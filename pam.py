@@ -9,7 +9,7 @@ def doAuth(pamh):
 		print("No face model is known for this user, skiping")
 		return pamh.PAM_SYSTEM_ERR
 	if status == 11:
-		print("Timeout reached, ould not find a known face")
+		print("Timeout reached, could not find a known face")
 		return pamh.PAM_SYSTEM_ERR
 	if status == 0:
 		print("Identified face as " + os.environ.get("USER"))

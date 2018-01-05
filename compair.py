@@ -21,7 +21,7 @@ encodings = []
 tries = 0
 
 try:
-	encodings = json.load(open(os.path.dirname(__file__) + "/models/lem.dat"))
+	encodings = json.load(open(os.path.dirname(__file__) + "/models/" + user + ".dat"))
 except FileNotFoundError:
 	stop(10)
 
