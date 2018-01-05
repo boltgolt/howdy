@@ -1,29 +1,62 @@
+import face_recognition
 import subprocess
 import time
 import os
+import sys
+import json
+
+import config
+import utils
+
+def captureFrame(delay):
+	subprocess.call(["fswebcam", "-S", str(delay), "--no-banner", "-d", "/dev/video" + str(config.device_id), tmp_file], stderr=open(os.devnull, "wb"))
+
+	ref = face_recognition.load_image_file(tmp_file)
+	enc = face_recognition.face_encodings(ref)
+
+	if len(enc) == 0:
+		print("No face detected, aborting")
+		sys.exit()
+	if len(enc) > 1:
+		print("Multiple faces detected, aborting")
+		sys.exit()
+
+	clean_enc = []
+
+	for point in enc[0]:
+		clean_enc.append(point)
+
+	encodings.append(clean_enc)
 
 user = os.environ.get("USER")
+tmp_file = "/tmp/howdy_" + user + ".jpg"
+enc_file = "./models/" + user + ".dat"
+encodings = []
 
 if not os.path.exists("models"):
+	print("No face model folder found, creating one")
 	os.makedirs("models")
 
-if not os.path.exists("models/" + user):
-	print("No face model folder found, creating one")
-	os.makedirs("models/" + user)
+try:
+	encodings = json.load(open(enc_file))
+except FileNotFoundError:
+	encodings = False
 
-print("Learning face for the user account " + os.environ.get("USER"))
-print("Please look straigt into the camera for 5 seconds")
+if encodings != False:
+	encodings = utils.print_menu(encodings)
 
-time.sleep(2.5)
+print("\nLearning face for the user account " + user)
+print("Please look straight into the camera for 5 seconds")
 
-subprocess.call(["fswebcam", "-S", "30", "--no-banner", "-d", "/dev/video1", "./models/" + user + "/L.jpg"], stderr=open(os.devnull, "wb"))
+time.sleep(2)
 
-time.sleep(.3)
+for delay in [30, 6, 0]:
+	time.sleep(.3)
+	captureFrame(delay)
 
-subprocess.call(["fswebcam", "-S", "6", "--no-banner", "-d", "/dev/video1", "./models/" + user + "/M.jpg"], stderr=open(os.devnull, "wb"))
+with open(enc_file, "w") as datafile:
+	json.dump(encodings, datafile)
 
-time.sleep(.3)
-
-subprocess.call(["fswebcam", "--no-banner", "-d", "/dev/video1", "./models/" + user + "/S.jpg"], stderr=open(os.devnull, "wb"))
+os.remove(tmp_file)
 
 print("Done.")

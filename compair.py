@@ -2,6 +2,7 @@ import face_recognition
 import cv2
 import sys
 import os
+import json
 
 import config
 
@@ -16,20 +17,18 @@ except IndexError:
 	sys.exit(1)
 
 user = sys.argv[1]
-# Get a reference to webcam #0 (the default one)
-video_capture = cv2.VideoCapture(config.device_id)
-
 encodings = []
+tries = 0
 
 try:
-	for exposure in ["L", "M", "S"]:
-		ref = face_recognition.load_image_file(os.path.dirname(__file__) + "/models/" + user + "/" + exposure + ".jpg")
-		enc = face_recognition.face_encodings(ref)[0]
-		encodings.append(enc)
+	encodings = json.load(open(os.path.dirname(__file__) + "/models/lem.dat"))
 except FileNotFoundError:
 	stop(10)
 
-tries = 0
+if len(encodings) < 3:
+	stop(1)
+
+video_capture = cv2.VideoCapture(config.device_id)
 
 while True:
 	# Grab a single frame of video
