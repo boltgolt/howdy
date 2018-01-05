@@ -2,17 +2,30 @@ import subprocess
 import sys
 import os
 
-def pam_sm_authenticate(pamh, flags, args):
-	status = subprocess.call(["python3", "compair.py", pamh.get_user()])
+def doAuth(pamh):
+	status = subprocess.call(["python3", "/compair.py", pamh.get_user()])
 
-	if status == 801:
-		print("Timeout reached, ould not find a known face")
+	if status == 10:
+		print("No face model is known for this user, aborting")
 		return pamh.PAM_SYSTEM_ERR
-	if status == 34:
-		print("No face model is known for this user")
+	if status == 11:
+		print("Timeout reached, ould not find a known face")
 		return pamh.PAM_SYSTEM_ERR
 	if status == 0:
 		print("Identified face as " + os.environ.get("USER"))
 		return pamh.PAM_SUCCESS
 
+	print(status)
 	return pamh.PAM_SYSTEM_ERR
+
+def pam_sm_authenticate(pamh, flags, args):
+	return doAuth(pamh)
+
+def pam_sm_open_session(pamh, flags, args):
+	return doAuth(pamh)
+
+def pam_sm_close_session(pamh, flags, argv):
+	return pamh.PAM_SUCCESS
+
+def pam_sm_setcred(pamh, flags, argv):
+	return pamh.PAM_SUCCESS

@@ -100,5 +100,8 @@ ENV/
 # mypy
 .mypy_cache/
 
-# Ignore generated models
+# generated models
 /models
+
+# config file
+config.py

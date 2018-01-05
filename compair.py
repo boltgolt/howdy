@@ -3,12 +3,11 @@ import cv2
 import sys
 import os
 
+import config
+
 def stop(status):
 	video_capture.release()
 	sys.exit(status)
-
-path = ""
-distance = 3
 
 try:
 	if not isinstance(sys.argv[1], str):
@@ -17,19 +16,18 @@ except IndexError:
 	sys.exit(1)
 
 user = sys.argv[1]
-
 # Get a reference to webcam #0 (the default one)
-video_capture = cv2.VideoCapture(1)
+video_capture = cv2.VideoCapture(config.device_id)
 
 encodings = []
 
 try:
 	for exposure in ["L", "M", "S"]:
-		ref = face_recognition.load_image_file(path + "/" + user + "/" + exposure + ".jpg")
+		ref = face_recognition.load_image_file(os.path.dirname(__file__) + "/models/" + user + "/" + exposure + ".jpg")
 		enc = face_recognition.face_encodings(ref)[0]
 		encodings.append(enc)
 except FileNotFoundError:
-	stop(802)
+	stop(10)
 
 tries = 0
 
@@ -44,10 +42,10 @@ while True:
 		matches = face_recognition.face_distance(encodings, face_encoding)
 
 		for match in matches:
-			if match < distance:
+			if match < config.certainty:
 				stop(0)
 
-	if tries => 100:
-		stop(801)
+	if tries > config.frame_count:
+		stop(11)
 
 	tries += 1
