@@ -1,4 +1,7 @@
+# Useful support functions
+
 def print_menu(encodings):
+	"""Show a menu asking the user what he wants to do"""
 	if len(encodings) == 3:
 		print("There is 1 existing face model for this user")
 	else:
