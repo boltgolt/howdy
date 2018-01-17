@@ -7,9 +7,11 @@ import cv2
 import sys
 import os
 import json
+import configparser
 
-# Import config
-import config
+# Read config from disk 
+config = configparser.ConfigParser()
+config.read(os.path.dirname(__file__) + "/config.ini")
 
 def stop(status):
 	"""Stop the execution and close video stream"""
@@ -34,14 +36,14 @@ tries = 0
 try:
 	encodings = json.load(open(os.path.dirname(__file__) + "/models/" + user + ".dat"))
 except FileNotFoundError:
-	stop(10)
+	sys.exit(10)
 
 # Verify that we have a valid model file
 if len(encodings) < 3:
-	stop(1)
+	sys.exit(1)
 
 # Start video capture on the IR camera
-video_capture = cv2.VideoCapture(config.device_id)
+video_capture = cv2.VideoCapture(int(config.get("video", "device_id")))
 
 while True:
 	# Grab a single frame of video
@@ -57,11 +59,11 @@ while True:
 
 		# Check if any match is certain enough to be the user we're looking for
 		for match in matches:
-			if match < config.certainty and match > 0:
+			if match < int(config.get("video", "certainty")) and match > 0:
 				stop(0)
 
 	# Stop if we've exceded the maximum retry count
-	if tries > config.frame_count:
+	if tries > int(config.get("video", "frame_count")):
 		stop(11)
 
 	tries += 1

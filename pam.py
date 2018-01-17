@@ -5,6 +5,13 @@ import subprocess
 import sys
 import os
 
+# pam-python is running python 2, so we use the old module here
+import ConfigParser
+
+# Read config from disk
+config = ConfigParser.ConfigParser()
+config.read(os.path.dirname(__file__) + "/config.ini")
+
 def doAuth(pamh):
 	"""Start authentication in a seperate process"""
 
@@ -13,19 +20,21 @@ def doAuth(pamh):
 
 	# Status 10 means we couldn't find any face models
 	if status == 10:
-		print("No face model is known for this user, skiping")
-		return pamh.PAM_SYSTEM_ERR
+		if config.get("core", "supress_unknown") != "true":
+			pamh.conversation(pamh.Message(pamh.PAM_ERROR_MSG, "No face model known"))
+		return pamh.PAM_USER_UNKNOWN
 	# Status 11 means we exceded the maximum retry count
 	if status == 11:
-		print("Timeout reached, could not find a known face")
-		return pamh.PAM_SYSTEM_ERR
+		pamh.conversation(pamh.Message(pamh.PAM_ERROR_MSG, "Face detection timeout reached"))
+		return pamh.PAM_AUTH_ERR
 	# Status 0 is a successful exit
 	if status == 0:
-		print("Identified face as " + os.environ.get("USER"))
+		if config.get("core", "no_confirmation") != "true":
+			pamh.conversation(pamh.Message(pamh.PAM_TEXT_INFO, "Identified face as " + pamh.get_user()))
 		return pamh.PAM_SUCCESS
 
 	# Otherwise, we can't discribe what happend but it wasn't successful
-	print("Unknown error: " + str(status))
+	pamh.conversation(pamh.Message(pamh.PAM_ERROR_MSG, "Unknown error: " + str(status)))
 	return pamh.PAM_SYSTEM_ERR
 
 def pam_sm_authenticate(pamh, flags, args):

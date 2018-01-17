@@ -102,6 +102,3 @@ ENV/
 
 # generated models
 /models
-
-# config file
-config.py
