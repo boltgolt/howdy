@@ -20,7 +20,7 @@ def doAuth(pamh):
 
 	# Status 10 means we couldn't find any face models
 	if status == 10:
-		if config.get("core", "supress_unknown") != "true":
+		if config.get("core", "suppress_unknown") != "true":
 			pamh.conversation(pamh.Message(pamh.PAM_ERROR_MSG, "No face model known"))
 		return pamh.PAM_USER_UNKNOWN
 	# Status 11 means we exceded the maximum retry count

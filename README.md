@@ -35,3 +35,12 @@ If nothing went wrong we should be able to run sudo by just showing your face. O
 ### Troubleshooting
 
 Any errors in the script itself get logged directly into the console and should indicate what went wrong. If authentication still fails but no errors are printed you could take a look at the last lines in `/var/log/auth.log` to see if anything has been reported there.
+
+
+### A note on security
+
+This script is in no way as secure as a password and will never be. Although it's harder to fool than normal face recognition, a person who looks similar to you or well-printed photo of you could be enough to do it.
+
+To minimize the chance of this script being compromised, it's recommend to store this repo in `/etc/pam.d` and to make it read only.
+
+DO NOT USE THIS SCRIPT AS THE SOLE AUTHENTICATION METHOD FOR YOUR SYSTEM. 
