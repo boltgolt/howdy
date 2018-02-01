@@ -21,7 +21,7 @@ def captureFrame(delay):
 	global encodings
 
 	# Call fswebcam to save a frame to /tmp with a set delay
-	subprocess.call(["fswebcam", "-S", str(delay), "--no-banner", "-d", "/dev/video" + str(config.get("video", "device_id")), tmp_file], stderr=open(os.devnull, "wb"))
+	subprocess.call(["fswebcam", "-S", str(delay), "--no-banner", "-d", "/dev/video" + str(config.get("video", "device_id")), tmp_file])
 
 	# Get the faces in htat image
 	ref = face_recognition.load_image_file(tmp_file)
