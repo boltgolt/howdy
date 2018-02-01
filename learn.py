@@ -21,10 +21,22 @@ def captureFrame(delay):
 	global encodings
 
 	# Call fswebcam to save a frame to /tmp with a set delay
-	subprocess.call(["fswebcam", "-S", str(delay), "--no-banner", "-d", "/dev/video" + str(config.get("video", "device_id")), tmp_file])
+	exit_code = subprocess.call(["fswebcam", "-S", str(delay), "--no-banner", "-d", "/dev/video" + str(config.get("video", "device_id")), tmp_file])
 
-	# Get the faces in htat image
-	ref = face_recognition.load_image_file(tmp_file)
+	# Check if fswebcam exited normally
+	if (exit_code != 0):
+		print("Webcam frame capture failed!")
+		print("Please make sure fswebcam is installed on this system")
+		sys.exit()
+
+	# Try to load the image from disk
+	try:
+		ref = face_recognition.load_image_file(tmp_file)
+	except FileNotFoundError:
+		print("No webcam frame captured, check if /dev/video" + str(config.get("video", "device_id")) + " is the right webcam")
+		sys.exit()
+
+	# Make a face encoding from the loaded image
 	enc = face_recognition.face_encodings(ref)
 
 	# If 0 faces are detected we can't continue
