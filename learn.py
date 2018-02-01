@@ -9,14 +9,19 @@ import sys
 import json
 
 # Import config and extra functions
-import config
+import configparser
 import utils
+
+# Read config from disk
+config = configparser.ConfigParser()
+config.read(os.path.dirname(os.path.abspath(__file__)) + "/config.ini")
 
 def captureFrame(delay):
 	"""Capture and encode 1 frame of video"""
+	global encodings
 
 	# Call fswebcam to save a frame to /tmp with a set delay
-	subprocess.call(["fswebcam", "-S", str(delay), "--no-banner", "-d", "/dev/video" + str(config.device_id), tmp_file], stderr=open(os.devnull, "wb"))
+	subprocess.call(["fswebcam", "-S", str(delay), "--no-banner", "-d", "/dev/video" + str(config.get("video", "device_id")), tmp_file], stderr=open(os.devnull, "wb"))
 
 	# Get the faces in htat image
 	ref = face_recognition.load_image_file(tmp_file)
@@ -62,6 +67,8 @@ except FileNotFoundError:
 # If a file does exist, ask the user what needs to be done
 if encodings != False:
 	encodings = utils.print_menu(encodings)
+else:
+	encodings = []
 
 print("\nLearning face for the user account " + user)
 print("Please look straight into the camera for 5 seconds")

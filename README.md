@@ -4,7 +4,7 @@ Windows Hello™ style authentication for Ubuntu. Use your build in IR emitters 
 
 ### Installation
 
-Fist we need to install pam-python, fswebcam and OpenCV from the Ubuntu repositories:
+First we need to install pam-python, fswebcam and OpenCV from the Ubuntu repositories:
 
 ```
 sudo apt install libpam-python fswebcam libopencv-dev python-opencv
@@ -43,4 +43,4 @@ This script is in no way as secure as a password and will never be. Although it'
 
 To minimize the chance of this script being compromised, it's recommend to store this repo in `/etc/pam.d` and to make it read only.
 
-DO NOT USE THIS SCRIPT AS THE SOLE AUTHENTICATION METHOD FOR YOUR SYSTEM. 
+DO NOT USE THIS SCRIPT AS THE SOLE AUTHENTICATION METHOD FOR YOUR SYSTEM.

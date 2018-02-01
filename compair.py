@@ -9,9 +9,9 @@ import os
 import json
 import configparser
 
-# Read config from disk 
+# Read config from disk
 config = configparser.ConfigParser()
-config.read(os.path.dirname(__file__) + "/config.ini")
+config.read(os.path.dirname(os.path.abspath(__file__)) + "/config.ini")
 
 def stop(status):
 	"""Stop the execution and close video stream"""
@@ -34,7 +34,7 @@ tries = 0
 
 # Try to load the face model from the models folder
 try:
-	encodings = json.load(open(os.path.dirname(__file__) + "/models/" + user + ".dat"))
+	encodings = json.load(open(os.path.dirname(os.path.abspath(__file__)) + "/models/" + user + ".dat"))
 except FileNotFoundError:
 	sys.exit(10)
 
