@@ -1,5 +1,7 @@
 # Useful support functions
 
+import sys
+
 def print_menu(encodings):
 	"""Show a menu asking the user what he wants to do"""
 	if len(encodings) == 3:
