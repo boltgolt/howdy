@@ -81,9 +81,15 @@ handleStatus(subprocess.call(["git", "clone", "https://github.com/Boltgolt/howdy
 for line in fileinput.input(["/lib/security/howdy/config.ini"], inplace = 1):
 	print(line.replace("device_id = 1", "device_id = " + picked), end="")
 
+# Secure the howdy folder
 handleStatus(subprocess.call(["chmod 600 -R /lib/security/howdy/"], shell=True))
+
+# Make the CLI executable as howdy
 handleStatus(subprocess.call(["ln -s /lib/security/howdy/cli.py /usr/bin/howdy"], shell=True))
 handleStatus(subprocess.call(["chmod +x /usr/bin/howdy"], shell=True))
+
+# Install the command autocomplete
+handleStatus(subprocess.call(["sudo cp /lib/security/howdy/autocomplete.sh /etc/bash_completion.d/howdy"], shell=True))
 
 log("Adding howdy as PAM module")
 
