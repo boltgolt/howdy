@@ -95,7 +95,7 @@ if len(encodings) > 0:
 label_in = input("Enter a label for this new model [" + label + "]: ")
 
 if label_in != "":
-	label = label_in
+	label = label_in[:24]
 
 insert_model = {
 	"time": int(time.time()),

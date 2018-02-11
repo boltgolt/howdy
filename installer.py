@@ -54,6 +54,7 @@ for dev in devices:
 
 if (picked == False):
 	print("\033[31mNo suitable IR camera found\033[0m")
+	sys.exit()
 
 log("Cloning dlib")
 
@@ -158,4 +159,8 @@ diag_out += "```"
 print("https://github.com/Boltgolt/howdy/issues/new?title=%5Bdiag%5D%20Post-installation%20camera%20information&body=" + urllib.parse.quote_plus(diag_out) + "\n")
 
 print("Installation complete.")
-print("If you want to help the development, please use the link above to post some camera-related information as a new github issue")
+print("If you want to help the development, please use the link above to post some camera-related information to github")
+
+# Remove the installer if downloaded to tmp
+if os.path.exists("/tmp/howdy_install.py"):
+	os.remove("/tmp/howdy_install.py")
