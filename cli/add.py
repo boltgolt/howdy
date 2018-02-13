@@ -6,19 +6,21 @@ import time
 import os
 import sys
 import json
-
-# Import config
 import configparser
 
+
+# Try to import face_recognition and give a nice error if we can't
+# Add should be the first point where import issues show up
 try:
 	import face_recognition
 except ImportError as err:
 	print(err)
 
-	print("\nCan't import face_recognition module, check the output of")
+	print("\nCan't import the face_recognition module, check the output of")
 	print("pip3 show face_recognition")
 	sys.exit()
 
+# Get the absolute path to the current file
 path = os.path.dirname(os.path.abspath(__file__))
 
 # Read config from disk
@@ -87,16 +89,21 @@ except FileNotFoundError:
 
 print("Adding face model for the user account " + user)
 
+# Set the default label
 label = "Initial model"
 
+# If models already exist, set that default label
 if len(encodings) > 0:
 	label = "Model #" + str(len(encodings) + 1)
 
+# Ask the user for a custom label
 label_in = input("Enter a label for this new model [" + label + "]: ")
 
+# Set the custom label (if any) and limit it to 24 characters
 if label_in != "":
 	label = label_in[:24]
 
+# Prepare the metadata for insertion
 insert_model = {
 	"time": int(time.time()),
 	"label": label,
@@ -114,6 +121,7 @@ for delay in [30, 6, 0]:
 	time.sleep(.3)
 	captureFrame(delay)
 
+# Insert full object into the list
 encodings.append(insert_model)
 
 # Save the new encodings to disk

@@ -73,12 +73,17 @@ while True:
 	# Don't remove ret, it doesn't work without it
 	ret, frame = video_capture.read()
 
+	# Get the height and with of the image
 	height, width = frame.shape[:2]
 
+	# If the hight is too high
 	if max_height < height:
+		# Calculate the amount the image has to shrink
 		scaling_factor = max_height / float(height)
+		# Apply that factor to the frame
 		frame = cv2.resize(frame, None, fx=scaling_factor, fy=scaling_factor, interpolation=cv2.INTER_AREA)
 
+	# Save the new size for diagnostics
 	scale_height, scale_width = frame.shape[:2]
 
 	# Convert from BGR to RGB

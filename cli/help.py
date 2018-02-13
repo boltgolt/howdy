@@ -1,3 +1,5 @@
+# Prints a simple help page for the CLI
+
 print("""
 Usage:
   howdy <user> <command> [argument]

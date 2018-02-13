@@ -1,3 +1,6 @@
+# Autocomplete file run in bash
+# Will sugest arguments on tab
+
 _howdy() {
 	local cur prev opts
 	COMPREPLY=()

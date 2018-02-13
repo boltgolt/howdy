@@ -12,7 +12,7 @@ Run the installer by pasting (`ctrl+shift+V`) the following command into the ter
 wget -O /tmp/howdy_install.py https://raw.githubusercontent.com/Boltgolt/howdy/master/installer.py && sudo python3 /tmp/howdy_install.py
 ```
 
-This will guide you through the installation. When that's done run `howdy add` to add a face model for the current user.
+This will guide you through the installation. When that's done run `howdy USER add` and replace `USER` with your username to add a face model.
 
 If nothing went wrong we should be able to run sudo by just showing your face. Open a new terminal and run `sudo -i` to see it in action.
 
