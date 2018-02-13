@@ -4,20 +4,20 @@ import json
 import time
 
 path = os.path.dirname(os.path.realpath(__file__))  + "/.."
+user = sys.argv[1]
 
 if not os.path.exists(path + "/models"):
 	print("Face models have not been initialized yet, please run:")
-	print("\n\thowdy add\n")
+	print("\n\thowdy " + user + " add\n")
 	sys.exit(1)
 
-user = os.environ.get("USER")
 enc_file = path + "/models/" + user + ".dat"
 
 try:
 	encodings = json.load(open(enc_file))
 except FileNotFoundError:
-	print("No face model known for the current user (" + user + "), please run:")
-	print("\n\thowdy add\n")
+	print("No face model known for the user " + user + ", please run:")
+	print("\n\thowdy " + user + " add\n")
 	sys.exit(1)
 
 print("Known face models for " + user + ":")

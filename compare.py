@@ -13,10 +13,6 @@ import configparser
 # Start timing
 timings = [time.time()]
 
-# Import face recognition, takes some time
-import face_recognition
-timings.append(time.time())
-
 # Read config from disk
 config = configparser.ConfigParser()
 config.read(os.path.dirname(os.path.abspath(__file__)) + "/config.ini")
@@ -56,6 +52,11 @@ if len(models) < 1:
 for model in models:
 	encodings += model["data"]
 
+# Import face recognition, takes some time
+timings.append(time.time())
+import face_recognition
+timings.append(time.time())
+
 # Start video capture on the IR camera
 video_capture = cv2.VideoCapture(int(config.get("video", "device_id")))
 timings.append(time.time())
@@ -90,13 +91,18 @@ while True:
 				if config.get("debug", "end_report") == "true":
 					print("DEBUG END REPORT\n")
 
-					print("Time spend")
-					print("  Importing face_recognition: " + str(round((timings[1] - timings[0]) * 1000)) + "ms")
-					print("  Opening the camera: " + str(round((timings[2] - timings[1]) * 1000)) + "ms")
-					print("  Searching for known face: " + str(round((timings[3] - timings[2]) * 1000)) + "ms\n")
+					def print_timing(label, offset):
+						"""Helper function to print a timing from the list"""
+						print("  " + label + ": " + str(round((timings[1 + offset] - timings[offset]) * 1000)) + "ms")
 
-					print("Frames searched: " + str(frames))
-					print("Certainty winning frame: " + str(round(match * 10, 3)))
+					print("Time spend")
+					print_timing("Starting up", 0)
+					print_timing("Importing face_recognition", 1)
+					print_timing("Opening the camera", 2)
+					print_timing("Searching for known face", 3)
+
+					print("\nFrames searched: " + str(frames) + " (" + str(round(float(frames) / (timings[4] - timings[2]), 2)) + " fps)")
+					print("Certainty of winning frame: " + str(round(match * 10, 3)))
 
 					exposures = ["long", "medium", "short"]
 					model_id = math.floor(float(match_index) / 3)

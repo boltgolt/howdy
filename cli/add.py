@@ -66,7 +66,7 @@ def captureFrame(delay):
 	insert_model["data"].append(clean_enc)
 
 # The current user
-user = os.environ.get("USER")
+user = sys.argv[1]
 # The name of the tmp frame file to user
 tmp_file = "/tmp/howdy_" + user + ".jpg"
 # The permanent file to store the encoded model in

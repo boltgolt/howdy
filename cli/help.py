@@ -1,14 +1,14 @@
-print("Howdy IR face recognition\n")
+print("""
+Usage:
+  howdy <user> <command> [argument]
 
-print("Usage:")
-print("  howdy <command> [argument]\n")
+Commands:
+  help          Show this help page
+  list          List all saved face models for the current user
+  add           Add a new face model for the current user
+  remove [id]   Remove a specific model
+  clear         Remove all face models for the current user
 
-print("Commands:")
-print("  help          Show this help page")
-print("  list          List all saved face models for the current user")
-print("  add           Add a new face model for the current user")
-print("  remove [id]   Remove a specific model")
-print("  clear         Remove all face models for the current user")
-
-print("\nFor support please visit")
-print("https://github.com/Boltgolt/howdy")
+For support please visit
+https://github.com/Boltgolt/howdy\
+""")
