@@ -2,6 +2,7 @@ import subprocess
 import time
 import sys
 import os
+import re
 import signal
 import fileinput
 import urllib.parse
@@ -37,7 +38,16 @@ for dev in devices:
 	if (dev[:5] == "video"):
 		time.sleep(.5)
 
-		print("Trying /dev/" + dev)
+		device_name = "/dev/" + dev
+		udevadm = subprocess.check_output(["udevadm info -r --query=all -n " + device_name], shell=True).decode("utf-8")
+
+		for line in udevadm.split("\n"):
+			re_name = re.search('product.*=(.*)$', line, re.IGNORECASE)
+
+			if re_name:
+				device_name = '"' + re_name.group(1) + '"'
+
+		print("Trying " + device_name)
 
 		sub = subprocess.Popen(["fswebcam -S 9999999999 -d /dev/" + dev + " /dev/null 2>/dev/null"], shell=True, preexec_fn=os.setsid)
 
@@ -89,8 +99,8 @@ handleStatus(subprocess.call(["chmod 600 -R /lib/security/howdy/"], shell=True))
 handleStatus(subprocess.call(["ln -s /lib/security/howdy/cli.py /usr/bin/howdy"], shell=True))
 handleStatus(subprocess.call(["chmod +x /usr/bin/howdy"], shell=True))
 
-# Install the command autocomplete
-handleStatus(subprocess.call(["sudo cp /lib/security/howdy/autocomplete.sh /etc/bash_completion.d/howdy"], shell=True))
+# Install the command autocomplete, don't error on failure
+subprocess.call(["sudo cp /lib/security/howdy/autocomplete.sh /etc/bash_completion.d/howdy"], shell=True)
 
 log("Adding howdy as PAM module")
 
@@ -144,9 +154,7 @@ common_auth = open("/etc/pam.d/common-auth", "w")
 common_auth.write("".join(outlines))
 common_auth.close()
 
-diag_out = ""
-
-diag_out += "Video devices (IR:" + picked + ")\n"
+diag_out = "Video devices [IR=" + picked + "]\n"
 diag_out += "```\n"
 diag_out += subprocess.check_output(['ls /dev/ | grep video'], shell=True).decode("utf-8")
 diag_out += "```\n"
@@ -154,9 +162,14 @@ diag_out += "```\n"
 diag_out += "Lsusb output\n"
 diag_out += "```\n"
 diag_out += subprocess.check_output(['lsusb -vvvv | grep -i "Camera\|iFunction"'], shell=True).decode("utf-8")
+diag_out += "```\n"
+
+diag_out += "Udevadm\n"
+diag_out += "```\n"
+diag_out += subprocess.check_output(['udevadm info -r --query=all -n /dev/video' + picked + ' | grep -i "ID_BUS\|ID_MODEL_ID\|ID_VENDOR_ID\|ID_V4L_PRODUCT\|ID_MODEL"'], shell=True).decode("utf-8")
 diag_out += "```"
 
-print("https://github.com/Boltgolt/howdy/issues/new?title=%5Bdiag%5D%20Post-installation%20camera%20information&body=" + urllib.parse.quote_plus(diag_out) + "\n")
+print("https://github.com/Boltgolt/howdy-reports/issues/new?title=Post-installation%20camera%20information&body=" + urllib.parse.quote_plus(diag_out) + "\n")
 
 print("Installation complete.")
 print("If you want to help the development, please use the link above to post some camera-related information to github")

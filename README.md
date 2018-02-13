@@ -8,11 +8,15 @@ Using the central authentication system in Linux (PAM), this works everywhere yo
 
 Run the installer by pasting (`ctrl+shift+V`) the following command into the terminal:
 
-`wget -O /tmp/howdy_install.py https://raw.githubusercontent.com/Boltgolt/howdy/master/installer.py && sudo python3 /tmp/howdy_install.py`
+```
+wget -O /tmp/howdy_install.py https://raw.githubusercontent.com/Boltgolt/howdy/master/installer.py && sudo python3 /tmp/howdy_install.py
+```
 
 This will guide you through the installation. When that's done run `howdy add` to add a face model for the current user.
 
 If nothing went wrong we should be able to run sudo by just showing your face. Open a new terminal and run `sudo -i` to see it in action.
+
+**Note:** The build of dlib can hang on 100% for over a minute, give it time.
 
 ### Command line
 
