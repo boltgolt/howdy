@@ -1,4 +1,4 @@
-# PAM interface in python, launches compair.py
+# PAM interface in python, launches compare.py
 
 # Import required modules
 import subprocess
@@ -15,8 +15,8 @@ config.read(os.path.dirname(os.path.abspath(__file__)) + "/config.ini")
 def doAuth(pamh):
 	"""Start authentication in a seperate process"""
 
-	# Run compair as python3 subprocess to circumvent python version and import issues
-	status = subprocess.call(["python3", os.path.dirname(os.path.abspath(__file__)) + "/compair.py", pamh.get_user()])
+	# Run compare as python3 subprocess to circumvent python version and import issues
+	status = subprocess.call(["python3", os.path.dirname(os.path.abspath(__file__)) + "/compare.py", pamh.get_user()])
 
 	# Status 10 means we couldn't find any face models
 	if status == 10:

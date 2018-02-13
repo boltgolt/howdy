@@ -1,24 +1,35 @@
 # Save the face of the user in encoded form
 
 # Import required modules
-import face_recognition
 import subprocess
 import time
 import os
 import sys
 import json
-
-# Import config and extra functions
 import configparser
-import utils
+
+
+# Try to import face_recognition and give a nice error if we can't
+# Add should be the first point where import issues show up
+try:
+	import face_recognition
+except ImportError as err:
+	print(err)
+
+	print("\nCan't import the face_recognition module, check the output of")
+	print("pip3 show face_recognition")
+	sys.exit()
+
+# Get the absolute path to the current file
+path = os.path.dirname(os.path.abspath(__file__))
 
 # Read config from disk
 config = configparser.ConfigParser()
-config.read(os.path.dirname(os.path.abspath(__file__)) + "/config.ini")
+config.read(path + "/../config.ini")
 
 def captureFrame(delay):
 	"""Capture and encode 1 frame of video"""
-	global encodings
+	global insert_model
 
 	# Call fswebcam to save a frame to /tmp with a set delay
 	exit_code = subprocess.call(["fswebcam", "-S", str(delay), "--no-banner", "-d", "/dev/video" + str(config.get("video", "device_id")), tmp_file])
@@ -54,36 +65,53 @@ def captureFrame(delay):
 	for point in enc[0]:
 		clean_enc.append(point)
 
-	encodings.append(clean_enc)
+	insert_model["data"].append(clean_enc)
 
 # The current user
-user = os.environ.get("USER")
+user = sys.argv[1]
 # The name of the tmp frame file to user
 tmp_file = "/tmp/howdy_" + user + ".jpg"
 # The permanent file to store the encoded model in
-enc_file = "./models/" + user + ".dat"
+enc_file = path + "/../models/" + user + ".dat"
 # Known encodings
 encodings = []
 
 # Make the ./models folder if it doesn't already exist
-if not os.path.exists("models"):
+if not os.path.exists(path + "/../models"):
 	print("No face model folder found, creating one")
-	os.makedirs("models")
+	os.makedirs(path + "/../models")
 
 # To try read a premade encodings file if it exists
 try:
 	encodings = json.load(open(enc_file))
 except FileNotFoundError:
-	encodings = False
-
-# If a file does exist, ask the user what needs to be done
-if encodings != False:
-	encodings = utils.print_menu(encodings)
-else:
 	encodings = []
 
-print("\nLearning face for the user account " + user)
-print("Please look straight into the camera for 5 seconds")
+print("Adding face model for the user account " + user)
+
+# Set the default label
+label = "Initial model"
+
+# If models already exist, set that default label
+if len(encodings) > 0:
+	label = "Model #" + str(len(encodings) + 1)
+
+# Ask the user for a custom label
+label_in = input("Enter a label for this new model [" + label + "]: ")
+
+# Set the custom label (if any) and limit it to 24 characters
+if label_in != "":
+	label = label_in[:24]
+
+# Prepare the metadata for insertion
+insert_model = {
+	"time": int(time.time()),
+	"label": label,
+	"id": len(encodings),
+	"data": []
+}
+
+print("\nPlease look straight into the camera for 5 seconds")
 
 # Give the user time to read
 time.sleep(2)
@@ -92,6 +120,9 @@ time.sleep(2)
 for delay in [30, 6, 0]:
 	time.sleep(.3)
 	captureFrame(delay)
+
+# Insert full object into the list
+encodings.append(insert_model)
 
 # Save the new encodings to disk
 with open(enc_file, "w") as datafile:
