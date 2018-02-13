@@ -80,7 +80,7 @@ handleStatus(subprocess.call(["rm", "-rf", "/tmp/dlib_clone"]))
 
 log("Installing face_recognition")
 
-handleStatus(subprocess.call(["pip3", "install", "face_recognition"]))
+handleStatus(subprocess.call(["pip3", "install", "face_recognition", "sty"]))
 
 log("Cloning howdy")
 

@@ -61,6 +61,9 @@ timings.append(time.time())
 video_capture = cv2.VideoCapture(int(config.get("video", "device_id")))
 timings.append(time.time())
 
+# Fetch the max frame height
+max_height = int(config.get("video", "max_height"))
+
 # Start the read loop
 frames = 0
 while True:
@@ -69,6 +72,17 @@ while True:
 	# Grab a single frame of video
 	# Don't remove ret, it doesn't work without it
 	ret, frame = video_capture.read()
+
+	height, width = frame.shape[:2]
+
+	if max_height < height:
+		scaling_factor = max_height / float(height)
+		frame = cv2.resize(frame, None, fx=scaling_factor, fy=scaling_factor, interpolation=cv2.INTER_AREA)
+
+	scale_height, scale_width = frame.shape[:2]
+
+	# Convert from BGR to RGB
+	frame = frame[:, :, ::-1]
 
 	# Get all faces from that frame as encodings
 	face_encodings = face_recognition.face_encodings(frame)
@@ -89,8 +103,6 @@ while True:
 
 				# If set to true in the config, print debug text
 				if config.get("debug", "end_report") == "true":
-					print("DEBUG END REPORT\n")
-
 					def print_timing(label, offset):
 						"""Helper function to print a timing from the list"""
 						print("  " + label + ": " + str(round((timings[1 + offset] - timings[offset]) * 1000)) + "ms")
@@ -100,6 +112,10 @@ while True:
 					print_timing("Importing face_recognition", 1)
 					print_timing("Opening the camera", 2)
 					print_timing("Searching for known face", 3)
+
+					print("\nResolution")
+					print("  Native: " + str(height) + "x" + str(width))
+					print("  Used: " + str(scale_height) + "x" + str(scale_width))
 
 					print("\nFrames searched: " + str(frames) + " (" + str(round(float(frames) / (timings[4] - timings[2]), 2)) + " fps)")
 					print("Certainty of winning frame: " + str(round(match * 10, 3)))
@@ -113,7 +129,7 @@ while True:
 				stop(0)
 
 	# Stop if we've exceded the maximum retry count
-	if tries > int(config.get("video", "frame_count")):
+	if time.time() - timings[3] > int(config.get("video", "timout")):
 		stop(11)
 
 	tries += 1
