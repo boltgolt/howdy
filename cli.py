@@ -21,6 +21,8 @@ elif cmd == "help":
 	import cli.help
 elif cmd == "add":
 	import cli.add
+elif cmd == "remove":
+	import cli.remove
 elif cmd == "clear":
 	import cli.clear
 else:
