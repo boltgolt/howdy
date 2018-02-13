@@ -28,6 +28,10 @@ Any python errors get logged directly into the console and should indicate what 
 
 If you encounter an error that hasn't been reported yet, don't be afraid to open a new issue.
 
+### Uninstalling
+
+There is an uninstaller available, run `sudo python3 /lib/security/howdy/uninstall.py` to remove Howdy from your system.
+
 ### A note on security
 
 This script is in no way as secure as a password and will never be. Although it's harder to fool than normal face recognition, a person who looks similar to you or well-printed photo of you could be enough to do it.
