@@ -8,7 +8,6 @@ import sys
 import json
 import configparser
 
-
 # Try to import face_recognition and give a nice error if we can't
 # Add should be the first point where import issues show up
 try:
