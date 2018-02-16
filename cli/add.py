@@ -6,6 +6,7 @@ import time
 import os
 import sys
 import json
+import cv2
 import configparser
 
 # Try to import face_recognition and give a nice error if we can't
@@ -26,50 +27,8 @@ path = os.path.dirname(os.path.abspath(__file__))
 config = configparser.ConfigParser()
 config.read(path + "/../config.ini")
 
-def captureFrame(delay):
-	"""Capture and encode 1 frame of video"""
-	global insert_model
-
-	# Call fswebcam to save a frame to /tmp with a set delay
-	exit_code = subprocess.call(["fswebcam", "-S", str(delay), "--no-banner", "-d", "/dev/video" + str(config.get("video", "device_id")), tmp_file])
-
-	# Check if fswebcam exited normally
-	if (exit_code != 0):
-		print("Webcam frame capture failed!")
-		print("Please make sure fswebcam is installed on this system")
-		sys.exit()
-
-	# Try to load the image from disk
-	try:
-		ref = face_recognition.load_image_file(tmp_file)
-	except FileNotFoundError:
-		print("No webcam frame captured, check if /dev/video" + str(config.get("video", "device_id")) + " is the right webcam")
-		sys.exit()
-
-	# Make a face encoding from the loaded image
-	enc = face_recognition.face_encodings(ref)
-
-	# If 0 faces are detected we can't continue
-	if len(enc) == 0:
-		print("No face detected, aborting")
-		sys.exit()
-	# If more than 1 faces are detected we can't know wich one belongs to the user
-	if len(enc) > 1:
-		print("Multiple faces detected, aborting")
-		sys.exit()
-
-	clean_enc = []
-
-	# Copy the values into a clean array so we can export it as JSON later on
-	for point in enc[0]:
-		clean_enc.append(point)
-
-	insert_model["data"].append(clean_enc)
-
 # The current user
 user = sys.argv[1]
-# The name of the tmp frame file to user
-tmp_file = "/tmp/howdy_" + user + ".jpg"
 # The permanent file to store the encoded model in
 enc_file = path + "/../models/" + user + ".dat"
 # Known encodings
@@ -110,15 +69,52 @@ insert_model = {
 	"data": []
 }
 
-print("\nPlease look straight into the camera for 5 seconds")
+# Open the camera
+video_capture = cv2.VideoCapture(int(config.get("video", "device_id")))
+video_capture.read()
+
+print("\nPlease look straight into the camera")
 
 # Give the user time to read
 time.sleep(2)
 
-# Capture with 3 different delays to simulate different camera exposures
-for delay in [30, 6, 0]:
-	time.sleep(.3)
-	captureFrame(delay)
+# Will contain found face encodings
+enc = []
+# Count the amount or read frames
+frames = 0
+
+# Loop through frames till we hit a timeout
+while frames < 60:
+	frames += 1
+
+	# Grab a single frame of video
+	# Don't remove ret, it doesn't work without it
+	ret, frame = video_capture.read()
+
+	# Get the encodings in the frame
+	enc = face_recognition.face_encodings(frame)
+
+	# If we've found at least one, we can continue
+	if len(enc) > 0:
+		break
+
+# If 0 faces are detected we can't continue
+if len(enc) == 0:
+	print("No face detected, aborting")
+	sys.exit()
+
+# If more than 1 faces are detected we can't know wich one belongs to the user
+if len(enc) > 1:
+	print("Multiple faces detected, aborting")
+	sys.exit()
+
+clean_enc = []
+
+# Copy the values into a clean array so we can export it as JSON later on
+for point in enc[0]:
+	clean_enc.append(point)
+
+insert_model["data"].append(clean_enc)
 
 # Insert full object into the list
 encodings.append(insert_model)
@@ -127,7 +123,6 @@ encodings.append(insert_model)
 with open(enc_file, "w") as datafile:
 	json.dump(encodings, datafile)
 
-# Remove any left over temp files
-os.remove(tmp_file)
-
-print("Done.")
+# Give let the user know how it went
+print("Scan complete")
+print("\nAdded a new model to " + user)

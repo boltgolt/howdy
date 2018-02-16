@@ -125,10 +125,11 @@ while True:
 					print("\nFrames searched: " + str(frames) + " (" + str(round(float(frames) / (timings[4] - timings[2]), 2)) + " fps)")
 					print("Certainty of winning frame: " + str(round(match * 10, 3)))
 
-					exposures = ["long", "medium", "short"]
-					model_id = math.floor(float(match_index) / 3)
+					# Catch older 3-encoding models
+					if not match_index in models:
+						match_index = 0
 
-					print("Winning model: " + str(model_id) + " (\"" + models[model_id]["label"] + "\") using " + exposures[match_index % 3] + " exposure\n")
+					print("Winning model: " + str(match_index) + " (\"" + models[match_index]["label"] + "\")")
 
 				# End peacegully
 				stop(0)
