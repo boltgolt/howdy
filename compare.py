@@ -37,6 +37,8 @@ models = []
 encodings = []
 # Amount of frames already matched
 tries = 0
+# Amount of ingnored dark frames
+dark_tries = 0
 
 # Try to load the face model from the models folder
 try:
@@ -72,6 +74,16 @@ while True:
 	# Grab a single frame of video
 	# Don't remove ret, it doesn't work without it
 	ret, frame = video_capture.read()
+
+	# Create a histogram of the image with 8 values
+	hist = cv2.calcHist([frame], [0], None, [8], [0, 256])
+	# All values combined for percentage calculation
+	hist_total = int(sum(hist)[0])
+
+	# Scrip the frame if it exceeds the threshold
+	if float(hist[0]) / hist_total * 100 > float(config.get("video", "dark_threshold")):
+		dark_tries += 1
+		continue
 
 	# Get the height and with of the image
 	height, width = frame.shape[:2]
@@ -123,6 +135,7 @@ while True:
 					print("  Used: " + str(scale_height) + "x" + str(scale_width))
 
 					print("\nFrames searched: " + str(frames) + " (" + str(round(float(frames) / (timings[4] - timings[2]), 2)) + " fps)")
+					print("Dark frames ignored: " + str(dark_tries))
 					print("Certainty of winning frame: " + str(round(match * 10, 3)))
 
 					# Catch older 3-encoding models
