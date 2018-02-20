@@ -36,7 +36,7 @@ time.sleep(.5)
 log("Installing required apt packages")
 
 # Install packages though apt
-handleStatus(subprocess.call(["apt", "install", "-y", "libpam-python", "fswebcam", "libopencv-dev", "python-opencv"]))
+handleStatus(subprocess.call(["apt", "install", "-y", "git", "libpam-python", "fswebcam", "libopencv-dev", "python-opencv"]))
 
 log("Starting camera check")
 
