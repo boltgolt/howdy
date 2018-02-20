@@ -10,6 +10,7 @@ Commands:
   add           Add a new face model for the current user
   remove [id]   Remove a specific model
   clear         Remove all face models for the current user
+  test          Test the camera and recognition methods
 
 For support please visit
 https://github.com/Boltgolt/howdy\

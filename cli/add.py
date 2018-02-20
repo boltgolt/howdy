@@ -113,6 +113,7 @@ if len(enc) > 1:
 	print("Multiple faces detected, aborting")
 	sys.exit()
 
+# Totally clean array that can be exported as JSON
 clean_enc = []
 
 # Copy the values into a clean array so we can export it as JSON later on

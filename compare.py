@@ -79,6 +79,7 @@ max_height = int(config.get("video", "max_height"))
 # Start the read loop
 frames = 0
 while True:
+	# Increment the frame count every loop
 	frames += 1
 
 	# Grab a single frame of video
