@@ -1,17 +1,19 @@
 # Compare incomming video with known faces
 # Running in a local python instance to get around PATH issues
 
+# Import time so we can start timing asap
+import time
+
+# Start timing
+timings = [time.time()]
+
 # Import required modules
 import cv2
 import sys
 import os
 import json
-import time
 import math
 import configparser
-
-# Start timing
-timings = [time.time()]
 
 # Read config from disk
 config = configparser.ConfigParser()
@@ -54,13 +56,21 @@ if len(models) < 1:
 for model in models:
 	encodings += model["data"]
 
-# Import face recognition, takes some time
-timings.append(time.time())
-import face_recognition
+# Add the time needed to start the script
 timings.append(time.time())
 
 # Start video capture on the IR camera
 video_capture = cv2.VideoCapture(int(config.get("video", "device_id")))
+
+# Capture a single frame so the camera becomes active
+# This will let the camera adjust its light levels while we're importing for faster scanning
+video_capture.read()
+
+# Note the time it took to open the camera
+timings.append(time.time())
+
+# Import face recognition, takes some time
+import face_recognition
 timings.append(time.time())
 
 # Fetch the max frame height
@@ -126,15 +136,16 @@ while True:
 
 					print("Time spend")
 					print_timing("Starting up", 0)
-					print_timing("Importing face_recognition", 1)
-					print_timing("Opening the camera", 2)
+					print_timing("Opening the camera", 1)
+					print_timing("Importing face_recognition", 2)
 					print_timing("Searching for known face", 3)
 
 					print("\nResolution")
 					print("  Native: " + str(height) + "x" + str(width))
 					print("  Used: " + str(scale_height) + "x" + str(scale_width))
 
-					print("\nFrames searched: " + str(frames) + " (" + str(round(float(frames) / (timings[4] - timings[2]), 2)) + " fps)")
+					# Show the total number of frames and calculate the FPS by deviding it by the total scan time
+					print("\nFrames searched: " + str(frames) + " (" + str(round(float(frames) / (timings[4] - timings[3]), 2)) + " fps)")
 					print("Dark frames ignored: " + str(dark_tries))
 					print("Certainty of winning frame: " + str(round(match * 10, 3)))
 

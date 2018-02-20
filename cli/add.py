@@ -45,6 +45,11 @@ try:
 except FileNotFoundError:
 	encodings = []
 
+# Print a warning if too many encodings are being added
+if len(encodings) > 2:
+	print("WARNING: Every additional model slows down the face recognition engine")
+	print("Press ctrl+C to cancel")
+
 print("Adding face model for the user account " + user)
 
 # Set the default label
