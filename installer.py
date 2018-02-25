@@ -36,7 +36,16 @@ time.sleep(.5)
 log("Installing required apt packages")
 
 # Install packages though apt
-handleStatus(subprocess.call(["apt", "install", "-y", "git", "python-pip", "python-dev", "python-setuptools", "python3-setuptools", "build-essential", "libpam-python", "fswebcam", "libopencv-dev", "python-opencv", "cmake"]))
+handleStatus(subprocess.call(["apt", "install", "-y", "git",
+													  "python3-pip",
+													  "python3-dev",
+													  "python3-setuptools",
+													  "build-essential",
+													  "libpam-python",
+													  "fswebcam",
+													  "libopencv-dev",
+													  "python-opencv",
+													  "cmake"]))
 
 # Update pip
 handleStatus(subprocess.call(["pip install --upgrade pip"], shell=True))
