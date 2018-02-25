@@ -37,18 +37,18 @@ log("Installing required apt packages")
 
 # Install packages though apt
 handleStatus(subprocess.call(["apt", "install", "-y", "git",
-													  "python3-pip",
-													  "python3-dev",
-													  "python3-setuptools",
-													  "build-essential",
-													  "libpam-python",
-													  "fswebcam",
-													  "libopencv-dev",
-													  "python-opencv",
-													  "cmake"]))
+                                                      "python3-pip",
+                                                      "python3-dev",
+                                                      "python3-setuptools",
+                                                      "build-essential",
+                                                      "libpam-python",
+                                                      "fswebcam",
+                                                      "libopencv-dev",
+                                                      "python-opencv",
+                                                      "cmake"]))
 
 # Update pip
-handleStatus(subprocess.call(["pip install --upgrade pip"], shell=True))
+handleStatus(subprocess.call(["pip3 install --upgrade pip"], shell=True))
 
 log("Starting camera check")
 
@@ -81,9 +81,14 @@ for dev in devices:
 		# Let fswebcam keep the camera open in the background
 		sub = subprocess.Popen(["fswebcam -S 9999999999 -d /dev/" + dev + " /dev/null 2>/dev/null"], shell=True, preexec_fn=os.setsid)
 
-		# Ask the user if this is the right one
-		print("\033[33mOne of your cameras should now be on.\033[0m")
-		ans = input("Did your IR emitters turn on? [y/N]: ")
+		try:
+			# Ask the user if this is the right one
+			print("\033[33mOne of your cameras should now be on.\033[0m")
+			ans = input("Did your IR emitters turn on? [y/N]: ")
+		except KeyboardInterrupt:
+			# Kill fswebcam if the user aborts
+			os.killpg(os.getpgid(sub.pid), signal.SIGTERM)
+			raise
 
 		# The user has answered, kill fswebcam
 		os.killpg(os.getpgid(sub.pid), signal.SIGTERM)
