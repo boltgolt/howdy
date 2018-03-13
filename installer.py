@@ -141,9 +141,14 @@ for line in fileinput.input(["/lib/security/howdy/config.ini"], inplace = 1):
 # Secure the howdy folder
 handleStatus(subprocess.call(["chmod 600 -R /lib/security/howdy/"], shell=True))
 
+# Allow anyone to execute the python CLI
+handleStatus(subprocess.call(["chmod 755 /lib/security/howdy"], shell=True))
+handleStatus(subprocess.call(["chmod 744 /lib/security/howdy/cli.py"], shell=True))
+handleStatus(subprocess.call(["chmod 744 -R /lib/security/howdy/cli"], shell=True))
+
 # Make the CLI executable as howdy
-handleStatus(subprocess.call(["ln -s /lib/security/howdy/cli.py /usr/bin/howdy"], shell=True))
-handleStatus(subprocess.call(["chmod +x /usr/bin/howdy"], shell=True))
+handleStatus(subprocess.call(["ln -s /lib/security/howdy/cli.py /usr/local/bin/howdy"], shell=True))
+handleStatus(subprocess.call(["chmod +x /usr/local/bin/howdy"], shell=True))
 
 # Install the command autocomplete, don't error on failure
 subprocess.call(["sudo cp /lib/security/howdy/autocomplete.sh /etc/bash_completion.d/howdy"], shell=True)
