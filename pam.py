@@ -29,8 +29,15 @@ def doAuth(pamh):
 		return pamh.PAM_AUTH_ERR
 	# Status 0 is a successful exit
 	if status == 0:
+		# Show the success message if it isn't suppressed
 		if config.get("core", "no_confirmation") != "true":
 			pamh.conversation(pamh.Message(pamh.PAM_TEXT_INFO, "Identified face as " + pamh.get_user()))
+
+		# Try to dismiss the lock screen if enabled
+		if config.get("core", "dismiss_lockscreen") == "true":
+			# Run it as root with a timeout of 1s, and never ask for a password through the UI
+			subprocess.Popen(["sudo", "timeout", "1", "loginctl", "unlock-sessions", "--no-ask-password"])
+
 		return pamh.PAM_SUCCESS
 
 	# Otherwise, we can't discribe what happend but it wasn't successful
