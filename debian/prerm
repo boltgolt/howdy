@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+# Executed on deinstallation
 # Completely remove howdy from the system
 
 # Import required modules

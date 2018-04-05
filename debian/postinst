@@ -1,5 +1,6 @@
+#!/usr/bin/env python3
 # Installation script to install howdy
-# Runs completely independent of the others
+# Executed after primary apt install
 
 # Import required modules
 import subprocess
@@ -19,33 +20,13 @@ def handleStatus(status):
 	"""Abort if a command fails"""
 	if (status != 0):
 		print("\033[31mError while running last command\033[0m")
-		sys.exit()
+		sys.exit(1)
 
 # Check if we're running as root
 user = os.getenv("SUDO_USER")
 if user is None:
-	print("Please run this script as a sudo user")
-	sys.exit()
-
-# Print some nice intro text
-print("\n\033[33m   HOWDY INSTALLER FOR UBUNTU\033[0m")
-print("   Version 1, 2016/02/05\n")
-
-# Let it sink in
-time.sleep(.5)
-log("Installing required apt packages")
-
-# Install packages though apt
-handleStatus(subprocess.call(["apt", "install", "-y", "git",
-                                                      "python3-pip",
-                                                      "python3-dev",
-                                                      "python3-setuptools",
-                                                      "build-essential",
-                                                      "libpam-python",
-                                                      "fswebcam",
-                                                      "libopencv-dev",
-                                                      "python-opencv",
-                                                      "cmake"]))
+	print("Can't continue installation without root rights.")
+	sys.exit(1)
 
 # Update pip
 handleStatus(subprocess.call(["pip3 install --upgrade pip"], shell=True))
@@ -55,55 +36,59 @@ log("Starting camera check")
 # Get all devices
 devices = os.listdir("/dev")
 # The picked video device id
-picked = False
+picked = -1
 
-# Loop though all devices
-for dev in devices:
-	# Only use the video devices
-	if (dev[:5] == "video"):
-		time.sleep(.5)
+# If prompting has been disabled, skip camera check
+if "HOWDY_NO_PROMPT" in os.environ:
+	picked = "0"
+else:
+	# Loop though all devices
+	for dev in devices:
+		# Only use the video devices
+		if (dev[:5] == "video"):
+			time.sleep(.5)
 
-		# The full path to the device is the default name
-		device_name = "/dev/" + dev
-		# Get the udevadm details to try to get a better name
-		udevadm = subprocess.check_output(["udevadm info -r --query=all -n " + device_name], shell=True).decode("utf-8")
+			# The full path to the device is the default name
+			device_name = "/dev/" + dev
+			# Get the udevadm details to try to get a better name
+			udevadm = subprocess.check_output(["udevadm info -r --query=all -n " + device_name], shell=True).decode("utf-8")
 
-		# Loop though udevadm to search for a better name
-		for line in udevadm.split("\n"):
-			# Match it and encase it in quotes
-			re_name = re.search('product.*=(.*)$', line, re.IGNORECASE)
-			if re_name:
-				device_name = '"' + re_name.group(1) + '"'
+			# Loop though udevadm to search for a better name
+			for line in udevadm.split("\n"):
+				# Match it and encase it in quotes
+				re_name = re.search('product.*=(.*)$', line, re.IGNORECASE)
+				if re_name:
+					device_name = '"' + re_name.group(1) + '"'
 
-		# Show what device we're using
-		print("Trying " + device_name)
+			# Show what device we're using
+			print("Trying " + device_name)
 
-		# Let fswebcam keep the camera open in the background
-		sub = subprocess.Popen(["fswebcam -S 9999999999 -d /dev/" + dev + " /dev/null 2>/dev/null"], shell=True, preexec_fn=os.setsid)
+			# Let fswebcam keep the camera open in the background
+			sub = subprocess.Popen(["fswebcam -S 9999999999 -d /dev/" + dev + " /dev/null 2>/dev/null"], shell=True, preexec_fn=os.setsid)
 
-		try:
-			# Ask the user if this is the right one
-			print("\033[33mOne of your cameras should now be on.\033[0m")
-			ans = input("Did your IR emitters turn on? [y/N]: ")
-		except KeyboardInterrupt:
-			# Kill fswebcam if the user aborts
+			try:
+				# Ask the user if this is the right one
+				print("\033[33mOne of your cameras should now be on.\033[0m")
+				ans = input("Did your IR emitters turn on? [y/N]: ")
+			except KeyboardInterrupt:
+				# Kill fswebcam if the user aborts
+				os.killpg(os.getpgid(sub.pid), signal.SIGTERM)
+				raise
+
+			# The user has answered, kill fswebcam
 			os.killpg(os.getpgid(sub.pid), signal.SIGTERM)
-			raise
 
-		# The user has answered, kill fswebcam
-		os.killpg(os.getpgid(sub.pid), signal.SIGTERM)
-
-		# Set this camera as picked if the answer was yes, go to the next one if no
-		if (ans.lower() == "y"):
-			picked = dev[5:]
-			break
-		else:
-			print("Inerpeting as a \"NO\"\n")
+			# Set this camera as picked if the answer was yes, go to the next one if no
+			if (ans.lower() == "y"):
+				picked = dev[5:]
+				break
+			else:
+				print("Inerpeting as a \"NO\"\n")
 
 # Abort if no camera was picked
-if (picked == False):
+if (picked == -1):
 	print("\033[31mNo suitable IR camera found\033[0m")
-	sys.exit()
+	sys.exit(1)
 
 log("Cloning dlib")
 
@@ -141,14 +126,9 @@ for line in fileinput.input(["/lib/security/howdy/config.ini"], inplace = 1):
 # Secure the howdy folder
 handleStatus(subprocess.call(["chmod 600 -R /lib/security/howdy/"], shell=True))
 
-# Allow anyone to execute the python CLI
-handleStatus(subprocess.call(["chmod 755 /lib/security/howdy"], shell=True))
-handleStatus(subprocess.call(["chmod 744 /lib/security/howdy/cli.py"], shell=True))
-handleStatus(subprocess.call(["chmod 744 -R /lib/security/howdy/cli"], shell=True))
-
 # Make the CLI executable as howdy
-handleStatus(subprocess.call(["ln -s /lib/security/howdy/cli.py /usr/local/bin/howdy"], shell=True))
-handleStatus(subprocess.call(["chmod +x /usr/local/bin/howdy"], shell=True))
+handleStatus(subprocess.call(["ln -s /lib/security/howdy/cli.py /usr/bin/howdy"], shell=True))
+handleStatus(subprocess.call(["chmod +x /usr/bin/howdy"], shell=True))
 
 # Install the command autocomplete, don't error on failure
 subprocess.call(["sudo cp /lib/security/howdy/autocomplete.sh /etc/bash_completion.d/howdy"], shell=True)
@@ -207,14 +187,16 @@ for line in printlines:
 # Print a footer
 print("\033[33m" + ">>> END OF /etc/pam.d/common-auth" + "\033[0m" + "\n")
 
-# Ask the user if this change is okay
-print("Lines will be insterted in /etc/pam.d/common-auth as shown above")
-ans = input("Apply this change? [y/N]: ")
+# Do not prompt for a yes if we're in no promt mode
+if "HOWDY_NO_PROMPT" in os.environ:
+	# Ask the user if this change is okay
+	print("Lines will be insterted in /etc/pam.d/common-auth as shown above")
+	ans = input("Apply this change? [y/N]: ")
 
-# Abort the whole thing if it's not
-if (ans.lower() != "y"):
-	print("Inerpeting as a \"NO\", aborting")
-	sys.exit()
+	# Abort the whole thing if it's not
+	if (ans.lower() != "y"):
+		print("Inerpeting as a \"NO\", aborting")
+		sys.exit(1)
 
 print("Adding lines to PAM\n")
 

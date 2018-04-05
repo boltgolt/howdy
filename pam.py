@@ -4,8 +4,6 @@
 import subprocess
 import sys
 import os
-import threading
-import time
 
 # pam-python is running python 2, so we use the old module here
 import ConfigParser
@@ -16,11 +14,6 @@ config.read(os.path.dirname(os.path.abspath(__file__)) + "/config.ini")
 
 def doAuth(pamh):
 	"""Start authentication in a seperate process"""
-
-	# Abort if the session is remote
-	if pamh.rhost is not None or "SSH_CONNECTION" in os.environ:
-		pamh.conversation(pamh.Message(pamh.PAM_TEXT_INFO, "Skipping face recognition for remote session"))
-		return pamh.PAM_AUTH_ERR
 
 	# Run compare as python3 subprocess to circumvent python version and import issues
 	status = subprocess.call(["python3", os.path.dirname(os.path.abspath(__file__)) + "/compare.py", pamh.get_user()])
