@@ -1,0 +1,6 @@
+tar-ignore = ".git"
+tar-ignore = "models"
+tar-ignore = ".gitignore"
+tar-ignore = "README.md"
+tar-ignore = "LICENSE"
+tar-ignore = ".travis.yml"

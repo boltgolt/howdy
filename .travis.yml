@@ -2,12 +2,13 @@ language: python
 sudo: required
 
 before_install:
-  - ln -s ./debian ./DEBIAN
-  - dpkg-deb --build . ./build.deb
+  - git clone https://github.com/Boltgolt/howdy.git /tmp/howdy_build
+  - cd /tmp/howdy_build
+  - dpkg-buildpackage -rfakeroot -d -us -uc -S
 
 install: sudo apt-get install ./build.deb
 
 script: howdy help
 
 notifications:
-    email: false
+  email: false
