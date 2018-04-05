@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-python3 ../cli.py
+python3 /lib/security/howdy/cli.py

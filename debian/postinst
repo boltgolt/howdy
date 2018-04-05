@@ -28,6 +28,8 @@ if user is None:
 	print("Can't continue installation without root rights.")
 	sys.exit(1)
 
+log("Upgrading pip to the latest version")
+
 # Update pip
 handleStatus(subprocess.call(["pip3 install --upgrade pip"], shell=True))
 
@@ -40,6 +42,7 @@ picked = -1
 
 # If prompting has been disabled, skip camera check
 if "HOWDY_NO_PROMPT" in os.environ:
+	print("\033[33mAUTOMATED INSTALL, YOU WILL NOT BE ASKED FOR INPUT AND CHECKS WILL BE SKIPPED\033[0m")
 	picked = "0"
 else:
 	# Loop though all devices
@@ -110,14 +113,21 @@ log("Installing face_recognition")
 # Install face_recognition though pip
 handleStatus(subprocess.call(["pip3", "install", "face_recognition"]))
 
-log("Cloning howdy")
+log("Copying howdy data")
 
 # Make sure /lib/security exists
 if not os.path.exists("/lib/security"):
 	os.makedirs("/lib/security")
 
-# Clone howdy into it
-handleStatus(subprocess.call(["git", "clone", "https://github.com/Boltgolt/howdy.git", "/lib/security/howdy"]))
+# Abort if a folder for howdy already exists
+if os.path.exists("/lib/security/howdy"):
+	print("\033[31mPrevious installation of howdy found, aborting\033[0m")
+	sys.exit(1)
+
+subprocess.call(["ls", "-hals"])
+
+# Copy howdy into it's new folder
+handleStatus(subprocess.call(["cp", "-R", "..", "/lib/security/howdy/"]))
 
 # Manually change the camera id to the one picked
 for line in fileinput.input(["/lib/security/howdy/config.ini"], inplace = 1):
@@ -125,10 +135,6 @@ for line in fileinput.input(["/lib/security/howdy/config.ini"], inplace = 1):
 
 # Secure the howdy folder
 handleStatus(subprocess.call(["chmod 600 -R /lib/security/howdy/"], shell=True))
-
-# Make the CLI executable as howdy
-handleStatus(subprocess.call(["ln -s /lib/security/howdy/cli.py /usr/bin/howdy"], shell=True))
-handleStatus(subprocess.call(["chmod +x /usr/bin/howdy"], shell=True))
 
 # Install the command autocomplete, don't error on failure
 subprocess.call(["sudo cp /lib/security/howdy/autocomplete.sh /etc/bash_completion.d/howdy"], shell=True)
@@ -188,7 +194,7 @@ for line in printlines:
 print("\033[33m" + ">>> END OF /etc/pam.d/common-auth" + "\033[0m" + "\n")
 
 # Do not prompt for a yes if we're in no promt mode
-if "HOWDY_NO_PROMPT" in os.environ:
+if "HOWDY_NO_PROMPT" not in os.environ:
 	# Ask the user if this change is okay
 	print("Lines will be insterted in /etc/pam.d/common-auth as shown above")
 	ans = input("Apply this change? [y/N]: ")
@@ -233,7 +239,3 @@ print("https://github.com/Boltgolt/howdy-reports/issues/new?title=Post-installat
 # Let the user know what to do with the link
 print("Installation complete.")
 print("If you want to help the development, please use the link above to post some camera-related information to github")
-
-# Remove the installer if it was downloaded to /tmp
-if os.path.exists("/tmp/howdy_install.py"):
-	os.remove("/tmp/howdy_install.py")
