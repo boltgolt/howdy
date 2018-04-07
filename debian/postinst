@@ -31,7 +31,7 @@ if user is None:
 log("Upgrading pip to the latest version")
 
 # Update pip
-handleStatus(subprocess.call(["pip3 install --upgrade pip --no-cache-dir"], shell=True))
+handleStatus(subprocess.call(["pip3 install --upgrade pip"], shell=True))
 
 log("Starting camera check")
 
