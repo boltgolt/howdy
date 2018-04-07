@@ -2,13 +2,16 @@ language: python
 sudo: required
 
 before_install:
+  - apt install devscripts
   - git clone https://github.com/Boltgolt/howdy.git /tmp/howdy_build
   - cd /tmp/howdy_build
   - debuild -i -us -uc -b
 
-install: sudo apt install ../*.deb
+install: sudo apt install ../*.deb -y
 
-script: sudo howdy help
+script:
+ - sudo howdy help
+ - sudo apt purge howdy -y
 
 notifications:
   email: false
