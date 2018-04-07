@@ -3,8 +3,6 @@ sudo: required
 
 before_install:
   - sudo apt install devscripts -y
-  - git clone https://github.com/Boltgolt/howdy.git /tmp/howdy_build
-  - cd /tmp/howdy_build
   - debuild -i -us -uc -b
 
 install: sudo apt install ../*.deb -y
