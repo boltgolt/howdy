@@ -115,20 +115,6 @@ handleStatus(subprocess.call(["pip3", "install", "face_recognition"]))
 
 log("Copying howdy data")
 
-# Make sure /lib/security exists
-if not os.path.exists("/lib/security"):
-	os.makedirs("/lib/security")
-
-# Abort if a folder for howdy already exists
-if os.path.exists("/lib/security/howdy"):
-	print("\033[31mPrevious installation of howdy found, aborting\033[0m")
-	sys.exit(1)
-
-subprocess.call(["ls", "-hals"])
-
-# Copy howdy into it's new folder
-handleStatus(subprocess.call(["cp", "-R", "..", "/lib/security/howdy/"]))
-
 # Manually change the camera id to the one picked
 for line in fileinput.input(["/lib/security/howdy/config.ini"], inplace = 1):
 	print(line.replace("device_id = 1", "device_id = " + picked), end="")
@@ -238,4 +224,4 @@ print("https://github.com/Boltgolt/howdy-reports/issues/new?title=Post-installat
 
 # Let the user know what to do with the link
 print("Installation complete.")
-print("If you want to help the development, please use the link above to post some camera-related information to github")
+print("\033[33mIf you want to help the development, please use the link above to post some camera-related information to github!\033[0m")
