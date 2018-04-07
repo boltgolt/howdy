@@ -2,7 +2,7 @@ language: python
 sudo: required
 
 before_install:
-  - sudo apt install devscripts -y
+  - sudo apt install devscripts dh-make -y
   - debuild -i -us -uc -b
 
 install: sudo apt install ../*.deb -y
