@@ -137,7 +137,7 @@ for line in fileinput.input(["/lib/security/howdy/config.ini"], inplace = 1):
 handleStatus(subprocess.call(["chmod 600 -R /lib/security/howdy/"], shell=True))
 
 # Install the command autocomplete, don't error on failure
-subprocess.call(["sudo cp /lib/security/howdy/autocomplete.sh /etc/bash_completion.d/howdy"], shell=True)
+# subprocess.call(["sudo cp /lib/security/howdy/autocomplete.sh /etc/bash_completion.d/howdy"], shell=True)
 
 log("Adding howdy as PAM module")
 

@@ -7,14 +7,5 @@ include /usr/share/dpkg/default.mk
 %:
 	dh $@
 
-clean:
-	echo "ok"
-
-build:
-	echo "ok"
-
 binary:
 	dh binary
-	mkdir ./debian/howdy/lib
-	mkdir ./debian/howdy/lib/security
-	cp -R bin ./debian/howdy/lib/security/howdy/

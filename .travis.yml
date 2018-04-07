@@ -4,11 +4,11 @@ sudo: required
 before_install:
   - git clone https://github.com/Boltgolt/howdy.git /tmp/howdy_build
   - cd /tmp/howdy_build
-  - dpkg-buildpackage -rfakeroot -d -us -uc -S
+  - debuild -i -us -uc -b
 
-install: sudo apt-get install ./build.deb
+install: sudo apt install ../*.deb
 
-script: howdy help
+script: sudo howdy help
 
 notifications:
   email: false
