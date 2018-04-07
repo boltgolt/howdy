@@ -199,28 +199,30 @@ common_auth.close()
 
 # From here onwards the installation is complete
 # We want to gather more information about the types or IR camera's
-# used though, and the following lines are data collection
+# used though, and the following lines are data gathering
+# No data is ever uploaded without permission
 
-# List all video devices
-diag_out = "Video devices [IR=" + picked + "]\n"
-diag_out += "```\n"
-diag_out += subprocess.check_output(['ls /dev/ | grep video'], shell=True).decode("utf-8")
-diag_out += "```\n"
+if "HOWDY_NO_PROMPT" not in os.environ:
+	# List all video devices
+	diag_out = "Video devices [IR=" + picked + "]\n"
+	diag_out += "```\n"
+	diag_out += subprocess.check_output(['ls /dev/ | grep video'], shell=True).decode("utf-8")
+	diag_out += "```\n"
 
-# Get some info from the USB kernel listings
-diag_out += "Lsusb output\n"
-diag_out += "```\n"
-diag_out += subprocess.check_output(['lsusb -vvvv | grep -i "Camera\|iFunction"'], shell=True).decode("utf-8")
-diag_out += "```\n"
+	# Get some info from the USB kernel listings
+	diag_out += "Lsusb output\n"
+	diag_out += "```\n"
+	diag_out += subprocess.check_output(['lsusb -vvvv | grep -i "Camera\|iFunction"'], shell=True).decode("utf-8")
+	diag_out += "```\n"
 
-# Get camera information from video4linux
-diag_out += "Udevadm\n"
-diag_out += "```\n"
-diag_out += subprocess.check_output(['udevadm info -r --query=all -n /dev/video' + picked + ' | grep -i "ID_BUS\|ID_MODEL_ID\|ID_VENDOR_ID\|ID_V4L_PRODUCT\|ID_MODEL"'], shell=True).decode("utf-8")
-diag_out += "```"
+	# Get camera information from video4linux
+	diag_out += "Udevadm\n"
+	diag_out += "```\n"
+	diag_out += subprocess.check_output(['udevadm info -r --query=all -n /dev/video' + picked + ' | grep -i "ID_BUS\|ID_MODEL_ID\|ID_VENDOR_ID\|ID_V4L_PRODUCT\|ID_MODEL"'], shell=True).decode("utf-8")
+	diag_out += "```"
 
-# Print it all as a clickable link to a new github issue
-print("https://github.com/Boltgolt/howdy-reports/issues/new?title=Post-installation%20camera%20information&body=" + urllib.parse.quote_plus(diag_out) + "\n")
+	# Print it all as a clickable link to a new github issue
+	print("https://github.com/Boltgolt/howdy-reports/issues/new?title=Post-installation%20camera%20information&body=" + urllib.parse.quote_plus(diag_out) + "\n")
 
 # Let the user know what to do with the link
 print("Installation complete.")
