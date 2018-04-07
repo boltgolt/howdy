@@ -1,5 +1,5 @@
 Source: howdy
-Section: unknown
+Section: misc
 Priority: optional
 Standards-Version: 3
 Build-Depends: python, dh-python
