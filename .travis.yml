@@ -9,6 +9,7 @@ install: sudo apt install ../*.deb -y
 
 script:
  - sudo howdy help
+ - sudo howdy list
  - sudo apt purge howdy -y
 
 notifications:

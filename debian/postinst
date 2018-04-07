@@ -107,13 +107,14 @@ log("Cleaning up dlib")
 
 # Remove the no longer needed git clone
 handleStatus(subprocess.call(["rm", "-rf", "/tmp/dlib_clone"]))
+print("Temporary dlib files removed")
 
 log("Installing face_recognition")
 
 # Install face_recognition though pip
-handleStatus(subprocess.call(["pip3", "install", "face_recognition", "--no-cache-dir"]))
+handleStatus(subprocess.call(["pip3", "install", "face_recognition"]))
 
-log("Copying howdy data")
+log("Configuring howdy")
 
 # Manually change the camera id to the one picked
 for line in fileinput.input(["/lib/security/howdy/config.ini"], inplace = 1):
@@ -126,10 +127,12 @@ handleStatus(subprocess.call(["chmod 600 -R /lib/security/howdy/"], shell=True))
 handleStatus(subprocess.call(["chmod 755 /lib/security/howdy"], shell=True))
 handleStatus(subprocess.call(["chmod 744 /lib/security/howdy/cli.py"], shell=True))
 handleStatus(subprocess.call(["chmod 744 -R /lib/security/howdy/cli"], shell=True))
+print("Permissions set")
 
 # Make the CLI executable as howdy
 handleStatus(subprocess.call(["ln -s /lib/security/howdy/cli.py /usr/local/bin/howdy"], shell=True))
 handleStatus(subprocess.call(["chmod +x /usr/local/bin/howdy"], shell=True))
+print("Installing howdy command")
 
 # Install the command autocomplete, don't error on failure
 # subprocess.call(["sudo cp /lib/security/howdy/autocomplete.sh /etc/bash_completion.d/howdy"], shell=True)
