@@ -1,4 +1,4 @@
-# Howdy for Ubuntu ![Build Status](https://travis-ci.org/Boltgolt/howdy.svg?branch=master)
+# Howdy for Ubuntu [![Build Status](https://travis-ci.org/Boltgolt/howdy.svg?branch=dev)](https://travis-ci.org/Boltgolt/howdy)
 
 Windows Hello™ style authentication for Ubuntu. Use your built-in IR emitters and camera in combination with face recognition to prove who you are.
 
@@ -14,7 +14,7 @@ sudo apt update
 sudo apt install howdy
 ```
 
-This will guide you through the installation. When that's done run `sudo howdy USER add` and replace `USER` with your username to add a face model.
+This will guide you through the installation. When that's done run `sudo howdy add $USER` and replace `$USER` with your username to add a face model.
 
 If nothing went wrong we should be able to run sudo by just showing your face. Open a new terminal and run `sudo -i` to see it in action.
 
@@ -40,10 +40,6 @@ The installer adds a `howdy` command to manage face models for the current user.
 Any python errors get logged directly into the console and should indicate what went wrong. If authentication still fails but no errors are printed you could take a look at the last lines in `/var/log/auth.log` to see if anything has been reported there.
 
 If you encounter an error that hasn't been reported yet, don't be afraid to open a new issue.
-
-### Uninstalling
-
-There is an uninstaller available, run `sudo python3 /lib/security/howdy/uninstall.py` to remove Howdy from your system.
 
 ### A note on security
 
