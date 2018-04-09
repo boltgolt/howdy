@@ -1,4 +1,4 @@
-# Howdy for Ubuntu
+# Howdy for Ubuntu ![Build Status](https://travis-ci.org/Boltgolt/howdy.svg?branch=master)
 
 Windows Hello™ style authentication for Ubuntu. Use your built-in IR emitters and camera in combination with face recognition to prove who you are.
 
@@ -6,10 +6,12 @@ Using the central authentication system in Linux (PAM), this works everywhere yo
 
 ### Installation
 
-Run the installer by pasting (`ctrl+shift+V`) the following command into the terminal:
+Run the installer by pasting (`ctrl+shift+V`) the following commands into the terminal one at a time:
 
 ```
-wget -O /tmp/howdy_install.py https://raw.githubusercontent.com/Boltgolt/howdy/master/installer.py && sudo python3 /tmp/howdy_install.py
+sudo add-apt-repository ppa:boltgolt/howdy
+sudo apt update
+sudo apt install howdy
 ```
 
 This will guide you through the installation. When that's done run `sudo howdy USER add` and replace `USER` with your username to add a face model.
@@ -21,6 +23,17 @@ If nothing went wrong we should be able to run sudo by just showing your face. O
 ### Command line
 
 The installer adds a `howdy` command to manage face models for the current user. Use `howdy help` to list the available options.
+
+| Command   | Description                                   | Needs user |
+|-----------|-----------------------------------------------|------------|
+| `add`     | Add a new face model for the given user       | Yes        |
+| `clear`   | Remove all face models for the given user     | Yes        |
+| `config`  | Open the config file in nano                  | No         |
+| `disable` | Disable or enable howdy                       | No         |
+| `help`    | Show a help page                              | No         |
+| `list`    | List all saved face models for the given user | Yes        |
+| `remove`  | Remove a specific model for the given user    | Yes        |
+| `test`    | Test the camera and recognition methods       | No         |
 
 ### Troubleshooting
 

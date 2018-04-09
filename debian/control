@@ -2,7 +2,7 @@ Source: howdy
 Section: misc
 Priority: optional
 Standards-Version: 3
-Build-Depends: python, dh-python
+Build-Depends: python, dh-python, devscripts, dh-make
 Maintainer: boltgolt <boltgolt@gmail.com>
 Vcs-Git: https://github.com/Boltgolt/howdy
 

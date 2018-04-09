@@ -30,7 +30,7 @@ else:
 	# Requre sudo for comamnds that need root rights to read the model files
 	if os.getenv("SUDO_USER") is None:
 		print("Please run this command with sudo")
-		sys.exit()
+		sys.exit(1)
 
 	# Frome here on we require the second argument to be the username,
 	# switching the command to the 3rd
@@ -48,6 +48,8 @@ else:
 		# If the comand is invalid, check if the user hasn't swapped the username and command
 		if sys.argv[1] in ["list", "add", "remove", "clear"]:
 			print("Usage: howdy <user> <command>")
+			sys.exit(1)
 		else:
 			print('Unknown command "' + cmd + '"')
 			import cli.help
+			sys.exit(1)
