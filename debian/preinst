@@ -86,4 +86,5 @@ if picked == -1:
 with open("/tmp/howdy_picked_device", "w") as out_file:
 	out_file.write(str(picked))
 
+# Add a line break
 print("")

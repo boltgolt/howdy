@@ -25,17 +25,19 @@ def handleStatus(status):
 		print("\033[31mError while running last command\033[0m")
 		sys.exit(1)
 
-log("Upgrading pip to the latest version")
 
 # We're not in fresh configuration mode, so exit
 if not os.path.exists("/tmp/howdy_picked_device"):
 	sys.exit(0)
 
 in_file = open("/tmp/howdy_picked_device", "r")
-picked = int(in_file.read())
+# Should be a string
+picked = in_file.read()
 in_file.close()
 
 subprocess.call(["rm /tmp/howdy_picked_device"], shell=True)
+
+log("Upgrading pip to the latest version")
 
 # Update pip
 handleStatus(subprocess.call(["pip3 install --upgrade pip"], shell=True))
@@ -43,7 +45,7 @@ handleStatus(subprocess.call(["pip3 install --upgrade pip"], shell=True))
 log("Cloning dlib")
 
 # Clone the git to /tmp
-handleStatus(subprocess.call(["git", "clone", "https://github.com/davisking/dlib.git", "/tmp/dlib_clone"]))
+handleStatus(subprocess.call(["git", "clone", "--depth", "1", "https://github.com/davisking/dlib.git", "/tmp/dlib_clone"]))
 
 log("Building dlib")
 
@@ -56,10 +58,15 @@ log("Cleaning up dlib")
 handleStatus(subprocess.call(["rm", "-rf", "/tmp/dlib_clone"]))
 print("Temporary dlib files removed")
 
+log("Installing python dependencies")
+
+# Install face_recognition though pip
+handleStatus(subprocess.call(["pip3", "install", "--cache-dir", "/tmp/pip_howdy", "face_recognition_models==0.3.0", "Click>=6.0", "numpy", "Pillow"]))
+
 log("Installing face_recognition")
 
 # Install face_recognition though pip
-handleStatus(subprocess.call(["pip3", "install", "face_recognition"]))
+handleStatus(subprocess.call(["pip3", "install", "--cache-dir", "/tmp/pip_howdy", "--no-deps", "face_recognition==1.2.2"]))
 
 log("Configuring howdy")
 

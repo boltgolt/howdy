@@ -13,13 +13,21 @@ import subprocess
 
 # Remove files and symlinks
 try:
+	subprocess.call(["rm /usr/local/bin/howdy"], shell=True)
+except e:
+	print("Can't remove executable")
+try:
 	subprocess.call(["rm /usr/share/bash-completion/completions/howdy"], shell=True)
 except e:
 	print("Can't remove autocompletion script")
+try:
+	subprocess.call(["rm -rf /lib/security/howdy"], shell=True)
+except e:
+	# This error is normal
 	pass
 
 # Remove face_recognition and dlib
-subprocess.call(["pip3 uninstall face_recognition dlib -y --no-cache-dir"], shell=True)
+subprocess.call(["pip3 uninstall face_recognition face_recognition_models dlib -y --no-cache-dir"], shell=True)
 
 # Print a tearbending message
 print(col(2) + """
