@@ -27,7 +27,7 @@ if "configure" not in sys.argv:
 
 def log(text):
 	"""Print a nicely formatted line to stdout"""
-	print("\n>>> " + col(1) + text + col(0)"\n")
+	print("\n>>> " + col(1) + text + col(0) + "\n")
 
 def handleStatus(status):
 	"""Abort if a command fails"""
