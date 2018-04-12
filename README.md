@@ -1,4 +1,4 @@
-# Howdy for Ubuntu [![Build Status](https://travis-ci.org/Boltgolt/howdy.svg?branch=dev)](https://travis-ci.org/Boltgolt/howdy)
+# Howdy for Ubuntu [![](https://travis-ci.org/Boltgolt/howdy.svg?branch=dev)](https://travis-ci.org/Boltgolt/howdy)
 
 Windows Hello™ style authentication for Ubuntu. Use your built-in IR emitters and camera in combination with face recognition to prove who you are.
 
@@ -24,16 +24,21 @@ If nothing went wrong we should be able to run sudo by just showing your face. O
 
 The installer adds a `howdy` command to manage face models for the current user. Use `howdy help` to list the available options.
 
-| Command   | Description                                   | Needs user |
-|-----------|-----------------------------------------------|------------|
-| `add`     | Add a new face model for the given user       | Yes        |
-| `clear`   | Remove all face models for the given user     | Yes        |
-| `config`  | Open the config file in nano                  | No         |
-| `disable` | Disable or enable howdy                       | No         |
-| `help`    | Show a help page                              | No         |
-| `list`    | List all saved face models for the given user | Yes        |
-| `remove`  | Remove a specific model for the given user    | Yes        |
-| `test`    | Test the camera and recognition methods       | No         |
+Usage:
+```
+howdy <command> [user] [argument]
+```
+
+| Command   | Description                                   | User required |
+|-----------|-----------------------------------------------|---------------|
+| `add`     | Add a new face model for the given user       | Yes           |
+| `clear`   | Remove all face models for the given user     | Yes           |
+| `config`  | Open the config file in nano                  | No            |
+| `disable` | Disable or enable howdy                       | No            |
+| `help`    | Show a help page                              | No            |
+| `list`    | List all saved face models for the given user | Yes           |
+| `remove`  | Remove a specific model for the given user    | Yes           |
+| `test`    | Test the camera and recognition methods       | No            |
 
 ### Troubleshooting
 

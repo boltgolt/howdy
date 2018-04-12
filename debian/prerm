@@ -2,28 +2,27 @@
 # Executed on deinstallation
 # Completely remove howdy from the system
 
+def col(id):
+	if id == 1: return "\033[32m"
+	if id == 2: return "\033[33m"
+	if id == 3: return "\033[31m"
+	return "\033[0m"
+
 # Import required modules
 import subprocess
 
 # Remove files and symlinks
 try:
-	subprocess.call(["rm -rf /lib/security/howdy/"], shell=True)
-except e:
-	pass
-try:
 	subprocess.call(["rm /usr/share/bash-completion/completions/howdy"], shell=True)
 except e:
+	print("Can't remove autocompletion script")
 	pass
-
-subprocess.call(["rm /usr/bin/howdy"], shell=True)
 
 # Remove face_recognition and dlib
 subprocess.call(["pip3 uninstall face_recognition dlib -y --no-cache-dir"], shell=True)
 
 # Print a tearbending message
-print("""
-Howdy has been uninstalled :'(
-
+print(col(2) + """
 There are still lines in /etc/pam.d/common-auth that can't be removed automatically
 Run "nano /etc/pam.d/common-auth" to remove them by hand\
-""")
+""" + col(0))

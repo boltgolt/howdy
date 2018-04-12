@@ -12,6 +12,9 @@ import signal
 import fileinput
 import urllib.parse
 
+if "configure" not in sys.argv:
+	sys.exit(0)
+
 def log(text):
 	"""Print a nicely formatted line to stdout"""
 	print("\n>>> \033[32m" + text + "\033[0m\n")
@@ -22,76 +25,20 @@ def handleStatus(status):
 		print("\033[31mError while running last command\033[0m")
 		sys.exit(1)
 
-# Check if we're running as root
-user = os.getenv("SUDO_USER")
-if user is None:
-	print("Can't continue installation without root rights.")
-	sys.exit(1)
-
 log("Upgrading pip to the latest version")
+
+# We're not in fresh configuration mode, so exit
+if not os.path.exists("/tmp/howdy_picked_device"):
+	sys.exit(0)
+
+in_file = open("/tmp/howdy_picked_device", "r")
+picked = int(in_file.read())
+in_file.close()
+
+subprocess.call(["rm /tmp/howdy_picked_device"], shell=True)
 
 # Update pip
 handleStatus(subprocess.call(["pip3 install --upgrade pip"], shell=True))
-
-log("Starting camera check")
-
-# Get all devices
-devices = os.listdir("/dev")
-# The picked video device id
-picked = -1
-
-# If prompting has been disabled, skip camera check
-if "HOWDY_NO_PROMPT" in os.environ:
-	print("\033[33mAUTOMATED INSTALL, YOU WILL NOT BE ASKED FOR INPUT AND CHECKS WILL BE SKIPPED\033[0m")
-	picked = "0"
-else:
-	# Loop though all devices
-	for dev in devices:
-		# Only use the video devices
-		if (dev[:5] == "video"):
-			time.sleep(.5)
-
-			# The full path to the device is the default name
-			device_name = "/dev/" + dev
-			# Get the udevadm details to try to get a better name
-			udevadm = subprocess.check_output(["udevadm info -r --query=all -n " + device_name], shell=True).decode("utf-8")
-
-			# Loop though udevadm to search for a better name
-			for line in udevadm.split("\n"):
-				# Match it and encase it in quotes
-				re_name = re.search('product.*=(.*)$', line, re.IGNORECASE)
-				if re_name:
-					device_name = '"' + re_name.group(1) + '"'
-
-			# Show what device we're using
-			print("Trying " + device_name)
-
-			# Let fswebcam keep the camera open in the background
-			sub = subprocess.Popen(["fswebcam -S 9999999999 -d /dev/" + dev + " /dev/null 2>/dev/null"], shell=True, preexec_fn=os.setsid)
-
-			try:
-				# Ask the user if this is the right one
-				print("\033[33mOne of your cameras should now be on.\033[0m")
-				ans = input("Did your IR emitters turn on? [y/N]: ")
-			except KeyboardInterrupt:
-				# Kill fswebcam if the user aborts
-				os.killpg(os.getpgid(sub.pid), signal.SIGTERM)
-				raise
-
-			# The user has answered, kill fswebcam
-			os.killpg(os.getpgid(sub.pid), signal.SIGTERM)
-
-			# Set this camera as picked if the answer was yes, go to the next one if no
-			if (ans.lower() == "y"):
-				picked = dev[5:]
-				break
-			else:
-				print("Inerpeting as a \"NO\"\n")
-
-# Abort if no camera was picked
-if (picked == -1):
-	print("\033[31mNo suitable IR camera found\033[0m")
-	sys.exit(1)
 
 log("Cloning dlib")
 

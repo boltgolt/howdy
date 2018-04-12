@@ -13,4 +13,4 @@ script:
  - sudo apt purge howdy -y
 
 notifications:
-  email: false
+  email: true
