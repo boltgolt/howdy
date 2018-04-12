@@ -3,6 +3,7 @@
 # Completely remove howdy from the system
 
 def col(id):
+	"""Add color escape sequences"""
 	if id == 1: return "\033[32m"
 	if id == 2: return "\033[33m"
 	if id == 3: return "\033[31m"
@@ -10,6 +11,14 @@ def col(id):
 
 # Import required modules
 import subprocess
+
+# Only run when we actually want to remove
+if "remove" not in sys.argv and "purge" not in sys.argv:
+	sys.exit(0)
+
+# Don't try running this if it's already gome
+if not os.path.exists("/lib/security/howdy/cli"):
+	sys.exit(0)
 
 # Remove files and symlinks
 try:

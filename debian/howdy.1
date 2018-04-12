@@ -1,54 +1,31 @@
 .\" Please adjust this date whenever revising the manpage.
-.TH HOWDY SECTION "April 9, 2018"
-.\" Some roff macros, for reference:
-.\" .nh        disable hyphenation
-.\" .hy        enable hyphenation
-.\" .ad l      left justify
-.\" .ad b      justify to both left and right margins
-.\" .nf        disable filling
-.\" .fi        enable filling
-.\" .br        insert line break
-.\" .sp <n>    insert n+1 empty lines
-.\" for manpage-specific macros, see man(7)
+.TH HOWDY 1 "April 9, 2018" "Howdy help" "User Commands"
 .SH NAME
 howdy \- Windows Hello style authentication for Ubuntu
-.SH SYNOPSIS
-.B howdy
-.RI [ options ] " files" ...
-.br
-.B bar
-.RI [ options ] " files" ...
 .SH DESCRIPTION
-This manual page documents briefly the
-.B nwsmtp
-and
-.B bar
-commands.
+Howdy IR face recognition implements a PAM module to use your face as a authentication method.
+.SS "Usage:"
+.IP
+howdy <command> [user] [argument]
+.SS "Commands:"
+.TP
+help
+Show this help page
+.TP
+list
+List all saved face models for the current user
+.TP
+add
+Add a new face model for the current user
+.TP
+remove
+Remove a specific model
+.TP
+clear
+Remove all face models for the current user
+.TP
+test
+Test the camera and recognition methods
 .PP
-.\" TeX users may be more comfortable with the \fB<whatever>\fP and
-.\" \fI<whatever>\fP escape sequences to invode bold face and italics,
-.\" respectively.
-\fBnwsmtp\fP is a program that...
-.SH OPTIONS
-These programs follow the usual GNU command line syntax, with long
-options starting with two dashes (`-').
-A summary of options is included below.
-For a complete description, see the Info files.
-.TP
-.B \-h, \-\-help
-Show summary of options.
-.TP
-.B \-v, \-\-version
-Show version of program.
-.SH SEE ALSO
-.BR bar (1),
-.BR baz (1).
-.br
-The programs are documented fully by
-.IR "The Rise and Fall of a Fooish Bar" ,
-available via the Info system.
 .SH AUTHOR
-nwsmtp was written by <upstream author>.
-.PP
-This manual page was written by Alexei Moisseev <alexmois@ya.ru>,
-for the Debian project (and may be used by others).
+Howdy was written by boltgolt. For more information visit https://github.com/Boltgolt/howdy

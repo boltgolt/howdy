@@ -2,6 +2,13 @@
 # Installation script to install howdy
 # Executed after primary apt install
 
+def col(id):
+	"""Add color escape sequences"""
+	if id == 1: return "\033[32m"
+	if id == 2: return "\033[33m"
+	if id == 3: return "\033[31m"
+	return "\033[0m"
+
 # Import required modules
 import subprocess
 import time
@@ -12,29 +19,34 @@ import signal
 import fileinput
 import urllib.parse
 
+# Don't run unless we need to configure the install
+# Will also happen on upgrade but we will catch that later on
 if "configure" not in sys.argv:
 	sys.exit(0)
 
+
 def log(text):
 	"""Print a nicely formatted line to stdout"""
-	print("\n>>> \033[32m" + text + "\033[0m\n")
+	print("\n>>> " + col(1) + text + col(0)"\n")
 
 def handleStatus(status):
 	"""Abort if a command fails"""
 	if (status != 0):
-		print("\033[31mError while running last command\033[0m")
+		print(col(3) + "Error while running last command" + col(0))
 		sys.exit(1)
 
 
-# We're not in fresh configuration mode, so exit
+# We're not in fresh configuration mode (probably an upgrade), so exit
 if not os.path.exists("/tmp/howdy_picked_device"):
 	sys.exit(0)
 
+# Open the temporary file containing the device ID
 in_file = open("/tmp/howdy_picked_device", "r")
-# Should be a string
+# Load it in, it should be a string
 picked = in_file.read()
 in_file.close()
 
+# Remove the temporary file
 subprocess.call(["rm /tmp/howdy_picked_device"], shell=True)
 
 log("Upgrading pip to the latest version")
@@ -44,7 +56,7 @@ handleStatus(subprocess.call(["pip3 install --upgrade pip"], shell=True))
 
 log("Cloning dlib")
 
-# Clone the git to /tmp
+# Clone the dlib git to /tmp, but only the last commit
 handleStatus(subprocess.call(["git", "clone", "--depth", "1", "https://github.com/davisking/dlib.git", "/tmp/dlib_clone"]))
 
 log("Building dlib")
@@ -86,10 +98,7 @@ print("Permissions set")
 # Make the CLI executable as howdy
 handleStatus(subprocess.call(["ln -s /lib/security/howdy/cli.py /usr/local/bin/howdy"], shell=True))
 handleStatus(subprocess.call(["chmod +x /usr/local/bin/howdy"], shell=True))
-print("Installing howdy command")
-
-# Install the command autocomplete, don't error on failure
-# subprocess.call(["sudo cp /lib/security/howdy/autocomplete.sh /etc/bash_completion.d/howdy"], shell=True)
+print("Howdy command installed")
 
 log("Adding howdy as PAM module")
 
@@ -192,4 +201,4 @@ if "HOWDY_NO_PROMPT" not in os.environ:
 
 # Let the user know what to do with the link
 print("Installation complete.")
-print("\033[33mIf you want to help the development, please use the link above to post some camera-related information to github!\033[0m")
+print(col(2) + "If you want to help the development, please use the link above to post some camera-related information to github!" + col(0))

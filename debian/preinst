@@ -3,6 +3,7 @@
 # Executed before primary apt install of files
 
 def col(id):
+	"""Add color escape sequences"""
 	if id == 1: return "\033[32m"
 	if id == 2: return "\033[33m"
 	if id == 3: return "\033[31m"
@@ -15,10 +16,11 @@ import os
 import re
 import signal
 
+# Don't run if we're not trying to install fresh
 if "install" not in sys.argv:
 	sys.exit(0)
 
-# The picked video device id
+# The default picked video device id
 picked = -1
 
 print(col(1) + "Starting IR camera check...\n" + col(0))
@@ -27,6 +29,7 @@ print(col(1) + "Starting IR camera check...\n" + col(0))
 if "HOWDY_NO_PROMPT" in os.environ:
 	print(col(2) + "AUTOMATED INSTALL, YOU WILL NOT BE ASKED FOR INPUT AND CHECKS WILL BE SKIPPED" + col(0))
 
+	# Write the default device to disk and exit
 	with open("/tmp/howdy_picked_device", "w") as out_file:
 		out_file.write("0")
 
@@ -83,6 +86,7 @@ if picked == -1:
 	print(col(3) + "No suitable IR camera found, aborting install." + col(0))
 	sys.exit(23)
 
+# Write the result to disk so postinst can have a look at it
 with open("/tmp/howdy_picked_device", "w") as out_file:
 	out_file.write(str(picked))
 
