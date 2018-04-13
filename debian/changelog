@@ -1,21 +1,16 @@
-howdy (2.0.1) xenial; urgency=medium
+howdy (2.1.0) xenial; urgency=medium
 
   * First complete PPA release
-
- -- boltgolt <boltgolt@gmail.com>  Fri, 13 Apr 2018 22:22:27 +0200
-
-howdy (2.0.0-alpha+4) xenial; urgency=medium
-
   * Reworked CLI
 
- -- boltgolt <boltgolt@gmail.com>  Fri, 13 Apr 2018 22:07:27 +0200
+ -- boltgolt <boltgolt@gmail.com>  Fri, 13 Apr 2018 22:22:27 +0200
 
 howdy (2.0.0-alpha+3) xenial; urgency=medium
 
   * Fixed issue where dlib dependency failed to install on some installations
   * Added preinst script for camera detection
 
- -- boltgolt <boltgolt@gmail.com>  Thu, 12 Apr 2018 21:42:42 +0200
+ -- boltgolt <boltgolt@gmail.com>  Thu, 12 Apr 2018 21:42:42 +0000
 
 howdy (2.0.0-alpha+2) xenial; urgency=medium
 
