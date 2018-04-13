@@ -1,0 +1,47 @@
+.\" Please adjust this date whenever revising the manpage.
+.TH HOWDY 1 "April 9, 2018" "Howdy help" "User Commands"
+.SH NAME
+howdy \- Windows Hello style authentication for Ubuntu
+.SH DESCRIPTION
+Howdy IR face recognition implements a PAM module to use your face as a authentication method.
+.SS "Usage:"
+.IP
+howdy [\-U USER] [\-y] [\-h] command [argument]
+.SS "Commands:"
+.TP
+add
+Add a new face model for an user.
+.TP
+clear
+Remove all face models for an user.
+.TP
+config
+Open the config file in gedit.
+.TP
+disable
+Disable or enable howdy.
+.TP
+list
+List all saved face models for an user.
+.TP
+remove
+Remove a specific model for an user.
+.TP
+clear
+Remove all face models for an user.
+.TP
+test
+Test the camera and recognition methods.
+.SS "Optional arguments:"
+.TP
+\fB\-U\fR USER, \fB\-\-user\fR USER
+Set the user account to use.
+.TP
+\fB\-y\fR
+Skip all questions.
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+Show this help message and exit.
+.PP
+.SH AUTHOR
+Howdy was written by boltgolt. For more information visit https://github.com/Boltgolt/howdy

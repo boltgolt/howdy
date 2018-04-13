@@ -1,3 +1,4 @@
+#!/bin/bash
 # Autocomplete file run in bash
 # Will sugest arguments on tab
 

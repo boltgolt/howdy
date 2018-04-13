@@ -15,6 +15,10 @@ config.read(os.path.dirname(os.path.abspath(__file__)) + "/config.ini")
 def doAuth(pamh):
 	"""Start authentication in a seperate process"""
 
+	# Abort is Howdy is disabled
+	if config.get("core", "disabled") == "true":
+		sys.exit(0)
+
 	# Run compare as python3 subprocess to circumvent python version and import issues
 	status = subprocess.call(["python3", os.path.dirname(os.path.abspath(__file__)) + "/compare.py", pamh.get_user()])
 

@@ -8,6 +8,7 @@ import sys
 import json
 import cv2
 import configparser
+import builtins
 
 # Try to import face_recognition and give a nice error if we can't
 # Add should be the first point where import issues show up
@@ -18,7 +19,7 @@ except ImportError as err:
 
 	print("\nCan't import the face_recognition module, check the output of")
 	print("pip3 show face_recognition")
-	sys.exit()
+	sys.exit(1)
 
 # Get the absolute path to the current file
 path = os.path.dirname(os.path.abspath(__file__))
@@ -27,8 +28,7 @@ path = os.path.dirname(os.path.abspath(__file__))
 config = configparser.ConfigParser()
 config.read(path + "/../config.ini")
 
-# The current user
-user = sys.argv[1]
+user = builtins.howdy_user
 # The permanent file to store the encoded model in
 enc_file = path + "/../models/" + user + ".dat"
 # Known encodings
@@ -46,11 +46,11 @@ except FileNotFoundError:
 	encodings = []
 
 # Print a warning if too many encodings are being added
-if len(encodings) > 2:
+if len(encodings) > 3:
 	print("WARNING: Every additional model slows down the face recognition engine")
-	print("Press ctrl+C to cancel")
+	print("Press ctrl+C to cancel\n")
 
-print("Adding face model for the user account " + user)
+print("Adding face model for the user " + user)
 
 # Set the default label
 label = "Initial model"
@@ -59,12 +59,16 @@ label = "Initial model"
 if len(encodings) > 0:
 	label = "Model #" + str(len(encodings) + 1)
 
-# Ask the user for a custom label
-label_in = input("Enter a label for this new model [" + label + "]: ")
+# Keep de default name if we can't ask questions
+if builtins.howdy_args.y:
+	print("Using default label \"" + label + "\" because of -y flag")
+else:
+	# Ask the user for a custom label
+	label_in = input("Enter a label for this new model [" + label + "]: ")
 
-# Set the custom label (if any) and limit it to 24 characters
-if label_in != "":
-	label = label_in[:24]
+	# Set the custom label (if any) and limit it to 24 characters
+	if label_in != "":
+		label = label_in[:24]
 
 # Prepare the metadata for insertion
 insert_model = {
@@ -106,12 +110,12 @@ while frames < 60:
 # If 0 faces are detected we can't continue
 if len(enc) == 0:
 	print("No face detected, aborting")
-	sys.exit()
+	sys.exit(1)
 
 # If more than 1 faces are detected we can't know wich one belongs to the user
 if len(enc) > 1:
 	print("Multiple faces detected, aborting")
-	sys.exit()
+	sys.exit(1)
 
 # Totally clean array that can be exported as JSON
 clean_enc = []
@@ -130,5 +134,6 @@ with open(enc_file, "w") as datafile:
 	json.dump(encodings, datafile)
 
 # Give let the user know how it went
-print("Scan complete")
-print("\nAdded a new model to " + user)
+print("""Scan complete
+
+Added a new model to """ + user)

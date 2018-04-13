@@ -101,4 +101,10 @@ ENV/
 .mypy_cache/
 
 # generated models
-/models
+/src/models
+
+# build files
+debian/howdy.substvars
+debian/files
+debian/debhelper-build-stamp
+debian/howdy

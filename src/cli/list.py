@@ -5,10 +5,11 @@ import sys
 import os
 import json
 import time
+import builtins
 
 # Get the absolute path and the username
 path = os.path.dirname(os.path.realpath(__file__))  + "/.."
-user = sys.argv[1]
+user = builtins.howdy_user
 
 # Check if the models file has been created yet
 if not os.path.exists(path + "/models"):

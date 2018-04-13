@@ -1,0 +1,94 @@
+#!/usr/bin/env python3
+# Used to check cameras before commiting to install
+# Executed before primary apt install of files
+
+def col(id):
+	"""Add color escape sequences"""
+	if id == 1: return "\033[32m"
+	if id == 2: return "\033[33m"
+	if id == 3: return "\033[31m"
+	return "\033[0m"
+
+import subprocess
+import time
+import sys
+import os
+import re
+import signal
+
+# Don't run if we're not trying to install fresh
+if "install" not in sys.argv:
+	sys.exit(0)
+
+# The default picked video device id
+picked = -1
+
+print(col(1) + "Starting IR camera check...\n" + col(0))
+
+# If prompting has been disabled, skip camera check
+if "HOWDY_NO_PROMPT" in os.environ:
+	print(col(2) + "AUTOMATED INSTALL, YOU WILL NOT BE ASKED FOR INPUT AND CHECKS WILL BE SKIPPED" + col(0))
+
+	# Write the default device to disk and exit
+	with open("/tmp/howdy_picked_device", "w") as out_file:
+		out_file.write("0")
+
+	sys.exit(0)
+
+# Get all devices
+devices = os.listdir("/dev")
+
+# Loop though all devices
+for dev in devices:
+	# Only use the video devices
+	if (dev[:5] == "video"):
+		time.sleep(.5)
+
+		# The full path to the device is the default name
+		device_name = "/dev/" + dev
+		# Get the udevadm details to try to get a better name
+		udevadm = subprocess.check_output(["udevadm info -r --query=all -n " + device_name], shell=True).decode("utf-8")
+
+		# Loop though udevadm to search for a better name
+		for line in udevadm.split("\n"):
+			# Match it and encase it in quotes
+			re_name = re.search('product.*=(.*)$', line, re.IGNORECASE)
+			if re_name:
+				device_name = '"' + re_name.group(1) + '"'
+
+		# Show what device we're using
+		print("Trying " + device_name)
+
+		# Let fswebcam keep the camera open in the background
+		sub = subprocess.Popen(["fswebcam -S 9999999999 -d /dev/" + dev + " /dev/null 2>/dev/null"], shell=True, preexec_fn=os.setsid)
+
+		try:
+			# Ask the user if this is the right one
+			print(col(2) + "One of your cameras should now be on." + col(0))
+			ans = input("Did your IR emitters turn on? [y/N]: ")
+		except KeyboardInterrupt:
+			# Kill fswebcam if the user aborts
+			os.killpg(os.getpgid(sub.pid), signal.SIGTERM)
+			raise
+
+		# The user has answered, kill fswebcam
+		os.killpg(os.getpgid(sub.pid), signal.SIGTERM)
+
+		# Set this camera as picked if the answer was yes, go to the next one if no
+		if ans.lower() == "y" or ans.lower() == "yes":
+			picked = dev[5:]
+			break
+		else:
+			print("Interpreting as a " + col(3) + "\"NO\"\n" + col(0))
+
+# Abort if no camera was picked
+if picked == -1:
+	print(col(3) + "No suitable IR camera found, aborting install." + col(0))
+	sys.exit(23)
+
+# Write the result to disk so postinst can have a look at it
+with open("/tmp/howdy_picked_device", "w") as out_file:
+	out_file.write(str(picked))
+
+# Add a line break
+print("")
