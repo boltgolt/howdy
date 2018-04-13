@@ -49,13 +49,14 @@ parser.add_argument("-h", "--help",
                     help="Show this help message and exit.")
 
 if len(sys.argv) < 2:
-    parser.print_help()
-    sys.exit(0)
+	print("current active user: " + user + "\n")
+	parser.print_help()
+	sys.exit(0)
 
 args = parser.parse_args()
 
 print(args)
-sys.exit(1)
+sys.exit(0)
 
 # Check if if a command has been given and print help otherwise
 if (len(sys.argv) < 2):

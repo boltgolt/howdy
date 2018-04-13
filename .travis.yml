@@ -1,15 +1,24 @@
-language: python
 sudo: required
+language: python
+python:
+  - "3.4"
+  - "3.6"
 
 install:
-  - sudo apt install devscripts dh-make -y
+  # Install build tools and ack-grep for checks
+  - sudo apt install devscripts dh-make ack-grep -y
 
 script:
- - debuild -i -us -uc -b
- - sudo apt install ../*.deb -y
- - sudo howdy help
- - sudo howdy list
- - sudo apt purge howdy -y
+  # Build the binary (.deb)
+  - debuild -i -us -uc -b
+  # Install the binary, also fireing the debian scripts
+  - sudo apt install ../*.deb -y
+  # Check if the username passthough works correctly with sudo
+  - 'howdy | ack-grep --passthru --color "current active user: travis"'
+  - 'sudo howdy | ack-grep --passthru --color "current active user: travis"'
+  - sudo howdy list
+  # Remove howdy from the installation
+  - sudo apt purge howdy -y
 
 notifications:
   email:
