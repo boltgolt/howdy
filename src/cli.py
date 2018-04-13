@@ -23,11 +23,6 @@ if user == "root" or user == "":
 	else:
 		user = env_user
 
-# Check if we have rootish rights
-if os.getenv("SUDO_USER") is None:
-	print("Please run this command with sudo")
-	sys.exit(1)
-
 # Basic command setup
 parser = argparse.ArgumentParser(description="Command line interface for Howdy face authentication.",
                                  formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -74,6 +69,12 @@ args = parser.parse_args()
 # Save the args and user as builtins which can be accessed by the imports
 builtins.howdy_args = args
 builtins.howdy_user = args.user
+
+# Check if we have rootish rights
+# This is this far down the file so running the command for help is always possible
+if os.getenv("SUDO_USER") is None:
+	print("Please run this command with sudo")
+	sys.exit(1)
 
 # Beond this point the user can't change anymore, if we still have root as user we need to abort
 if args.user == "root":

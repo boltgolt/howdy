@@ -14,15 +14,17 @@ sudo apt update
 sudo apt install howdy
 ```
 
+**Note:** The build of dlib can hang on 100% for over a minute, give it time.
+
 This will guide you through the installation. When that's done run `sudo howdy add` to add a face model.
 
 If nothing went wrong we should be able to run sudo by just showing your face. Open a new terminal and run `sudo -i` to see it in action.
 
-**Note:** The build of dlib can hang on 100% for over a minute, give it time.
+If you're curious you can run `sudo howdy config` to open the central config file and see the options Howdy has.
 
 ### Command line
 
-The installer adds a `howdy` command to manage face models for the current user. Use `howdy --help` to list the available options.
+The installer adds a `howdy` command to manage face models for the current user. Use `howdy --help` or `man howdy` to list the available options.
 
 Usage:
 ```
@@ -31,12 +33,12 @@ howdy [-U user] [-y] command [argument]
 
 | Command   | Description                                   |
 |-----------|-----------------------------------------------|
-| `add`     | Add a new face model for the given user       |
-| `clear`   | Remove all face models for the given user     |
-| `config`  | Open the config file in nano                  |
+| `add`     | Add a new face model for an user              |
+| `clear`   | Remove all face models for an user            |
+| `config`  | Open the config file in gedit                 |
 | `disable` | Disable or enable howdy                       |
-| `list`    | List all saved face models for the given user |
-| `remove`  | Remove a specific model for the given user    |
+| `list`    | List all saved face models for an user        |
+| `remove`  | Remove a specific model for an user           |
 | `test`    | Test the camera and recognition methods       |
 
 ### Troubleshooting

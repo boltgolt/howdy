@@ -6,26 +6,42 @@ howdy \- Windows Hello style authentication for Ubuntu
 Howdy IR face recognition implements a PAM module to use your face as a authentication method.
 .SS "Usage:"
 .IP
-howdy <command> [user] [argument]
+howdy [\-U USER] [\-y] [\-h] command [argument]
 .SS "Commands:"
 .TP
-help
-Show this help page
-.TP
-list
-List all saved face models for the current user
-.TP
 add
-Add a new face model for the current user
-.TP
-remove
-Remove a specific model
+Add a new face model for an user.
 .TP
 clear
-Remove all face models for the current user
+Remove all face models for an user.
+.TP
+config
+Open the config file in gedit.
+.TP
+disable
+Disable or enable howdy.
+.TP
+list
+List all saved face models for an user.
+.TP
+remove
+Remove a specific model for an user.
+.TP
+clear
+Remove all face models for an user.
 .TP
 test
-Test the camera and recognition methods
+Test the camera and recognition methods.
+.SS "Optional arguments:"
+.TP
+\fB\-U\fR USER, \fB\-\-user\fR USER
+Set the user account to use.
+.TP
+\fB\-y\fR
+Skip all questions.
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+Show this help message and exit.
 .PP
 .SH AUTHOR
 Howdy was written by boltgolt. For more information visit https://github.com/Boltgolt/howdy
