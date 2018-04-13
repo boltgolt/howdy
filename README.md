@@ -14,7 +14,7 @@ sudo apt update
 sudo apt install howdy
 ```
 
-This will guide you through the installation. When that's done run `sudo howdy add $USER` and replace `$USER` with your username to add a face model.
+This will guide you through the installation. When that's done run `sudo howdy add` to add a face model.
 
 If nothing went wrong we should be able to run sudo by just showing your face. Open a new terminal and run `sudo -i` to see it in action.
 
@@ -22,22 +22,22 @@ If nothing went wrong we should be able to run sudo by just showing your face. O
 
 ### Command line
 
-The installer adds a `howdy` command to manage face models for the current user. Use `howdy help` to list the available options.
+The installer adds a `howdy` command to manage face models for the current user. Use `howdy --help` to list the available options.
 
 Usage:
 ```
-howdy <command> [user] [argument]
+howdy [-U user] [-y] command [argument]
 ```
 
-| Command   | Description                                   | User required |
-|-----------|-----------------------------------------------|---------------|
-| `add`     | Add a new face model for the given user       | Yes           |
-| `clear`   | Remove all face models for the given user     | Yes           |
-| `config`  | Open the config file in nano                  | No            |
-| `disable` | Disable or enable howdy                       | No            |
-| `list`    | List all saved face models for the given user | Yes           |
-| `remove`  | Remove a specific model for the given user    | Yes           |
-| `test`    | Test the camera and recognition methods       | No            |
+| Command   | Description                                   |
+|-----------|-----------------------------------------------|
+| `add`     | Add a new face model for the given user       |
+| `clear`   | Remove all face models for the given user     |
+| `config`  | Open the config file in nano                  |
+| `disable` | Disable or enable howdy                       |
+| `list`    | List all saved face models for the given user |
+| `remove`  | Remove a specific model for the given user    |
+| `test`    | Test the camera and recognition methods       |
 
 ### Troubleshooting
 

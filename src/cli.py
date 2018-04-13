@@ -7,102 +7,91 @@ import os
 import subprocess
 import getpass
 import argparse
+import builtins
 
+# Try to get the original username (not "root") from shell
 user = subprocess.check_output("echo $(logname 2>/dev/null || echo $SUDO_USER)", shell=True).decode("ascii").strip()
 
+# If that fails, try to get the direct user
 if user == "root" or user == "":
 	env_user = getpass.getuser().strip()
 
-	if env_user == "root" or env_user == "":
+	# If even that fails, error out
+	if env_user == "":
 		print("Could not determine user, please use the --user flag")
 		sys.exit(1)
 	else:
 		user = env_user
 
+# Check if we have rootish rights
+if os.getenv("SUDO_USER") is None:
+	print("Please run this command with sudo")
+	sys.exit(1)
+
+# Basic command setup
 parser = argparse.ArgumentParser(description="Command line interface for Howdy face authentication.",
-								 formatter_class=argparse.RawDescriptionHelpFormatter,
-								 add_help=False,
-								 prog="howdy",
-								 epilog="For support please visit\nhttps://github.com/Boltgolt/howdy")
+                                 formatter_class=argparse.RawDescriptionHelpFormatter,
+                                 add_help=False,
+                                 prog="howdy",
+                                 epilog="For support please visit\nhttps://github.com/Boltgolt/howdy")
 
-
+# Add an argument for the command
 parser.add_argument("command",
-					help="The command option to execute, can be one of the following: add, clear, config, disable, list, remove or test.",
-					metavar="command",
-					choices=["add", "clear", "config", "disable", "list", "remove", "test"])
+                    help="The command option to execute, can be one of the following: add, clear, config, disable, list, remove or test.",
+                    metavar="command",
+                    choices=["add", "clear", "config", "disable", "list", "remove", "test"])
 
+# Add an argument for the extra arguments of diable and remove
 parser.add_argument("argument",
-					help="Either 0 or 1 for the disable command, or the model ID for the remove command.",
-					nargs="?")
+                    help="Either 0 (enable) or 1 (disable) for the disable command, or the model ID for the remove command.",
+                    nargs="?")
 
+# Add the user flag
 parser.add_argument("-U", "--user",
-					default=user,
+                    default=user,
                     help="Set the user account to use.")
 
+# Add the -y flag
 parser.add_argument("-y",
                     help="Skip all questions.",
-					action="store_true")
+                    action="store_true")
 
+# Overwrite the default help message so we can use a uppercase S
 parser.add_argument("-h", "--help",
-					action="help",
-					default=argparse.SUPPRESS,
+                    action="help",
+                    default=argparse.SUPPRESS,
                     help="Show this help message and exit.")
 
+# If we only have 1 argument we print the help text
 if len(sys.argv) < 2:
 	print("current active user: " + user + "\n")
 	parser.print_help()
 	sys.exit(0)
 
+# Parse all arguments above
 args = parser.parse_args()
 
-print(args)
-sys.exit(0)
+# Save the args and user as builtins which can be accessed by the imports
+builtins.howdy_args = args
+builtins.howdy_user = args.user
 
-# Check if if a command has been given and print help otherwise
-if (len(sys.argv) < 2):
-	print("Howdy IR face recognition help")
-	import cli.help
-	sys.exit()
+# Beond this point the user can't change anymore, if we still have root as user we need to abort
+if args.user == "root":
+	print("Can't run howdy commands as root, please run this command with the --user flag")
+	sys.exit(1)
 
-# The command given
-cmd = sys.argv[1]
-
-# Call the right files for commands that don't need root
-if cmd == "help":
-	print("Howdy IR face recognition")
-	import cli.help
-elif cmd == "test":
+# Execute the right command
+if args.command == "add":
+	import cli.add
+elif args.command == "clear":
+	import cli.clear
+elif args.command == "config":
+	import cli.config
+elif args.command == "disable":
+	import cli.disable
+elif args.command == "list":
+	import cli.list
+elif args.command == "remove":
+	import cli.remove
+elif args.command == "test":
 	import cli.test
-else:
-	# Check if the minimum of 3 arugemnts has been met and print help otherwise
-	if (len(sys.argv) < 3):
-		print("Howdy IR face recognition help")
-		import cli.help
-		sys.exit()
-
-	# Requre sudo for comamnds that need root rights to read the model files
-	if os.getenv("SUDO_USER") is None:
-		print("Please run this command with sudo")
-		sys.exit(1)
-
-	# Frome here on we require the second argument to be the username,
-	# switching the command to the 3rd
-	cmd = sys.argv[2]
-
-	if cmd == "list":
-		import cli.list
-	elif cmd == "add":
-		import cli.add
-	elif cmd == "remove":
-		import cli.remove
-	elif cmd == "clear":
-		import cli.clear
-	else:
-		# If the comand is invalid, check if the user hasn't swapped the username and command
-		if sys.argv[1] in ["list", "add", "remove", "clear"]:
-			print("Usage: howdy <user> <command>")
-			sys.exit(1)
-		else:
-			print('Unknown command "' + cmd + '"')
-			import cli.help
-			sys.exit(1)
