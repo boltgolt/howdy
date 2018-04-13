@@ -11,6 +11,7 @@ def col(id):
 
 # Import required modules
 import subprocess
+import sys
 
 # Only run when we actually want to remove
 if "remove" not in sys.argv and "purge" not in sys.argv:

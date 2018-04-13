@@ -1,4 +1,4 @@
-# Howdy for Ubuntu  [![](https://travis-ci.org/Boltgolt/howdy.svg?branch=dev)](https://travis-ci.org/Boltgolt/howdy) ![](https://img.shields.io/github/release/Boltgolt/howdy.svg?colorB=4c1) [![](https://img.shields.io/github/issues-raw/Boltgolt/howdy/enhancement.svg?label=feature+requests&colorB=4c1)](https://github.com/Boltgolt/howdy/issues?q=is%3Aissue+is%3Aopen+label%3Aenhancement)
+# Howdy for Ubuntu  [![](https://img.shields.io/travis/Boltgolt/howdy/dev.svg)](https://travis-ci.org/Boltgolt/howdy) [![](https://img.shields.io/github/release/Boltgolt/howdy.svg?colorB=4c1)](https://github.com/Boltgolt/howdy/releases) [![](https://img.shields.io/github/issues-raw/Boltgolt/howdy/enhancement.svg?label=feature+requests&colorB=4c1)](https://github.com/Boltgolt/howdy/issues?q=is%3Aissue+is%3Aopen+label%3Aenhancement)
 
 Windows Hello™ style authentication for Ubuntu. Use your built-in IR emitters and camera in combination with face recognition to prove who you are.
 
@@ -35,7 +35,6 @@ howdy <command> [user] [argument]
 | `clear`   | Remove all face models for the given user     | Yes           |
 | `config`  | Open the config file in nano                  | No            |
 | `disable` | Disable or enable howdy                       | No            |
-| `help`    | Show a help page                              | No            |
 | `list`    | List all saved face models for the given user | Yes           |
 | `remove`  | Remove a specific model for the given user    | Yes           |
 | `test`    | Test the camera and recognition methods       | No            |
@@ -50,6 +49,6 @@ If you encounter an error that hasn't been reported yet, don't be afraid to open
 
 This script is in no way as secure as a password and will never be. Although it's harder to fool than normal face recognition, a person who looks similar to you or well-printed photo of you could be enough to do it.
 
-To minimize the chance of this script being compromised, it's recommend to leave this repo in /lib/security and to keep it read only.
+To minimize the chance of this program being compromised, it's recommend to leave Howdy in /lib/security and to keep it read only.
 
 DO NOT USE HOWDY AS THE SOLE AUTHENTICATION METHOD FOR YOUR SYSTEM.

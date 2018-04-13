@@ -1,16 +1,17 @@
 language: python
 sudo: required
 
-before_install:
+install:
   - sudo apt install devscripts dh-make -y
-  - debuild -i -us -uc -b
-
-install: sudo apt install ../*.deb -y
 
 script:
+ - debuild -i -us -uc -b
+ - sudo apt install ../*.deb -y
  - sudo howdy help
  - sudo howdy list
  - sudo apt purge howdy -y
 
 notifications:
-  email: true
+  email:
+    on_success: never
+    on_failure: always

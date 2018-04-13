@@ -4,6 +4,58 @@
 # Import required modules
 import sys
 import os
+import subprocess
+import getpass
+import argparse
+
+user = subprocess.check_output("echo $(logname 2>/dev/null || echo $SUDO_USER)", shell=True).decode("ascii").strip()
+
+if user == "root" or user == "":
+	env_user = getpass.getuser().strip()
+
+	if env_user == "root" or env_user == "":
+		print("Could not determine user, please use the --user flag")
+		sys.exit(1)
+	else:
+		user = env_user
+
+parser = argparse.ArgumentParser(description="Command line interface for Howdy face authentication.",
+								 formatter_class=argparse.RawDescriptionHelpFormatter,
+								 add_help=False,
+								 prog="howdy",
+								 epilog="For support please visit\nhttps://github.com/Boltgolt/howdy")
+
+
+parser.add_argument("command",
+					help="The command option to execute, can be one of the following: add, clear, config, disable, list, remove or test.",
+					metavar="command",
+					choices=["add", "clear", "config", "disable", "list", "remove", "test"])
+
+parser.add_argument("argument",
+					help="Either 0 or 1 for the disable command, or the model ID for the remove command.",
+					nargs="?")
+
+parser.add_argument("-U", "--user",
+					default=user,
+                    help="Set the user account to use.")
+
+parser.add_argument("-y",
+                    help="Skip all questions.",
+					action="store_true")
+
+parser.add_argument("-h", "--help",
+					action="help",
+					default=argparse.SUPPRESS,
+                    help="Show this help message and exit.")
+
+if len(sys.argv) < 2:
+    parser.print_help()
+    sys.exit(0)
+
+args = parser.parse_args()
+
+print(args)
+sys.exit(1)
 
 # Check if if a command has been given and print help otherwise
 if (len(sys.argv) < 2):
