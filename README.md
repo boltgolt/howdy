@@ -41,7 +41,7 @@ howdy [-U user] [-y] command [argument]
 | `remove`  | Remove a specific model for an user           |
 | `test`    | Test the camera and recognition methods       |
 
-### Contributing [![](https://img.shields.io/github/issues-raw/Boltgolt/howdy/enhancement.svg?label=feature+requests&colorB=4c1)](https://github.com/Boltgolt/howdy/issues?q=is%3Aissue+is%3Aopen+label%3Aenhancement)
+### Contributing [![](https://img.shields.io/travis/Boltgolt/howdy/dev.svg?label=dev build)](https://github.com/Boltgolt/howdy/tree/dev) [![](https://img.shields.io/github/issues-raw/Boltgolt/howdy/enhancement.svg?label=feature+requests&colorB=4c1)](https://github.com/Boltgolt/howdy/issues?q=is%3Aissue+is%3Aopen+label%3Aenhancement)
 
 You can contribute in many ways. The easiest are reporting bugs and opening github issues for features you'd like to see in howdy. Code contributions are also very welcome.
 
