@@ -6,7 +6,7 @@ import time
 import subprocess
 
 # Let the user know what we're doing
-print("Opening condig.ini in gedit")
+print("Opening config.ini in gedit")
 
 # Open gedit as a subprocess and fork it
 subprocess.Popen(["gedit", os.path.dirname(os.path.realpath(__file__))  + "/../config.ini"],

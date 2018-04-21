@@ -1,4 +1,4 @@
-# Howdy for Ubuntu  [![](https://img.shields.io/travis/Boltgolt/howdy/master.svg)](https://travis-ci.org/Boltgolt/howdy) [![](https://img.shields.io/github/release/Boltgolt/howdy.svg?colorB=4c1)](https://github.com/Boltgolt/howdy/releases) [![](https://img.shields.io/github/issues-raw/Boltgolt/howdy/enhancement.svg?label=feature+requests&colorB=4c1)](https://github.com/Boltgolt/howdy/issues?q=is%3Aissue+is%3Aopen+label%3Aenhancement)
+# Howdy for Ubuntu  [![](https://img.shields.io/travis/Boltgolt/howdy/master.svg)](https://travis-ci.org/Boltgolt/howdy) [![](https://img.shields.io/github/release/Boltgolt/howdy.svg?colorB=4c1)](https://github.com/Boltgolt/howdy/releases) ![](https://boltgolt.nl/howdy_badge/installs.php)
 
 Windows Hello™ style authentication for Ubuntu. Use your built-in IR emitters and camera in combination with face recognition to prove who you are.
 
@@ -22,7 +22,7 @@ If nothing went wrong we should be able to run sudo by just showing your face. O
 
 If you're curious you can run `sudo howdy config` to open the central config file and see the options Howdy has.
 
-### Command line
+### CLI
 
 The installer adds a `howdy` command to manage face models for the current user. Use `howdy --help` or `man howdy` to list the available options.
 
@@ -41,6 +41,10 @@ howdy [-U user] [-y] command [argument]
 | `remove`  | Remove a specific model for an user           |
 | `test`    | Test the camera and recognition methods       |
 
+### Contributing [![](https://img.shields.io/travis/Boltgolt/howdy/dev.svg?label=dev build)](https://github.com/Boltgolt/howdy/tree/dev) [![](https://img.shields.io/github/issues-raw/Boltgolt/howdy/enhancement.svg?label=feature+requests&colorB=4c1)](https://github.com/Boltgolt/howdy/issues?q=is%3Aissue+is%3Aopen+label%3Aenhancement)
+
+You can contribute in many ways. The easiest are reporting bugs and opening github issues for features you'd like to see in howdy. Code contributions are also very welcome.
+
 ### Troubleshooting
 
 Any python errors get logged directly into the console and should indicate what went wrong. If authentication still fails but no errors are printed you could take a look at the last lines in `/var/log/auth.log` to see if anything has been reported there.
@@ -51,6 +55,6 @@ If you encounter an error that hasn't been reported yet, don't be afraid to open
 
 This script is in no way as secure as a password and will never be. Although it's harder to fool than normal face recognition, a person who looks similar to you or well-printed photo of you could be enough to do it.
 
-To minimize the chance of this program being compromised, it's recommend to leave Howdy in /lib/security and to keep it read only.
+To minimize the chance of this program being compromised, it's recommend to leave Howdy in `/lib/security` and to keep it read only.
 
 DO NOT USE HOWDY AS THE SOLE AUTHENTICATION METHOD FOR YOUR SYSTEM.
