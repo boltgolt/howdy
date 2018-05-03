@@ -1,3 +1,9 @@
+howdy (2.2.1) xenial; urgency=medium
+
+  * Add notes
+
+ -- boltgolt <boltgolt@gmail.com>  Thu, 03 May 2018 13:23:09 +0200
+
 howdy (2.1.0) xenial; urgency=medium
 
   * First complete PPA release

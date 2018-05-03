@@ -37,8 +37,6 @@ user = sys.argv[1]
 models = []
 # Encoded face models
 encodings = []
-# Amount of frames already matched
-tries = 0
 # Amount of ingnored dark frames
 dark_tries = 0
 
@@ -82,6 +80,10 @@ while True:
 	# Increment the frame count every loop
 	frames += 1
 
+	# Stop if we've exceded the time limit
+	if time.time() - timings[3] > int(config.get("video", "timout")):
+		stop(11)
+
 	# Grab a single frame of video
 	# Don't remove ret, it doesn't work without it
 	ret, frame = video_capture.read()
@@ -108,9 +110,6 @@ while True:
 
 	# Save the new size for diagnostics
 	scale_height, scale_width = frame.shape[:2]
-
-	# Convert from BGR to RGB
-	frame = frame[:, :, ::-1]
 
 	# Get all faces from that frame as encodings
 	face_encodings = face_recognition.face_encodings(frame)
@@ -158,9 +157,3 @@ while True:
 
 				# End peacegully
 				stop(0)
-
-	# Stop if we've exceded the maximum retry count
-	if time.time() - timings[3] > int(config.get("video", "timout")):
-		stop(11)
-
-	tries += 1
