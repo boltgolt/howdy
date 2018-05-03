@@ -80,6 +80,12 @@ insert_model = {
 
 # Open the camera
 video_capture = cv2.VideoCapture(int(config.get("video", "device_id")))
+
+# Force MJPEG decoding if true
+if config.get("debug", "force_mjpeg") == "true":
+	video_capture.set(cv2.CAP_PROP_FOURCC, 1196444237)
+
+# Request a frame to wake the camera up
 video_capture.read()
 
 print("\nPlease look straight into the camera")

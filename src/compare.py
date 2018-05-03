@@ -60,6 +60,10 @@ timings.append(time.time())
 # Start video capture on the IR camera
 video_capture = cv2.VideoCapture(int(config.get("video", "device_id")))
 
+# Force MJPEG decoding if true
+if config.get("debug", "force_mjpeg") == "true":
+	video_capture.set(cv2.CAP_PROP_FOURCC, 1196444237)
+
 # Capture a single frame so the camera becomes active
 # This will let the camera adjust its light levels while we're importing for faster scanning
 video_capture.read()
