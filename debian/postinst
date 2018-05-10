@@ -36,8 +36,34 @@ def handleStatus(status):
 		sys.exit(1)
 
 
-# We're not in fresh configuration mode (probably an upgrade), so exit
+# We're not in fresh configuration mode so don't continue the setup
 if not os.path.exists("/tmp/howdy_picked_device"):
+	# Check if we have an older config we can restore
+	if len(sys.argv) > 2:
+		if os.path.exists("/tmp/howdy_config_backup_v" + sys.argv[2] + ".ini"):
+			# Get the config parser
+			import configparser
+
+			# Load th old and new config files
+			oldConf = configparser.ConfigParser()
+			oldConf.read("/tmp/howdy_config_backup_v" + sys.argv[2] + ".ini")
+			newConf = configparser.ConfigParser()
+			newConf.read("/lib/security/howdy/config.ini")
+
+			# Go through every setting in the old config and apply it to the new file
+			for section in oldConf.sections():
+				for (key, value) in oldConf.items(section):
+					try:
+						newConf.set(section, key, value)
+					# Add a new section where needed
+					except configparser.NoSectionError as e:
+						newConf.add_section(section)
+						newConf.set(section, key, value)
+
+			# Write it all to file
+			with open("/lib/security/howdy/config.ini", "w") as configfile:
+				newConf.write(configfile)
+
 	sys.exit(0)
 
 # Open the temporary file containing the device ID
@@ -162,7 +188,7 @@ if "HOWDY_NO_PROMPT" not in os.environ:
 
 	# Abort the whole thing if it's not
 	if (ans.lower() != "y"):
-		print("Inerpeting as a \"NO\", aborting")
+		print("Interpreting as a \"NO\", aborting")
 		sys.exit(1)
 
 print("Adding lines to PAM\n")

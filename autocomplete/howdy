@@ -42,4 +42,5 @@ _howdy() {
 	return 0
 }
 
+# Register the autocomplete function
 complete -F _howdy howdy
