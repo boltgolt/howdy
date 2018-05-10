@@ -1,8 +1,12 @@
 howdy (2.2.1) xenial; urgency=medium
 
-  * Add notes
+  * Added mechanism to keep config files between updates
+  * Added force_mjpeg option to fix YUYV image issues (thanks @arifeinberg!)
+  * Revamped the bash autocompletion script
+  * Fixed timeout never being reached in certain scenarios (thanks @Tkopic001!)
+  * Fixed issue where BGR to RGB frame conversion caused a crash (thanks @Jerezano!)
 
- -- boltgolt <boltgolt@gmail.com>  Thu, 03 May 2018 13:23:09 +0200
+ -- boltgolt <boltgolt@gmail.com>  Thu, 10 May 2018 15:14:03 +0200
 
 howdy (2.1.0) xenial; urgency=medium
 
