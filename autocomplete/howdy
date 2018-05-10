@@ -5,12 +5,42 @@
 _howdy() {
 	local cur prev opts
 	COMPREPLY=()
+	# The argument typed so far
 	cur="${COMP_WORDS[COMP_CWORD]}"
+	# The previous argument
 	prev="${COMP_WORDS[COMP_CWORD-1]}"
-	opts="help list add remove clear"
 
-	COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+	# Go though all cases we support
+	case "${prev}" in
+		# After the main command, show the commands
+		"howdy")
+			opts="add clear config disable list remove clear test"
+			COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+			return 0
+			;;
+		# For disable, grab the current "disabled" config option and give the reverse
+		"disable")
+			local status=$(cut -d'=' -f2 <<< $(cat /lib/security/howdy/config.ini | grep 'disabled =') | xargs echo -n)
+
+			[ "$status" == "false" ] && COMPREPLY="true" || COMPREPLY="false"
+			return 0
+			;;
+		# List the users availible
+		"-U")
+			COMPREPLY=( $(compgen -u -- ${cur}) )
+			return 0
+			;;
+		"--user")
+			COMPREPLY=( $(compgen -u -- ${cur}) )
+			return 0
+			;;
+ 		*)
+		;;
+	esac
+
+	# Nothing matched, so return nothing
 	return 0
 }
 
+# Register the autocomplete function
 complete -F _howdy howdy

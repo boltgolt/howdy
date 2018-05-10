@@ -37,8 +37,6 @@ user = sys.argv[1]
 models = []
 # Encoded face models
 encodings = []
-# Amount of frames already matched
-tries = 0
 # Amount of ingnored dark frames
 dark_tries = 0
 
@@ -62,6 +60,10 @@ timings.append(time.time())
 # Start video capture on the IR camera
 video_capture = cv2.VideoCapture(int(config.get("video", "device_id")))
 
+# Force MJPEG decoding if true
+if config.get("video", "force_mjpeg") == "true":
+	video_capture.set(cv2.CAP_PROP_FOURCC, 1196444237)
+
 # Capture a single frame so the camera becomes active
 # This will let the camera adjust its light levels while we're importing for faster scanning
 video_capture.read()
@@ -81,6 +83,10 @@ frames = 0
 while True:
 	# Increment the frame count every loop
 	frames += 1
+
+	# Stop if we've exceded the time limit
+	if time.time() - timings[3] > int(config.get("video", "timout")):
+		stop(11)
 
 	# Grab a single frame of video
 	# Don't remove ret, it doesn't work without it
@@ -108,9 +114,6 @@ while True:
 
 	# Save the new size for diagnostics
 	scale_height, scale_width = frame.shape[:2]
-
-	# Convert from BGR to RGB
-	frame = frame[:, :, ::-1]
 
 	# Get all faces from that frame as encodings
 	face_encodings = face_recognition.face_encodings(frame)
@@ -158,9 +161,3 @@ while True:
 
 				# End peacegully
 				stop(0)
-
-	# Stop if we've exceded the maximum retry count
-	if time.time() - timings[3] > int(config.get("video", "timout")):
-		stop(11)
-
-	tries += 1

@@ -1,4 +1,4 @@
-# Howdy for Ubuntu  [![](https://img.shields.io/travis/Boltgolt/howdy/master.svg)](https://travis-ci.org/Boltgolt/howdy) [![](https://img.shields.io/github/release/Boltgolt/howdy.svg?colorB=4c1)](https://github.com/Boltgolt/howdy/releases) ![](https://boltgolt.nl/howdy_badge/installs.php)
+# Howdy for Ubuntu  [![](https://img.shields.io/travis/Boltgolt/howdy/master.svg)](https://travis-ci.org/Boltgolt/howdy) [![](https://img.shields.io/github/release/Boltgolt/howdy.svg?colorB=4c1)](https://github.com/Boltgolt/howdy/releases) ![](https://boltgolt.nl/howdy_badge/installs.php?nc) ![](https://boltgolt.nl/howdy_badge/views.php)
 
 Windows Hello™ style authentication for Ubuntu. Use your built-in IR emitters and camera in combination with face recognition to prove who you are.
 
