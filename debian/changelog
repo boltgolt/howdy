@@ -1,3 +1,9 @@
+howdy (2.2.2) xenial; urgency=medium
+
+  * Fixed fetching of wrong config section (thanks @halcyoncheng and @arifeinberg!)
+
+ -- boltgolt <boltgolt@gmail.com>  Fri, 11 May 2018 10:43:03 +0200
+
 howdy (2.2.1) xenial; urgency=medium
 
   * Added mechanism to keep config files between updates
