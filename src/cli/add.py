@@ -82,7 +82,7 @@ insert_model = {
 video_capture = cv2.VideoCapture(int(config.get("video", "device_id")))
 
 # Force MJPEG decoding if true
-if config.get("debug", "force_mjpeg") == "true":
+if config.get("video", "force_mjpeg") == "true":
 	video_capture.set(cv2.CAP_PROP_FOURCC, 1196444237)
 
 # Request a frame to wake the camera up

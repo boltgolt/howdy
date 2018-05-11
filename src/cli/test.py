@@ -21,7 +21,7 @@ config.read(path + "/../config.ini")
 video_capture = cv2.VideoCapture(int(config.get("video", "device_id")))
 
 # Force MJPEG decoding if true
-if config.get("debug", "force_mjpeg") == "true":
+if config.get("video", "force_mjpeg") == "true":
 	video_capture.set(cv2.CAP_PROP_FOURCC, 1196444237)
 
 # Let the user know what's up
