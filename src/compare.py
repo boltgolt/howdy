@@ -97,6 +97,11 @@ while True:
 	# All values combined for percentage calculation
 	hist_total = int(sum(hist)[0])
 
+	# If the image is fully black, skip to the next frame
+	if hist_total == 0:
+		dark_tries += 1
+		continue
+
 	# Scrip the frame if it exceeds the threshold
 	if float(hist[0]) / hist_total * 100 > float(config.get("video", "dark_threshold")):
 		dark_tries += 1
