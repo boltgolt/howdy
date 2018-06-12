@@ -28,7 +28,7 @@ parser = argparse.ArgumentParser(description="Command line interface for Howdy f
                                  formatter_class=argparse.RawDescriptionHelpFormatter,
                                  add_help=False,
                                  prog="howdy",
-                                 epilog="For support please visit\nhttps://github.com/Boltgolt/howdy")
+                                 epilog="For support please visit\nhttps://github.com/boltgolt/howdy")
 
 # Add an argument for the command
 parser.add_argument("command",

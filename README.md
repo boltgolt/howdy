@@ -1,4 +1,4 @@
-# Howdy for Ubuntu  [![](https://img.shields.io/travis/Boltgolt/howdy/master.svg)](https://travis-ci.org/Boltgolt/howdy) [![](https://img.shields.io/github/release/Boltgolt/howdy.svg?colorB=4c1)](https://github.com/Boltgolt/howdy/releases) ![](https://boltgolt.nl/howdy_badge/installs.php?nc) ![](https://boltgolt.nl/howdy_badge/views.php)
+# Howdy for Ubuntu  [![](https://img.shields.io/travis/boltgolt/howdy/master.svg)](https://travis-ci.org/boltgolt/howdy) [![](https://img.shields.io/github/release/boltgolt/howdy.svg?colorB=4c1)](https://github.com/boltgolt/howdy/releases) ![](https://boltgolt.nl/howdy_badge/installs.php?nc) ![](https://boltgolt.nl/howdy_badge/views.php)
 
 Windows Hello™ style authentication for Ubuntu. Use your built-in IR emitters and camera in combination with face recognition to prove who you are.
 
@@ -41,7 +41,7 @@ howdy [-U user] [-y] command [argument]
 | `remove`  | Remove a specific model for an user           |
 | `test`    | Test the camera and recognition methods       |
 
-### Contributing [![](https://img.shields.io/travis/Boltgolt/howdy/dev.svg?label=dev%20build)](https://github.com/Boltgolt/howdy/tree/dev) [![](https://img.shields.io/github/issues-raw/Boltgolt/howdy/enhancement.svg?label=feature+requests&colorB=4c1)](https://github.com/Boltgolt/howdy/issues?q=is%3Aissue+is%3Aopen+label%3Aenhancement)
+### Contributing [![](https://img.shields.io/travis/boltgolt/howdy/dev.svg?label=dev%20build)](https://github.com/boltgolt/howdy/tree/dev) [![](https://img.shields.io/github/issues-raw/boltgolt/howdy/enhancement.svg?label=feature+requests&colorB=4c1)](https://github.com/boltgolt/howdy/issues?q=is%3Aissue+is%3Aopen+label%3Aenhancement)
 
 You can contribute in many ways. The easiest are reporting bugs and opening github issues for features you'd like to see in howdy. Code contributions are also very welcome.
 
