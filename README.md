@@ -1,4 +1,4 @@
-# Howdy for Ubuntu  [![](https://img.shields.io/travis/Boltgolt/howdy/master.svg)](https://travis-ci.org/Boltgolt/howdy) [![](https://img.shields.io/github/release/Boltgolt/howdy.svg?colorB=4c1)](https://github.com/Boltgolt/howdy/releases) ![](https://boltgolt.nl/howdy_badge/installs.php?nc) ![](https://boltgolt.nl/howdy_badge/views.php)
+# Howdy for Linux  [![](https://img.shields.io/travis/Boltgolt/howdy/master.svg)](https://travis-ci.org/Boltgolt/howdy) [![](https://img.shields.io/github/release/Boltgolt/howdy.svg?colorB=4c1)](https://github.com/Boltgolt/howdy/releases) ![](https://boltgolt.nl/howdy_badge/installs.php?nc) ![](https://boltgolt.nl/howdy_badge/views.php)
 
 Windows Hello™ style authentication for Ubuntu. Use your built-in IR emitters and camera in combination with face recognition to prove who you are.
 
@@ -6,13 +6,9 @@ Using the central authentication system in Linux (PAM), this works everywhere yo
 
 ### Installation
 
-Run the installer by pasting (`ctrl+shift+V`) the following commands into the terminal one at a time:
+* Ubuntu: Add the following ppa with ``` sudo add-apt-repository ppa:boltgolt/howdy ``` and ``` sudo apt update```. Then install Howdy with ``` sudo apt install howdy ```.
 
-```
-sudo add-apt-repository ppa:boltgolt/howdy
-sudo apt update
-sudo apt install howdy
-```
+* Arch Linux: Install the following package from the AUR: ``` howdy ```. Please read the [ArchWiki entry](https://wiki.archlinux.org/index.php/Howdy) for additional information.
 
 **Note:** The build of dlib can hang on 100% for over a minute, give it time.
 
