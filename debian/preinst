@@ -89,7 +89,7 @@ for dev in devices:
 		os.killpg(os.getpgid(sub.pid), signal.SIGTERM)
 
 		# Set this camera as picked if the answer was yes, go to the next one if no
-		if ans.lower() == "y" or ans.lower() == "yes":
+		if ans.lower().strip() == "y" or ans.lower().strip() == "yes":
 			picked = dev[5:]
 			break
 		else:
