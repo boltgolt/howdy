@@ -1,10 +1,16 @@
-# Howdy for Ubuntu  [![](https://img.shields.io/travis/boltgolt/howdy/master.svg)](https://travis-ci.org/boltgolt/howdy) [![](https://img.shields.io/github/release/boltgolt/howdy.svg?colorB=4c1)](https://github.com/boltgolt/howdy/releases) ![](https://boltgolt.nl/howdy_badge/installs.php?nc) ![](https://boltgolt.nl/howdy_badge/views.php)
+# Howdy for Linux  [![](https://img.shields.io/travis/boltgolt/howdy/master.svg)](https://travis-ci.org/boltgolt/howdy) [![](https://img.shields.io/github/release/boltgolt/howdy.svg?colorB=4c1)](https://github.com/boltgolt/howdy/releases) ![](https://boltgolt.nl/howdy_badge/installs.php?nc) ![](https://boltgolt.nl/howdy_badge/views.php)
 
-Windows Hello™ style authentication for Ubuntu. Use your built-in IR emitters and camera in combination with face recognition to prove who you are.
+Windows Hello™ style authentication for Linux. Use your built-in IR emitters and camera in combination with face recognition to prove who you are.
 
-Using the central authentication system in Linux (PAM), this works everywhere you would otherwise need your password: Login, lock screen, sudo, su, etc.
+Using the central authentication system (PAM), this works everywhere you would otherwise need your password: Login, lock screen, sudo, su, etc.
 
 ### Installation
+
+Howdy is currently available for Ubuntu/Debian and Arch Linux. If you’re interested in packaging Howdy for your distro, don’t hesitate to open an issue.
+
+**Note:** The build of dlib can hang on 100% for over a minute, give it time.
+
+##### Ubuntu (apt)
 
 Run the installer by pasting (`ctrl+shift+V`) the following commands into the terminal one at a time:
 
@@ -14,13 +20,21 @@ sudo apt update
 sudo apt install howdy
 ```
 
-**Note:** The build of dlib can hang on 100% for over a minute, give it time.
+This will guide you through the installation.
 
-This will guide you through the installation. When that's done run `sudo howdy add` to add a face model.
+##### Arch Linux
+
+Install the `howdy` package from the AUR. For AUR installation instructions, take a look at this [wiki page](https://wiki.archlinux.org/index.php/Arch_User_Repository#Installing_packages).
+
+You will need to do some additional configuration steps. Please read the [ArchWiki entry](https://wiki.archlinux.org/index.php/Howdy) for more information.
+
+### Setup
+
+After installation, you need to let Howdy learn your face. Run `sudo howdy add` to add a face model.
 
 If nothing went wrong we should be able to run sudo by just showing your face. Open a new terminal and run `sudo -i` to see it in action.
 
-If you're curious you can run `sudo howdy config` to open the central config file and see the options Howdy has.
+If you're curious you can run `sudo howdy config` to open the central config file and see the options Howdy has. On most systems this will open the nano editor, where you have to press `ctrl`+`x` to save your changes.
 
 ### CLI
 
