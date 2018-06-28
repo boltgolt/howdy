@@ -10,10 +10,13 @@ import argparse
 import builtins
 
 # Try to get the original username (not "root") from shell
-user = subprocess.check_output("echo $(logname 2>/dev/null || echo $SUDO_USER)", shell=True).decode("ascii").strip()
+try:
+	user = os.getlogin()
+except:
+	user = os.environ.get("SUDO_USER")
 
 # If that fails, try to get the direct user
-if user == "root" or user == "":
+if user == "root" or user == None:
 	env_user = getpass.getuser().strip()
 
 	# If even that fails, error out
@@ -73,7 +76,8 @@ builtins.howdy_user = args.user
 # Check if we have rootish rights
 # This is this far down the file so running the command for help is always possible
 if os.getenv("SUDO_USER") is None:
-	print("Please run this command with sudo")
+	print("Please run this command as root:\n")
+	print("\tsudo howdy " + " ".join(sys.argv[1:]))
 	sys.exit(1)
 
 # Beond this point the user can't change anymore, if we still have root as user we need to abort
