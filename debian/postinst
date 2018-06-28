@@ -187,7 +187,7 @@ if "HOWDY_NO_PROMPT" not in os.environ:
 	ans = input("Apply this change? [y/N]: ")
 
 	# Abort the whole thing if it's not
-	if (ans.lower() != "y"):
+	if ans.lower().strip() != "y" or ans.lower().strip() == "yes":
 		print("Interpreting as a \"NO\", aborting")
 		sys.exit(1)
 
@@ -223,7 +223,7 @@ if "HOWDY_NO_PROMPT" not in os.environ:
 	diag_out += "```"
 
 	# Print it all as a clickable link to a new github issue
-	print("https://github.com/Boltgolt/howdy-reports/issues/new?title=Post-installation%20camera%20information&body=" + urllib.parse.quote_plus(diag_out) + "\n")
+	print("https://github.com/boltgolt/howdy-reports/issues/new?title=Post-installation%20camera%20information&body=" + urllib.parse.quote_plus(diag_out) + "\n")
 
 # Let the user know what to do with the link
 print("Installation complete.")

@@ -1,3 +1,13 @@
+howdy (2.3.0) xenial; urgency=medium
+
+  * Added a config option to set the frame height and width (thanks @wzrdtales!)
+  * Rewrote the code that fetches the non-root username (thanks @dmig!)
+  * Changed the config command so it uses the default editor (thanks @stellarpower and @dmig!)
+  * Fixed issue where a "y" could be interpreted as a no (thanks @ramkrishna757575!)
+  * Fixed division by zeno (thanks @stellarpower!)
+
+ -- boltgolt <boltgolt@gmail.com>  Thu, 28 Jun 2018 14:59:52 +0100
+
 howdy (2.2.2) xenial; urgency=medium
 
   * Fixed fetching of wrong config section (thanks @halcyoncheng and @arifeinberg!)
