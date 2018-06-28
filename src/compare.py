@@ -62,7 +62,15 @@ video_capture = cv2.VideoCapture(int(config.get("video", "device_id")))
 
 # Force MJPEG decoding if true
 if config.get("video", "force_mjpeg") == "true":
+	# Set a magic number, will enable MJPEG but is badly documentated
 	video_capture.set(cv2.CAP_PROP_FOURCC, 1196444237)
+
+# Set the frame width and height if requested
+if int(config.get("video", "frame_width")) != -1:
+	video_capture.set(cv2.CAP_PROP_FRAME_WIDTH, int(config.get("video", "frame_width")))
+
+if int(config.get("video", "frame_height")) != -1:
+	video_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, int(config.get("video", "frame_height")))
 
 # Capture a single frame so the camera becomes active
 # This will let the camera adjust its light levels while we're importing for faster scanning
@@ -164,5 +172,5 @@ while True:
 
 					print("Winning model: " + str(match_index) + " (\"" + models[match_index]["label"] + "\")")
 
-				# End peacegully
+				# End peacefully
 				stop(0)
