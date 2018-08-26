@@ -22,6 +22,11 @@ sudo apt install howdy
 
 This will guide you through the installation.
 
+p.s. ensure you have python3-opencv installed
+```
+sudo apt install python3-opencv
+```
+
 ### Arch Linux
 
 Install the `howdy` package from the AUR. For AUR installation instructions, take a look at this [wiki page](https://wiki.archlinux.org/index.php/Arch_User_Repository#Installing_packages).
