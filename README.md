@@ -59,7 +59,7 @@ howdy [-U user] [-y] command [argument]
 
 The easiest ways to contribiute to Howdy is by starring the reposotory and opening github issues for features you'd like to see. If you want to do more, you can also [buy me a coffee](https://www.buymeacoffee.com/boltgolt).
 
-Code contributions are also very welcome. If you want to port Howdy to another OS, feel free to contact me.
+Code contributions are also very welcome. If you want to port Howdy to another distro, feel free to contact me.
 
 ## Troubleshooting
 
