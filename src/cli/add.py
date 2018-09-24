@@ -85,6 +85,13 @@ video_capture = cv2.VideoCapture(int(config.get("video", "device_id")))
 if config.get("video", "force_mjpeg") == "true":
 	video_capture.set(cv2.CAP_PROP_FOURCC, 1196444237)
 
+# Set the frame width and height if requested
+if int(config.get("video", "frame_width")) != -1:
+	video_capture.set(cv2.CAP_PROP_FRAME_WIDTH, int(config.get("video", "frame_width")))
+
+if int(config.get("video", "frame_height")) != -1:
+	video_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, int(config.get("video", "frame_height")))
+
 # Request a frame to wake the camera up
 video_capture.read()
 
