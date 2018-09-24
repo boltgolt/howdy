@@ -1,3 +1,10 @@
+howdy (2.3.1) xenial; urgency=high
+
+  * Fixed issue where `frame_width` and `frame_height` would be completely ignored (thanks @janecz-n!)
+  * Fixed security problem with remote session authentication (thanks @cccaballero!)
+
+ -- boltgolt <boltgolt@gmail.com>  Mon, 24 Sep 2018 17:49:07 +0100
+
 howdy (2.3.0) xenial; urgency=medium
 
   * Added a config option to set the frame height and width (thanks @wzrdtales!)
