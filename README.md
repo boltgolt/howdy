@@ -1,4 +1,4 @@
-# Howdy for Linux  [![](https://img.shields.io/travis/boltgolt/howdy/master.svg)](https://travis-ci.org/boltgolt/howdy) [![](https://img.shields.io/github/release/boltgolt/howdy.svg?colorB=4c1)](https://github.com/boltgolt/howdy/releases) ![](https://boltgolt.nl/howdy_badge/installs.php?nc) ![](https://boltgolt.nl/howdy_badge/views.php)
+# Howdy for Linux  [![](https://img.shields.io/travis/boltgolt/howdy/master.svg)](https://travis-ci.org/boltgolt/howdy) [![](https://img.shields.io/github/release/boltgolt/howdy.svg?colorB=4c1)](https://github.com/boltgolt/howdy/releases) 
 
 Windows Hello™ style authentication for Linux. Use your built-in IR emitters and camera in combination with face recognition to prove who you are.
 
@@ -10,7 +10,7 @@ Howdy is currently available for Ubuntu/Debian and Arch Linux. If you’re inter
 
 **Note:** The build of dlib can hang on 100% for over a minute, give it time.
 
-### Ubuntu (apt)
+### Debian (Ubuntu, Linux Mint, etc)
 
 Run the installer by pasting (`ctrl+shift+V`) the following commands into the terminal one at a time:
 
@@ -57,7 +57,9 @@ howdy [-U user] [-y] command [argument]
 
 ## Contributing [![](https://img.shields.io/travis/boltgolt/howdy/dev.svg?label=dev%20build)](https://github.com/boltgolt/howdy/tree/dev) [![](https://img.shields.io/github/issues-raw/boltgolt/howdy/enhancement.svg?label=feature+requests&colorB=4c1)](https://github.com/boltgolt/howdy/issues?q=is%3Aissue+is%3Aopen+label%3Aenhancement)
 
-You can contribute in many ways. The easiest are reporting bugs and opening github issues for features you'd like to see in howdy. Code contributions are also very welcome.
+The easiest ways to contribiute to Howdy is by starring the reposotory and opening github issues for features you'd like to see. If you want to do more, you can also [buy me a coffee](https://www.buymeacoffee.com/boltgolt).
+
+Code contributions are also very welcome. If you want to port Howdy to another OS, feel free to contact me.
 
 ## Troubleshooting
 
