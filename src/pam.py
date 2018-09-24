@@ -19,6 +19,11 @@ def doAuth(pamh):
 	if config.get("core", "disabled") == "true":
 		sys.exit(0)
 
+	# Abort if we're in a remote SSH env
+	if config.get("core", "ignore_ssh") == "true":
+		if "SSH_CONNECTION" in os.environ or "SSH_CLIENT" in os.environ or "SSHD_OPTS" in os.environ:
+			sys.exit(0)
+
 	# Run compare as python3 subprocess to circumvent python version and import issues
 	status = subprocess.call(["python3", os.path.dirname(os.path.abspath(__file__)) + "/compare.py", pamh.get_user()])
 
