@@ -57,7 +57,7 @@ howdy [-U user] [-y] command [argument]
 
 ## Contributing [![](https://img.shields.io/travis/boltgolt/howdy/dev.svg?label=dev%20build)](https://github.com/boltgolt/howdy/tree/dev) [![](https://img.shields.io/github/issues-raw/boltgolt/howdy/enhancement.svg?label=feature+requests&colorB=4c1)](https://github.com/boltgolt/howdy/issues?q=is%3Aissue+is%3Aopen+label%3Aenhancement)
 
-The easiest ways to contribiute to Howdy is by starring the reposotory and opening github issues for features you'd like to see. If you want to do more, you can also [buy me a coffee](https://www.buymeacoffee.com/boltgolt).
+The easiest ways to contribute to Howdy is by starring the repository and opening GitHub issues for features you'd like to see. If you want to do more, you can also [buy me a coffee](https://www.buymeacoffee.com/boltgolt).
 
 Code contributions are also very welcome. If you want to port Howdy to another distro, feel free to contact me.
 
@@ -71,6 +71,6 @@ If you encounter an error that hasn't been reported yet, don't be afraid to open
 
 This script is in no way as secure as a password and will never be. Although it's harder to fool than normal face recognition, a person who looks similar to you or well-printed photo of you could be enough to do it.
 
-To minimize the chance of this program being compromised, it's recommend to leave Howdy in `/lib/security` and to keep it read only.
+To minimize the chance of this program being compromised, it's recommended to leave Howdy in `/lib/security` and to keep it read-only.
 
 DO NOT USE HOWDY AS THE SOLE AUTHENTICATION METHOD FOR YOUR SYSTEM.
