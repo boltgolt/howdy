@@ -11,6 +11,8 @@ _Please describe the issue in as much detail as possible, including any errors a
 
 ----
 
+- [ ] I've searched for similar issues already, and my issue has not been reported yet.
 
-**Linux distribution (if applicable)**:
-**Howdy version**:
+Linux distribution (if applicable): 
+
+Howdy version: 
