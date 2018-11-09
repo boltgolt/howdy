@@ -2,7 +2,7 @@ Source: howdy
 Section: misc
 Priority: optional
 Standards-Version: 3.9.7
-Build-Depends: python, dh-python, devscripts, dh-make, debhelper
+Build-Depends: python, dh-python, devscripts, dh-make, debhelper, fakeroot
 Maintainer: boltgolt <boltgolt@gmail.com>
 Vcs-Git: https://github.com/boltgolt/howdy
 

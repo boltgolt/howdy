@@ -27,3 +27,4 @@ addons:
       - dh-make
       - ack-grep
       - devscripts
+      - fakeroot
