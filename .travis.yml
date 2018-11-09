@@ -8,17 +8,15 @@ script:
   # Install the binary, running the debian scripts in the process
   - sudo apt install ../*.deb -y
 
-  # Confirm the dlib module has been installed correctly
-  - 'python3 -c "import dlib; print(dlib.__version__);'
-  # Confirm the face_recognition module has been installed correctly
-  - 'python3 -c "import face_recognition; print(face_recognition.__version__);"'
-
   # Check if the username passthough works correctly with sudo
   - 'howdy | ack-grep --passthru --color "current active user: travis"'
   - 'sudo howdy | ack-grep --passthru --color "current active user: travis"'
-  
+
+  - sudo howdy test
+
   # Remove howdy from the installation
   - sudo apt purge howdy -y
+
 
 notifications:
   email:

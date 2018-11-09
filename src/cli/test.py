@@ -18,7 +18,7 @@ config = configparser.ConfigParser()
 config.read(path + "/../config.ini")
 
 # Start capturing from the configured webcam
-video_capture = cv2.VideoCapture(int(config.get("video", "device_id")))
+video_capture = cv2.VideoCapture(config.get("video", "device_path"))
 
 # Force MJPEG decoding if true
 if config.get("video", "force_mjpeg") == "true":

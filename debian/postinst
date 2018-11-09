@@ -98,6 +98,7 @@ print("Temporary dlib files removed")
 
 log("Installing python dependencies")
 
+# Install direct dependencies so pip does not freak out with the manual dlib install
 handleStatus(subprocess.call(["pip3", "install", "--cache-dir", "/tmp/pip_howdy", "face_recognition_models==0.3.0", "Click>=6.0", "numpy", "Pillow"]))
 
 log("Installing face_recognition")
@@ -115,7 +116,7 @@ log("Configuring howdy")
 
 # Manually change the camera id to the one picked
 for line in fileinput.input(["/lib/security/howdy/config.ini"], inplace = 1):
-	print(line.replace("device_id = 1", "device_id = " + picked), end="")
+	print(line.replace("device_path = none", "device_path = " + picked), end="")
 print("Camera ID saved")
 
 # Secure the howdy folder

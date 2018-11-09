@@ -35,7 +35,7 @@ if "install" not in sys.argv:
 	sys.exit(0)
 
 # The default picked video device id
-picked = ""
+picked = "none"
 
 print(col(1) + "Starting IR camera check...\n" + col(0))
 
@@ -51,8 +51,6 @@ if "HOWDY_NO_PROMPT" in os.environ:
 
 # Get all devices
 devices = os.listdir("/dev/v4l/by-path")
-
-print(devices)
 
 # Loop though all devices
 for dev in devices:
@@ -90,19 +88,19 @@ for dev in devices:
 
 	# Set this camera as picked if the answer was yes, go to the next one if no
 	if ans.lower().strip() == "y" or ans.lower().strip() == "yes":
-		picked = dev[5:]
+		picked = dev
 		break
 	else:
 		print("Interpreting as a " + col(3) + "\"NO\"\n" + col(0))
 
 # Abort if no camera was picked
-if picked == -1:
+if picked == "none":
 	print(col(3) + "No suitable IR camera found, aborting install." + col(0))
 	sys.exit(23)
 
 # Write the result to disk so postinst can have a look at it
 with open("/tmp/howdy_picked_device", "w") as out_file:
-	out_file.write(str(picked))
+	out_file.write("/dev/v4l/by-path/" + picked)
 
 # Add a line break
 print("")
