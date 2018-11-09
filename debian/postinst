@@ -80,16 +80,36 @@ log("Upgrading pip to the latest version")
 # Update pip
 handleStatus(subprocess.call(["pip3 install --upgrade pip"], shell=True))
 
+log("Cloning dlib")
+
+# Clone the dlib git to /tmp, but only the last commit
+handleStatus(subprocess.call(["git", "clone", "--depth", "1", "https://github.com/davisking/dlib.git", "/tmp/dlib_clone"]))
+
+log("Building dlib")
+
+# Start the build without GPU
+handleStatus(subprocess.call(["cd /tmp/dlib_clone/; python3 setup.py install --yes USE_AVX_INSTRUCTIONS --no DLIB_USE_CUDA"], shell=True))
+
+log("Cleaning up dlib")
+
+# Remove the no longer needed git clone
+handleStatus(subprocess.call(["rm", "-rf", "/tmp/dlib_clone"]))
+print("Temporary dlib files removed")
+
 log("Installing python dependencies")
 
-# Install exact dependencies through pip
-handleStatus(subprocess.call(["pip3", "install", "--cache-dir", "/tmp/pip_howdy", "face_recognition_models==0.3.0", "Click>=6.0", "numpy", "Pillow", "dlib"]))
+handleStatus(subprocess.call(["pip3", "install", "--cache-dir", "/tmp/pip_howdy", "face_recognition_models==0.3.0", "Click>=6.0", "numpy", "Pillow"]))
 
 log("Installing face_recognition")
 
 # Install face_recognition though pip
-handleStatus(subprocess.call(["pip3", "install", "--cache-dir", "/tmp/pip_howdy", "face_recognition==1.2.2"]))
-handleStatus(subprocess.call(["pip3", "install", "--cache-dir", "/tmp/pip_howdy", "opencv-python"]))
+handleStatus(subprocess.call(["pip3", "install", "--cache-dir", "/tmp/pip_howdy", "--no-deps", "face_recognition==1.2.2"]))
+
+try:
+	import cv2
+except Exception as e:
+	log("Reinstalling opencv2")
+	handleStatus(subprocess.call(["pip3", "install", "opencv-python"]))
 
 log("Configuring howdy")
 
