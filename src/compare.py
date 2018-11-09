@@ -58,7 +58,7 @@ for model in models:
 timings.append(time.time())
 
 # Start video capture on the IR camera
-video_capture = cv2.VideoCapture(int(config.get("video", "device_id")))
+video_capture = cv2.VideoCapture(config.get("video", "device_path"))
 
 # Force MJPEG decoding if true
 if config.get("video", "force_mjpeg") == "true":

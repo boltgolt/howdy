@@ -1,23 +1,25 @@
 sudo: required
 language: python
-python:
-  - "3.4"
-  - "3.6"
-
-install:
-  # Install build tools and ack-grep for checks
-  - sudo apt install devscripts dh-make ack-grep -y
+python: "3.6"
 
 script:
   # Build the binary (.deb)
   - debuild -i -us -uc -b
-  # Install the binary, also fireing the debian scripts
+  # Install the binary, running the debian scripts in the process
   - sudo apt install ../*.deb -y
+
+  # Confirm the cv2 module has been installed correctly
+  - sudo /usr/bin/env python3 -c "import cv2; print(cv2.__version__);"
+  # Confirm the face_recognition module has been installed correctly
+  - sudo /usr/bin/env python3 -c "import face_recognition; print(face_recognition.__version__);"
+
   # Check if the username passthough works correctly with sudo
   - 'howdy | ack-grep --passthru --color "current active user: travis"'
   - 'sudo howdy | ack-grep --passthru --color "current active user: travis"'
+
   # Remove howdy from the installation
   - sudo apt purge howdy -y
+
 
 notifications:
   email:
@@ -27,3 +29,8 @@ notifications:
 addons:
   apt:
     update: true
+    packages:
+      - dh-make
+      - ack-grep
+      - devscripts
+      - fakeroot

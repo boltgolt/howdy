@@ -6,6 +6,3 @@ include /usr/share/dpkg/default.mk
 
 %:
 	dh $@
-
-binary:
-	dh binary

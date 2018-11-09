@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
 # Installation script to install howdy
 # Executed after primary apt install
 
@@ -53,6 +53,11 @@ if not os.path.exists("/tmp/howdy_picked_device"):
 			# Go through every setting in the old config and apply it to the new file
 			for section in oldConf.sections():
 				for (key, value) in oldConf.items(section):
+					# If config is still using the old device_id parameter, convert it to a path
+					if key == "device_id":
+						key = "device_path"
+						value = "/dev/video" + value
+
 					try:
 						newConf.set(section, key, value)
 					# Add a new section where needed
@@ -98,7 +103,7 @@ print("Temporary dlib files removed")
 
 log("Installing python dependencies")
 
-# Install face_recognition though pip
+# Install direct dependencies so pip does not freak out with the manual dlib install
 handleStatus(subprocess.call(["pip3", "install", "--cache-dir", "/tmp/pip_howdy", "face_recognition_models==0.3.0", "Click>=6.0", "numpy", "Pillow"]))
 
 log("Installing face_recognition")
@@ -106,19 +111,26 @@ log("Installing face_recognition")
 # Install face_recognition though pip
 handleStatus(subprocess.call(["pip3", "install", "--cache-dir", "/tmp/pip_howdy", "--no-deps", "face_recognition==1.2.2"]))
 
+try:
+	import cv2
+except Exception as e:
+	log("Reinstalling opencv2")
+	handleStatus(subprocess.call(["pip3", "install", "opencv-python"]))
+
 log("Configuring howdy")
 
 # Manually change the camera id to the one picked
 for line in fileinput.input(["/lib/security/howdy/config.ini"], inplace = 1):
-	print(line.replace("device_id = 1", "device_id = " + picked), end="")
+	print(line.replace("device_path = none", "device_path = " + picked), end="")
+print("Camera ID saved")
 
 # Secure the howdy folder
-handleStatus(subprocess.call(["chmod 600 -R /lib/security/howdy/"], shell=True))
+handleStatus(subprocess.call(["chmod 744 -R /lib/security/howdy/"], shell=True))
 
 # Allow anyone to execute the python CLI
 handleStatus(subprocess.call(["chmod 755 /lib/security/howdy"], shell=True))
-handleStatus(subprocess.call(["chmod 744 /lib/security/howdy/cli.py"], shell=True))
-handleStatus(subprocess.call(["chmod 744 -R /lib/security/howdy/cli"], shell=True))
+handleStatus(subprocess.call(["chmod 755 /lib/security/howdy/cli.py"], shell=True))
+handleStatus(subprocess.call(["chmod 755 -R /lib/security/howdy/cli"], shell=True))
 print("Permissions set")
 
 # Make the CLI executable as howdy
@@ -198,33 +210,5 @@ common_auth = open("/etc/pam.d/common-auth", "w")
 common_auth.write("".join(outlines))
 common_auth.close()
 
-# From here onwards the installation is complete
-# We want to gather more information about the types or IR camera's
-# used though, and the following lines are data gathering
-# No data is ever uploaded without permission
-
-if "HOWDY_NO_PROMPT" not in os.environ:
-	# List all video devices
-	diag_out = "Video devices [IR=" + picked + "]\n"
-	diag_out += "```\n"
-	diag_out += subprocess.check_output(['ls /dev/ | grep video'], shell=True).decode("utf-8")
-	diag_out += "```\n"
-
-	# Get some info from the USB kernel listings
-	diag_out += "Lsusb output\n"
-	diag_out += "```\n"
-	diag_out += subprocess.check_output(['lsusb -vvvv | grep -i "Camera\|iFunction"'], shell=True).decode("utf-8")
-	diag_out += "```\n"
-
-	# Get camera information from video4linux
-	diag_out += "Udevadm\n"
-	diag_out += "```\n"
-	diag_out += subprocess.check_output(['udevadm info -r --query=all -n /dev/video' + picked + ' | grep -i "ID_BUS\|ID_MODEL_ID\|ID_VENDOR_ID\|ID_V4L_PRODUCT\|ID_MODEL"'], shell=True).decode("utf-8")
-	diag_out += "```"
-
-	# Print it all as a clickable link to a new github issue
-	print("https://github.com/boltgolt/howdy-reports/issues/new?title=Post-installation%20camera%20information&body=" + urllib.parse.quote_plus(diag_out) + "\n")
-
-# Let the user know what to do with the link
+# Sign off
 print("Installation complete.")
-print(col(2) + "If you want to help the development, please use the link above to post some camera-related information to github!" + col(0))

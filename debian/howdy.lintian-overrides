@@ -1,0 +1,7 @@
+# W: Don't require ugly linebreaks in last 5 chars
+howdy: debian-changelog-line-too-long
+
+# E: Allows the name Howdy to show up in Ubuntu updater
+howdy: description-starts-with-package-name
+# E: Allows python for installation scripts
+howdy: unknown-control-interpreter

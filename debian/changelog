@@ -1,3 +1,13 @@
+howdy (2.4.0) xenial; urgency=medium
+
+  * Cameras are now selected by path instead of by video device number (thanks @Rhiyo!)
+  * Added fallbacks to $EDITOR for the config command (thanks @yassineim!)
+  * Fixed missing cv2 module after installation (thanks @bendandersen and many others!)
+  * Fixed file permissions crashing Howdy in some cases (thanks @GJDitchfield!)
+  * Fixed howdy using python3 from local virtual environment (thanks @EdwardJB!)
+
+ -- boltgolt <boltgolt@gmail.com>  Fri, 09 Nov 2018 20:59:45 +0100
+
 howdy (2.3.1) xenial; urgency=high
 
   * Fixed issue where `frame_width` and `frame_height` would be completely ignored (thanks @janecz-n!)
