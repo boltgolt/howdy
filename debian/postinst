@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
 # Installation script to install howdy
 # Executed after primary apt install
 
@@ -83,12 +83,12 @@ handleStatus(subprocess.call(["pip3 install --upgrade pip"], shell=True))
 log("Cloning dlib")
 
 # Clone the dlib git to /tmp, but only the last commit
-handleStatus(subprocess.call(["git", "clone", "--depth", "1", "https://github.com/davisking/dlib.git", "/tmp/dlib_clone"]))
+# handleStatus(subprocess.call(["git", "clone", "--depth", "1", "https://github.com/davisking/dlib.git", "/tmp/dlib_clone"]))
 
 log("Building dlib")
 
 # Start the build without GPU
-handleStatus(subprocess.call(["cd /tmp/dlib_clone/; python3 setup.py install --yes USE_AVX_INSTRUCTIONS --no DLIB_USE_CUDA"], shell=True))
+# handleStatus(subprocess.call(["cd /tmp/dlib_clone/; python3 setup.py install --yes USE_AVX_INSTRUCTIONS --no DLIB_USE_CUDA"], shell=True))
 
 log("Cleaning up dlib")
 
@@ -99,7 +99,7 @@ print("Temporary dlib files removed")
 log("Installing python dependencies")
 
 # Install face_recognition though pip
-handleStatus(subprocess.call(["pip3", "install", "--cache-dir", "/tmp/pip_howdy", "face_recognition_models==0.3.0", "Click>=6.0", "numpy", "Pillow"]))
+handleStatus(subprocess.call(["pip3", "install", "--cache-dir", "/tmp/pip_howdy", "face_recognition_models==0.3.0", "Click>=6.0", "numpy", "Pillow", "dlib", "opencv-python"]))
 
 log("Installing face_recognition")
 
