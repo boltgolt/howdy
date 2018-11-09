@@ -53,6 +53,10 @@ if not os.path.exists("/tmp/howdy_picked_device"):
 			# Go through every setting in the old config and apply it to the new file
 			for section in oldConf.sections():
 				for (key, value) in oldConf.items(section):
+					if key == "device_id":
+						key = "device_path"
+						value = "/dev/video" + value
+
 					try:
 						newConf.set(section, key, value)
 					# Add a new section where needed

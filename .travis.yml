@@ -12,7 +12,8 @@ script:
   - 'howdy | ack-grep --passthru --color "current active user: travis"'
   - 'sudo howdy | ack-grep --passthru --color "current active user: travis"'
 
-  - sudo howdy test
+  - echo "import face_recognition; print(face_recognition.__version__);" > /tmp/h.py
+  - python3 /tmp/h.py
 
   # Remove howdy from the installation
   - sudo apt purge howdy -y
