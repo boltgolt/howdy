@@ -53,6 +53,7 @@ if not os.path.exists("/tmp/howdy_picked_device"):
 			# Go through every setting in the old config and apply it to the new file
 			for section in oldConf.sections():
 				for (key, value) in oldConf.items(section):
+					# If config is still using the old device_id parameter, convert it to a path
 					if key == "device_id":
 						key = "device_path"
 						value = "/dev/video" + value
@@ -124,12 +125,12 @@ for line in fileinput.input(["/lib/security/howdy/config.ini"], inplace = 1):
 print("Camera ID saved")
 
 # Secure the howdy folder
-handleStatus(subprocess.call(["chmod 600 -R /lib/security/howdy/"], shell=True))
+handleStatus(subprocess.call(["chmod 744 -R /lib/security/howdy/"], shell=True))
 
 # Allow anyone to execute the python CLI
 handleStatus(subprocess.call(["chmod 755 /lib/security/howdy"], shell=True))
-handleStatus(subprocess.call(["chmod 744 /lib/security/howdy/cli.py"], shell=True))
-handleStatus(subprocess.call(["chmod 744 -R /lib/security/howdy/cli"], shell=True))
+handleStatus(subprocess.call(["chmod 755 /lib/security/howdy/cli.py"], shell=True))
+handleStatus(subprocess.call(["chmod 755 -R /lib/security/howdy/cli"], shell=True))
 print("Permissions set")
 
 # Make the CLI executable as howdy
