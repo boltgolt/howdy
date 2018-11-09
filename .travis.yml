@@ -2,10 +2,6 @@ sudo: required
 language: python
 python: "3.6"
 
-install:
-  # Install build tools and ack-grep for checks
-  # - sudo apt install devscripts dh-make ack-grep -y
-
 script:
   # Build the binary (.deb)
   - debuild -i -us -uc -b
@@ -30,3 +26,4 @@ addons:
     packages:
       - dh-make
       - ack-grep
+      - devscripts
