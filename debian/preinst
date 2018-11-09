@@ -35,7 +35,7 @@ if "install" not in sys.argv:
 	sys.exit(0)
 
 # The default picked video device id
-picked = -1
+picked = ""
 
 print(col(1) + "Starting IR camera check...\n" + col(0))
 
@@ -45,55 +45,55 @@ if "HOWDY_NO_PROMPT" in os.environ:
 
 	# Write the default device to disk and exit
 	with open("/tmp/howdy_picked_device", "w") as out_file:
-		out_file.write("0")
+		out_file.write("none")
 
 	sys.exit(0)
 
 # Get all devices
-devices = os.listdir("/dev")
+devices = os.listdir("/dev/v4l/by-path")
+
+print(devices)
 
 # Loop though all devices
 for dev in devices:
-	# Only use the video devices
-	if (dev[:5] == "video"):
-		time.sleep(.5)
+	time.sleep(.5)
 
-		# The full path to the device is the default name
-		device_name = "/dev/" + dev
-		# Get the udevadm details to try to get a better name
-		udevadm = subprocess.check_output(["udevadm info -r --query=all -n " + device_name], shell=True).decode("utf-8")
+	# The full path to the device is the default name
+	device_name = "/dev/v4l/by-path/" + dev
+	# Get the udevadm details to try to get a better name
+	udevadm = subprocess.check_output(["udevadm info -r --query=all -n " + device_name], shell=True).decode("utf-8")
 
-		# Loop though udevadm to search for a better name
-		for line in udevadm.split("\n"):
-			# Match it and encase it in quotes
-			re_name = re.search('product.*=(.*)$', line, re.IGNORECASE)
-			if re_name:
-				device_name = '"' + re_name.group(1) + '"'
+	# Loop though udevadm to search for a better name
+	for line in udevadm.split("\n"):
+		# Match it and encase it in quotes
+		re_name = re.search('product.*=(.*)$', line, re.IGNORECASE)
+		if re_name:
+			device_name = '"' + re_name.group(1) + '"'
 
-		# Show what device we're using
-		print("Trying " + device_name)
+	# Show what device we're using
+	print("Trying " + device_name)
 
-		# Let fswebcam keep the camera open in the background
-		sub = subprocess.Popen(["fswebcam -S 9999999999 -d /dev/" + dev + " /dev/null 2>/dev/null"], shell=True, preexec_fn=os.setsid)
+	# Let fswebcam keep the camera open in the background
+	sub = subprocess.Popen(["streamer -t 1:0:0 -c /dev/v4l/by-path/" + dev + " -b 16 -f rgb24 -o /dev/null 1>/dev/null 2>/dev/null"], shell=True, preexec_fn=os.setsid)
 
-		try:
-			# Ask the user if this is the right one
-			print(col(2) + "One of your cameras should now be on." + col(0))
-			ans = input("Did your IR emitters turn on? [y/N]: ")
-		except KeyboardInterrupt:
-			# Kill fswebcam if the user aborts
-			os.killpg(os.getpgid(sub.pid), signal.SIGTERM)
-			raise
-
-		# The user has answered, kill fswebcam
+	try:
+		# Ask the user if this is the right one
+		print(col(2) + "One of your cameras should now be on." + col(0))
+		ans = input("Did your IR emitters turn on? [y/N]: ")
+	except KeyboardInterrupt:
+		# Kill fswebcam if the user aborts
 		os.killpg(os.getpgid(sub.pid), signal.SIGTERM)
+		raise
 
-		# Set this camera as picked if the answer was yes, go to the next one if no
-		if ans.lower().strip() == "y" or ans.lower().strip() == "yes":
-			picked = dev[5:]
-			break
-		else:
-			print("Interpreting as a " + col(3) + "\"NO\"\n" + col(0))
+	# The user has answered, kill fswebcam
+	os.killpg(os.getpgid(sub.pid), signal.SIGTERM)
+
+	# Set this camera as picked if the answer was yes, go to the next one if no
+	if ans.lower().strip() == "y" or ans.lower().strip() == "yes":
+		picked = dev[5:]
+		break
+	else:
+		print("Interpreting as a " + col(3) + "\"NO\"\n" + col(0))
 
 # Abort if no camera was picked
 if picked == -1:

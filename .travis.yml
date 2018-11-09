@@ -7,6 +7,8 @@ script:
   - debuild -i -us -uc -b
   # Install the binary, running the debian scripts in the process
   - sudo apt install ../*.deb -y
+  # Confirm the dlib module has been installed correctly
+  - 'python3 -c "import dlib; print(dlib.__version__); print(\"OK\")"'
   # Confirm the face_recognition module has been installed correctly
   - 'python3 -c "import face_recognition; print(\"OK\")" | ack-grep --passthru "OK"'
   # Check if the username passthough works correctly with sudo
@@ -14,6 +16,7 @@ script:
   - 'sudo howdy | ack-grep --passthru --color "current active user: travis"'
   # Remove howdy from the installation
   - sudo apt purge howdy -y
+  - streamer --help
 
 notifications:
   email:
