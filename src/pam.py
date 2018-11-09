@@ -13,7 +13,7 @@ config = ConfigParser.ConfigParser()
 config.read(os.path.dirname(os.path.abspath(__file__)) + "/config.ini")
 
 def doAuth(pamh):
-	"""Start authentication in a seperate process"""
+	"""Starts authentication in a seperate process"""
 
 	# Abort is Howdy is disabled
 	if config.get("core", "disabled") == "true":
@@ -25,7 +25,7 @@ def doAuth(pamh):
 			sys.exit(0)
 
 	# Run compare as python3 subprocess to circumvent python version and import issues
-	status = subprocess.call(["python3", os.path.dirname(os.path.abspath(__file__)) + "/compare.py", pamh.get_user()])
+	status = subprocess.call(["/usr/bin/python3", os.path.dirname(os.path.abspath(__file__)) + "/compare.py", pamh.get_user()])
 
 	# Status 10 means we couldn't find any face models
 	if status == 10:
@@ -62,9 +62,9 @@ def pam_sm_open_session(pamh, flags, args):
 	return doAuth(pamh)
 
 def pam_sm_close_session(pamh, flags, argv):
-	"""We don't need to clean anyting up at the end of a session, so return true"""
+	"""We don't need to clean anyting up at the end of a session, so returns true"""
 	return pamh.PAM_SUCCESS
 
 def pam_sm_setcred(pamh, flags, argv):
-	"""We don't need set any credentials, so return true"""
+	"""We don't need set any credentials, so returns true"""
 	return pamh.PAM_SUCCESS
