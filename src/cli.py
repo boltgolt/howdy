@@ -4,7 +4,6 @@
 # Import required modules
 import sys
 import os
-import subprocess
 import getpass
 import argparse
 import builtins

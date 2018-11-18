@@ -1,14 +1,11 @@
 # Show a windows with the video stream and testing information
 
 # Import required modules
-import face_recognition
-import cv2
 import configparser
 import os
-import sys
-import json
-import numpy
 import time
+import cv2
+import face_recognition
 
 # Get the absolute path to the current file
 path = os.path.dirname(os.path.abspath(__file__))
