@@ -42,16 +42,15 @@ dark_tries = 0
 # Try to load the face model from the models folder
 try:
 	models = json.load(open(os.path.dirname(os.path.abspath(__file__)) + "/models/" + user + ".dat"))
+
+	# Put all models together into 1 array
+	encodings = [model["data"] for model in models]
 except FileNotFoundError:
 	sys.exit(10)
 
 # Check if the file contains a model
-if len(models) < 1:
+if not encodings:
 	sys.exit(10)
-
-# Put all models together into 1 array
-for model in models:
-	encodings += model["data"]
 
 # Add the time needed to start the script
 timings.append(time.time())
@@ -153,7 +152,7 @@ while True:
 				if end_report:
 					def print_timing(label, offset):
 						"""Helper function to print a timing from the list"""
-						print("  " + label + ": " + str(round((timings[1 + offset] - timings[offset]) * 1000)) + "ms")
+						print("  %s: %dms" % (label, round((timings[1 + offset] - timings[offset]) * 1000)))
 
 					print("Time spent")
 					print_timing("Starting up", 0)
@@ -162,19 +161,19 @@ while True:
 					print_timing("Searching for known face", 3)
 
 					print("\nResolution")
-					print("  Native: " + str(height) + "x" + str(width))
-					print("  Used: " + str(scale_height) + "x" + str(scale_width))
+					print("  Native: %dx%d" % (height, width))
+					print("  Used: %dx%d" % (scale_height, scale_width))
 
 					# Show the total number of frames and calculate the FPS by deviding it by the total scan time
-					print("\nFrames searched: " + str(frames) + " (" + str(round(float(frames) / (timings[4] - timings[3]), 2)) + " fps)")
-					print("Dark frames ignored: " + str(dark_tries))
-					print("Certainty of winning frame: " + str(round(match * 10, 3)))
+					print("\nFrames searched: %d (%.2f fps)" % (frames, frames / (timings[4] - timings[3])))
+					print("Dark frames ignored: %d " % (dark_tries, ))
+					print("Certainty of winning frame: %.3f" % (match * 10, ))
 
 					# Catch older 3-encoding models
 					if not match_index in models:
 						match_index = 0
 
-					print("Winning model: " + str(match_index) + " (\"" + models[match_index]["label"] + "\")")
+					print("Winning model: %d (\"%s\")" % (match_index,  models[match_index]["label"]))
 
 				# End peacefully
 				stop(0)

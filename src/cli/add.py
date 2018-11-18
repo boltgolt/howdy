@@ -5,9 +5,9 @@ import time
 import os
 import sys
 import json
-import cv2
 import configparser
 import builtins
+import cv2
 
 # Try to import face_recognition and give a nice error if we can't
 # Add should be the first point where import issues show up
@@ -55,12 +55,12 @@ print("Adding face model for the user " + user)
 label = "Initial model"
 
 # If models already exist, set that default label
-if len(encodings) > 0:
+if encodings:
 	label = "Model #" + str(len(encodings) + 1)
 
 # Keep de default name if we can't ask questions
 if builtins.howdy_args.y:
-	print("Using default label \"" + label + "\" because of -y flag")
+	print('Using default label "%s" because of -y flag' % (label, ))
 else:
 	# Ask the user for a custom label
 	label_in = input("Enter a label for this new model [" + label + "]: ")
@@ -119,11 +119,9 @@ while frames < 60:
 	enc = face_recognition.face_encodings(frame)
 
 	# If we've found at least one, we can continue
-	if len(enc) > 0:
+	if enc:
 		break
-
-# If 0 faces are detected we can't continue
-if len(enc) == 0:
+else:
 	print("No face detected, aborting")
 	sys.exit(1)
 
