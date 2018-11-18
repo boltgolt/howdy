@@ -1,7 +1,6 @@
 # Save the face of the user in encoded form
 
 # Import required modules
-import subprocess
 import time
 import os
 import sys
@@ -82,15 +81,18 @@ insert_model = {
 video_capture = cv2.VideoCapture(config.get("video", "device_path"))
 
 # Force MJPEG decoding if true
-if config.get("video", "force_mjpeg") == "true":
+if config.getboolean("video", "force_mjpeg"):
+	# Set a magic number, will enable MJPEG but is badly documentated
 	video_capture.set(cv2.CAP_PROP_FOURCC, 1196444237)
 
 # Set the frame width and height if requested
-if int(config.get("video", "frame_width")) != -1:
-	video_capture.set(cv2.CAP_PROP_FRAME_WIDTH, int(config.get("video", "frame_width")))
+fw = config.getint("video", "frame_width")
+fh = config.getint("video", "frame_height")
+if fw != -1:
+	video_capture.set(cv2.CAP_PROP_FRAME_WIDTH, fw)
 
-if int(config.get("video", "frame_height")) != -1:
-	video_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, int(config.get("video", "frame_height")))
+if fh != -1:
+	video_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, fh)
 
 # Request a frame to wake the camera up
 video_capture.read()
