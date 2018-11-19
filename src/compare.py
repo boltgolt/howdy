@@ -12,7 +12,6 @@ import cv2
 import sys
 import os
 import json
-import math
 import configparser
 
 # Read config from disk
@@ -43,16 +42,15 @@ dark_tries = 0
 # Try to load the face model from the models folder
 try:
 	models = json.load(open(os.path.dirname(os.path.abspath(__file__)) + "/models/" + user + ".dat"))
+
+	# Put all models together into 1 array
+	encodings = [model["data"] for model in models]
 except FileNotFoundError:
 	sys.exit(10)
 
 # Check if the file contains a model
-if len(models) < 1:
+if not encodings:
 	sys.exit(10)
-
-# Put all models together into 1 array
-for model in models:
-	encodings += model["data"]
 
 # Add the time needed to start the script
 timings.append(time.time())
@@ -61,16 +59,18 @@ timings.append(time.time())
 video_capture = cv2.VideoCapture(config.get("video", "device_path"))
 
 # Force MJPEG decoding if true
-if config.get("video", "force_mjpeg") == "true":
+if config.getboolean("video", "force_mjpeg"):
 	# Set a magic number, will enable MJPEG but is badly documentated
 	video_capture.set(cv2.CAP_PROP_FOURCC, 1196444237)
 
 # Set the frame width and height if requested
-if int(config.get("video", "frame_width")) != -1:
-	video_capture.set(cv2.CAP_PROP_FRAME_WIDTH, int(config.get("video", "frame_width")))
+fw = config.getint("video", "frame_width")
+fh = config.getint("video", "frame_height")
+if fw != -1:
+	video_capture.set(cv2.CAP_PROP_FRAME_WIDTH, fw)
 
-if int(config.get("video", "frame_height")) != -1:
-	video_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, int(config.get("video", "frame_height")))
+if fh != -1:
+	video_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, fh)
 
 # Capture a single frame so the camera becomes active
 # This will let the camera adjust its light levels while we're importing for faster scanning
@@ -88,12 +88,15 @@ max_height = int(config.get("video", "max_height"))
 
 # Start the read loop
 frames = 0
+timeout = config.getint("video", "timout")
+dark_threshold = config.getfloat("video", "dark_threshold")
+end_report = config.getboolean("debug", "end_report")
 while True:
 	# Increment the frame count every loop
 	frames += 1
 
 	# Stop if we've exceded the time limit
-	if time.time() - timings[3] > int(config.get("video", "timout")):
+	if time.time() - timings[3] > timeout:
 		stop(11)
 
 	# Grab a single frame of video
@@ -111,7 +114,7 @@ while True:
 		continue
 
 	# Scrip the frame if it exceeds the threshold
-	if float(hist[0]) / hist_total * 100 > float(config.get("video", "dark_threshold")):
+	if float(hist[0]) / hist_total * 100 > dark_threshold:
 		dark_tries += 1
 		continue
 
@@ -146,31 +149,31 @@ while True:
 				timings.append(time.time())
 
 				# If set to true in the config, print debug text
-				if config.get("debug", "end_report") == "true":
+				if end_report:
 					def print_timing(label, offset):
 						"""Helper function to print a timing from the list"""
-						print("  " + label + ": " + str(round((timings[1 + offset] - timings[offset]) * 1000)) + "ms")
+						print("  %s: %dms" % (label, round((timings[1 + offset] - timings[offset]) * 1000)))
 
-					print("Time spend")
+					print("Time spent")
 					print_timing("Starting up", 0)
 					print_timing("Opening the camera", 1)
 					print_timing("Importing face_recognition", 2)
 					print_timing("Searching for known face", 3)
 
 					print("\nResolution")
-					print("  Native: " + str(height) + "x" + str(width))
-					print("  Used: " + str(scale_height) + "x" + str(scale_width))
+					print("  Native: %dx%d" % (height, width))
+					print("  Used: %dx%d" % (scale_height, scale_width))
 
 					# Show the total number of frames and calculate the FPS by deviding it by the total scan time
-					print("\nFrames searched: " + str(frames) + " (" + str(round(float(frames) / (timings[4] - timings[3]), 2)) + " fps)")
-					print("Dark frames ignored: " + str(dark_tries))
-					print("Certainty of winning frame: " + str(round(match * 10, 3)))
+					print("\nFrames searched: %d (%.2f fps)" % (frames, frames / (timings[4] - timings[3])))
+					print("Dark frames ignored: %d " % (dark_tries, ))
+					print("Certainty of winning frame: %.3f" % (match * 10, ))
 
 					# Catch older 3-encoding models
 					if not match_index in models:
 						match_index = 0
 
-					print("Winning model: " + str(match_index) + " (\"" + models[match_index]["label"] + "\")")
+					print("Winning model: %d (\"%s\")" % (match_index,  models[match_index]["label"]))
 
 				# End peacefully
 				stop(0)

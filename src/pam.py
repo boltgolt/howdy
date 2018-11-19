@@ -16,11 +16,11 @@ def doAuth(pamh):
 	"""Starts authentication in a seperate process"""
 
 	# Abort is Howdy is disabled
-	if config.get("core", "disabled") == "true":
+	if config.getboolean("core", "disabled"):
 		sys.exit(0)
 
 	# Abort if we're in a remote SSH env
-	if config.get("core", "ignore_ssh") == "true":
+	if config.getboolean("core", "ignore_ssh"):
 		if "SSH_CONNECTION" in os.environ or "SSH_CLIENT" in os.environ or "SSHD_OPTS" in os.environ:
 			sys.exit(0)
 
@@ -29,7 +29,7 @@ def doAuth(pamh):
 
 	# Status 10 means we couldn't find any face models
 	if status == 10:
-		if config.get("core", "suppress_unknown") != "true":
+		if not config.getboolean("core", "suppress_unknown"):
 			pamh.conversation(pamh.Message(pamh.PAM_ERROR_MSG, "No face model known"))
 		return pamh.PAM_USER_UNKNOWN
 	# Status 11 means we exceded the maximum retry count
@@ -39,11 +39,11 @@ def doAuth(pamh):
 	# Status 0 is a successful exit
 	if status == 0:
 		# Show the success message if it isn't suppressed
-		if config.get("core", "no_confirmation") != "true":
+		if not config.getboolean("core", "no_confirmation"):
 			pamh.conversation(pamh.Message(pamh.PAM_TEXT_INFO, "Identified face as " + pamh.get_user()))
 
 		# Try to dismiss the lock screen if enabled
-		if config.get("core", "dismiss_lockscreen") == "true":
+		if config.get("core", "dismiss_lockscreen"):
 			# Run it as root with a timeout of 1s, and never ask for a password through the UI
 			subprocess.Popen(["sudo", "timeout", "1", "loginctl", "unlock-sessions", "--no-ask-password"])
 

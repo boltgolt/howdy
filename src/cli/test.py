@@ -1,14 +1,11 @@
 # Show a windows with the video stream and testing information
 
 # Import required modules
-import face_recognition
-import cv2
 import configparser
 import os
-import sys
-import json
-import numpy
 import time
+import cv2
+import face_recognition
 
 # Get the absolute path to the current file
 path = os.path.dirname(os.path.abspath(__file__))
@@ -21,15 +18,18 @@ config.read(path + "/../config.ini")
 video_capture = cv2.VideoCapture(config.get("video", "device_path"))
 
 # Force MJPEG decoding if true
-if config.get("video", "force_mjpeg") == "true":
+if config.getboolean("video", "force_mjpeg"):
+	# Set a magic number, will enable MJPEG but is badly documented
 	video_capture.set(cv2.CAP_PROP_FOURCC, 1196444237)
 
 # Set the frame width and height if requested
-if int(config.get("video", "frame_width")) != -1:
-	video_capture.set(cv2.CAP_PROP_FRAME_WIDTH, int(config.get("video", "frame_width")))
+fw = config.getint("video", "frame_width")
+fh = config.getint("video", "frame_height")
+if fw != -1:
+	video_capture.set(cv2.CAP_PROP_FRAME_WIDTH, fw)
 
-if int(config.get("video", "frame_height")) != -1:
-	video_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, int(config.get("video", "frame_height")))
+if fh != -1:
+	video_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, fh)
 
 # Let the user know what's up
 print("""
@@ -47,6 +47,10 @@ def mouse(event, x, y, flags, param):
 	if event == cv2.EVENT_LBUTTONDOWN:
 		slow_mode = not slow_mode
 
+def print_text(line_number, text):
+	"""Print the status text by line number"""
+	cv2.putText(overlay, text, (10, height - 10 - (10 * line_number)), cv2.FONT_HERSHEY_SIMPLEX, .3, (0, 255, 0), 0, cv2.LINE_AA)
+
 # Open the window and attach a a mouse listener
 cv2.namedWindow("Howdy Test")
 cv2.setMouseCallback("Howdy Test", mouse)
@@ -61,11 +65,13 @@ sec_frames = 0
 fps = 0
 # The current second we're counting
 sec = int(time.time())
+# recognition time
+rec_tm = 0
 
 # Wrap everything in an keyboard interupt handler
 try:
 	while True:
-		# Inclement the frames
+		# Increment the frames
 		total_frames += 1
 		sec_frames += 1
 
@@ -109,14 +115,11 @@ try:
 		# Draw a stripe indicating the dark threshold
 		cv2.rectangle(overlay, (8, 35), (20, 36), (255, 0, 0), thickness=cv2.FILLED)
 
-		def print_text(line_number, text):
-			"""Print the status text by line number"""
-			cv2.putText(overlay, text, (10, height - 10 - (10 * line_number)), cv2.FONT_HERSHEY_SIMPLEX, .3, (0, 255, 0), 0, cv2.LINE_AA)
-
 		# Print the statis in the bottom left
-		print_text(0, "RESOLUTION: " + str(height) + "x" + str(width))
-		print_text(1, "FPS: " + str(fps))
-		print_text(2, "FRAMES: " + str(total_frames))
+		print_text(0, "RESOLUTION: %dx%d" % (height, width))
+		print_text(1, "FPS: %d" % (fps, ))
+		print_text(2, "FRAMES: %d" % (total_frames, ))
+		print_text(3, "RECOGNITION: %dms" % (round(rec_tm * 1000), ))
 
 		# Show that slow mode is on, if it's on
 		if slow_mode:
@@ -130,8 +133,10 @@ try:
 			# SHow that this is an active frame
 			cv2.putText(overlay, "SCAN FRAME", (width - 68, 16), cv2.FONT_HERSHEY_SIMPLEX, .3, (0, 255, 0), 0, cv2.LINE_AA)
 
+			rec_tm = time.time()
 			# Get the locations of all faces and their locations
 			face_locations = face_recognition.face_locations(frame)
+			rec_tm = time.time() - rec_tm
 
 			# Loop though all faces and paint a circle around them
 			for loc in face_locations:

@@ -1,14 +1,13 @@
 # Save the face of the user in encoded form
 
 # Import required modules
-import subprocess
 import time
 import os
 import sys
 import json
-import cv2
 import configparser
 import builtins
+import cv2
 
 # Try to import face_recognition and give a nice error if we can't
 # Add should be the first point where import issues show up
@@ -56,12 +55,12 @@ print("Adding face model for the user " + user)
 label = "Initial model"
 
 # If models already exist, set that default label
-if len(encodings) > 0:
+if encodings:
 	label = "Model #" + str(len(encodings) + 1)
 
 # Keep de default name if we can't ask questions
 if builtins.howdy_args.y:
-	print("Using default label \"" + label + "\" because of -y flag")
+	print('Using default label "%s" because of -y flag' % (label, ))
 else:
 	# Ask the user for a custom label
 	label_in = input("Enter a label for this new model [" + label + "]: ")
@@ -82,15 +81,18 @@ insert_model = {
 video_capture = cv2.VideoCapture(config.get("video", "device_path"))
 
 # Force MJPEG decoding if true
-if config.get("video", "force_mjpeg") == "true":
+if config.getboolean("video", "force_mjpeg"):
+	# Set a magic number, will enable MJPEG but is badly documentated
 	video_capture.set(cv2.CAP_PROP_FOURCC, 1196444237)
 
 # Set the frame width and height if requested
-if int(config.get("video", "frame_width")) != -1:
-	video_capture.set(cv2.CAP_PROP_FRAME_WIDTH, int(config.get("video", "frame_width")))
+fw = config.getint("video", "frame_width")
+fh = config.getint("video", "frame_height")
+if fw != -1:
+	video_capture.set(cv2.CAP_PROP_FRAME_WIDTH, fw)
 
-if int(config.get("video", "frame_height")) != -1:
-	video_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, int(config.get("video", "frame_height")))
+if fh != -1:
+	video_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, fh)
 
 # Request a frame to wake the camera up
 video_capture.read()
@@ -117,11 +119,9 @@ while frames < 60:
 	enc = face_recognition.face_encodings(frame)
 
 	# If we've found at least one, we can continue
-	if len(enc) > 0:
+	if enc:
 		break
-
-# If 0 faces are detected we can't continue
-if len(enc) == 0:
+else:
 	print("No face detected, aborting")
 	sys.exit(1)
 

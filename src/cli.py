@@ -4,7 +4,6 @@
 # Import required modules
 import sys
 import os
-import subprocess
 import getpass
 import argparse
 import builtins
@@ -16,7 +15,7 @@ except:
 	user = os.environ.get("SUDO_USER")
 
 # If that fails, try to get the direct user
-if user == "root" or user == None:
+if user == "root" or user is None:
 	env_user = getpass.getuser().strip()
 
 	# If even that fails, error out
