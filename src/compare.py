@@ -42,15 +42,16 @@ dark_tries = 0
 # Try to load the face model from the models folder
 try:
 	models = json.load(open(os.path.dirname(os.path.abspath(__file__)) + "/models/" + user + ".dat"))
-
-	# Put all models together into 1 array
-	encodings = [model["data"] for model in models]
 except FileNotFoundError:
 	sys.exit(10)
 
 # Check if the file contains a model
-if not encodings:
+if len(models) < 1:
 	sys.exit(10)
+
+# Put all models together into 1 array
+for model in models:
+	encodings += model["data"]
 
 # Add the time needed to start the script
 timings.append(time.time())
@@ -63,12 +64,13 @@ if config.getboolean("video", "force_mjpeg"):
 	# Set a magic number, will enable MJPEG but is badly documentated
 	video_capture.set(cv2.CAP_PROP_FOURCC, 1196444237)
 
-# Set the frame width and height if requested
+# Get the height and width config values
 fw = config.getint("video", "frame_width")
 fh = config.getint("video", "frame_height")
+
+# Set the frame width and height if requested
 if fw != -1:
 	video_capture.set(cv2.CAP_PROP_FRAME_WIDTH, fw)
-
 if fh != -1:
 	video_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, fh)
 
@@ -86,11 +88,13 @@ timings.append(time.time())
 # Fetch the max frame height
 max_height = int(config.get("video", "max_height"))
 
-# Start the read loop
-frames = 0
+# Fetch config settings out of the loop
 timeout = config.getint("video", "timout")
 dark_threshold = config.getfloat("video", "dark_threshold")
 end_report = config.getboolean("debug", "end_report")
+
+# Start the read loop
+frames = 0
 while True:
 	# Increment the frame count every loop
 	frames += 1
@@ -145,7 +149,7 @@ while True:
 			match_index += 1
 
 			# Try to find a match that's confident enough
-			if match * 10 < float(config.get("video", "certainty")) and match > 0:
+			if match * 10 < config.getfloat("video", "certainty") and match > 0:
 				timings.append(time.time())
 
 				# If set to true in the config, print debug text

@@ -8,18 +8,11 @@ script:
   # Install the binary, running the debian scripts in the process
   - sudo apt install ../*.deb -y
 
-  # Confirm the cv2 module has been installed correctly
-  - sudo /usr/bin/env python3 -c "import cv2; print(cv2.__version__);"
-  # Confirm the face_recognition module has been installed correctly
-  - sudo /usr/bin/env python3 -c "import face_recognition; print(face_recognition.__version__);"
-
-  # Check if the username passthough works correctly with sudo
-  - 'howdy | ack-grep --passthru --color "current active user: travis"'
-  - 'sudo howdy | ack-grep --passthru --color "current active user: travis"'
+  - ./tests/importing.sh
+  - ./tests/passthrough.sh
 
   # Remove howdy from the installation
   - sudo apt purge howdy -y
-
 
 notifications:
   email:
