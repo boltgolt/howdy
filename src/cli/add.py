@@ -121,7 +121,8 @@ while frames < 60:
 	# If we've found at least one, we can continue
 	if enc:
 		break
-else:
+
+if not enc:
 	print("No face detected, aborting")
 	sys.exit(1)
 
