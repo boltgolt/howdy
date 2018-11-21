@@ -91,6 +91,7 @@ frames = 0
 timeout = config.getint("video", "timout")
 dark_threshold = config.getfloat("video", "dark_threshold")
 end_report = config.getboolean("debug", "end_report")
+video_certainty = config.getfloat("video", "certainty") / 10
 while True:
 	# Increment the frame count every loop
 	frames += 1
@@ -145,7 +146,7 @@ while True:
 			match_index += 1
 
 			# Try to find a match that's confident enough
-			if match * 10 < float(config.get("video", "certainty")) and match > 0:
+			if 0 < match < video_certainty:
 				timings.append(time.time())
 
 				# If set to true in the config, print debug text
