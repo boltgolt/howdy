@@ -8,8 +8,11 @@ script:
   # Install the binary, running the debian scripts in the process
   - sudo apt install ../*.deb -y
 
+  # Go through function tests
   - ./tests/importing.sh
   - ./tests/passthrough.sh
+  - ./tests/pam.sh
+  - ./tests/compare.sh
 
   # Remove howdy from the installation
   - sudo apt purge howdy -y
@@ -27,3 +30,4 @@ addons:
       - ack-grep
       - devscripts
       - fakeroot
+      - pamtester
