@@ -28,6 +28,14 @@ Install the `howdy` package from the AUR. For AUR installation instructions, tak
 
 You will need to do some additional configuration steps. Please read the [ArchWiki entry](https://wiki.archlinux.org/index.php/Howdy) for more information.
 
+### Fedora
+The `howdy` package is now available in a [Fedora COPR repository](https://copr.fedorainfracloud.org/coprs/luya/howdy/) by simply execute the following command from a terminal:
+
+```
+sudo dnf copr enable luya/howdy
+sudo dnf install howdy
+```
+
 ## Setup
 
 After installation, you need to let Howdy learn your face. Run `sudo howdy add` to add a face model.
