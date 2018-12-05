@@ -140,75 +140,8 @@ print("Howdy command installed")
 
 log("Adding howdy as PAM module")
 
-# Will be filled with the actual output lines
-outlines = []
-# Will be fillled with lines that contain coloring
-printlines = []
-# Track if the new lines have been insterted yet
-inserted = False
-
-# Open the PAM config file
-with open("/etc/pam.d/common-auth") as fp:
-	# Read the first line
-	line = fp.readline()
-
-	while line:
-		# Add the line to the output directly, we're not deleting anything
-		outlines.append(line)
-
-		# Print the comments in gray and don't insert into comments
-		if line[:1] == "#":
-			printlines.append("\033[37m" + line + "\033[0m")
-		else:
-			printlines.append(line)
-
-			# If it's not a comment and we haven't inserted yet
-			if not inserted:
-				# Set both the comment and the linking line
-				line_comment = "# Howdy IR face recognition\n"
-				line_link	= "auth	sufficient			pam_python.so /lib/security/howdy/pam.py\n\n"
-
-				# Add them to the output without any markup
-				outlines.append(line_comment)
-				outlines.append(line_link)
-
-				# Make the print orange to make it clear what's being added
-				printlines.append("\033[33m" + line_comment + "\033[0m")
-				printlines.append("\033[33m" + line_link + "\033[0m")
-
-				# Mark as inserted
-				inserted = True
-
-		# Go to the next line
-		line = fp.readline()
-
-# Print a file Header
-print("\033[33m" + ">>> START OF /etc/pam.d/common-auth" + "\033[0m")
-
-# Loop though all printing lines and use the enters from the file
-for line in printlines:
-	print(line, end="")
-
-# Print a footer
-print("\033[33m" + ">>> END OF /etc/pam.d/common-auth" + "\033[0m" + "\n")
-
-# Do not prompt for a yes if we're in no promt mode
-if "HOWDY_NO_PROMPT" not in os.environ:
-	# Ask the user if this change is okay
-	print("Lines will be insterted in /etc/pam.d/common-auth as shown above")
-	ans = input("Apply this change? [y/N]: ")
-
-	# Abort the whole thing if it's not
-	if ans.lower().strip() != "y" or ans.lower().strip() == "yes":
-		print("Interpreting as a \"NO\", aborting")
-		sys.exit(1)
-
-print("Adding lines to PAM\n")
-
-# Write to PAM
-common_auth = open("/etc/pam.d/common-auth", "w")
-common_auth.write("".join(outlines))
-common_auth.close()
+# Activate the pam-config file
+handleStatus(subprocess.call(["pam-auth-update --package"], shell=True))
 
 # Sign off
 print("Installation complete.")
