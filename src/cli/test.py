@@ -1,3 +1,4 @@
+#! /usr/bin/python3
 # Show a windows with the video stream and testing information
 
 # Import required modules
@@ -59,6 +60,8 @@ if use_cnn:
 else:
 	face_detector = dlib.get_frontal_face_detector()
 
+clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+
 # Open the window and attach a a mouse listener
 cv2.namedWindow("Howdy Test")
 cv2.setMouseCallback("Howdy Test", mouse)
@@ -79,22 +82,26 @@ rec_tm = 0
 # Wrap everything in an keyboard interupt handler
 try:
 	while True:
+		frame_tm = time.time()
+
 		# Increment the frames
 		total_frames += 1
 		sec_frames += 1
 
 		# Id we've entered a new second
-		if sec != int(time.time()):
+		if sec != int(frame_tm):
 			# Set the last seconds FPS
 			fps = sec_frames
 
 			# Set the new second and reset the counter
-			sec = int(time.time())
+			sec = int(frame_tm)
 			sec_frames = 0
 
 
 		# Grab a single frame of video
 		ret, frame = video_capture.read()
+		frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+		frame = clahe.apply(frame)
 		# Make a frame to put overlays in
 		overlay = frame.copy()
 
@@ -174,9 +181,11 @@ try:
 		if cv2.waitKey(1) != -1:
 			raise KeyboardInterrupt()
 
+		frame_time = time.time() - frame_tm
+
 		# Delay the frame if slowmode is on
 		if slow_mode:
-			time.sleep(.55)
+			time.sleep(.5 - frame_time)
 
 # On ctrl+C
 except KeyboardInterrupt:
