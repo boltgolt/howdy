@@ -75,7 +75,7 @@ if fh != -1:
 
 # Capture a single frame so the camera becomes active
 # This will let the camera adjust its light levels while we're importing for faster scanning
-video_capture.read()
+video_capture.grab()
 
 # Note the time it took to open the camera
 timings.append(time.time())
