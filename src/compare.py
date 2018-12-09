@@ -44,7 +44,8 @@ try:
 	models = json.load(open(os.path.dirname(os.path.abspath(__file__)) + "/models/" + user + ".dat"))
 
 	# Put all models together into 1 array
-	encodings = [model["data"] for model in models]
+	for model in models:
+		encodings += model["data"]
 except FileNotFoundError:
 	sys.exit(10)
 
