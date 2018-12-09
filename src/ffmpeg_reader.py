@@ -5,12 +5,6 @@ from cv2 import CAP_PROP_FRAME_HEIGHT
 from cv2 import CAP_PROP_FOURCC
 import sys
 
-import json
-#import subprocess
-#from ._run import Error
-from subprocess import Popen, PIPE
-
-
 class ffmpeg_reader:
 	""" This class was created to look as similar to the openCV features used in Howdy as possible for overall code cleanliness. """
 
@@ -84,8 +78,6 @@ class ffmpeg_reader:
 		# and then take numframes of video to fill the buffer for faster recognition.
 		if self.init_camera:
 			self.init_camera = False
-			self.set(CAP_PROP_FRAME_HEIGHT, 352)
-			self.set(CAP_PROP_FRAME_WIDTH, 352)
 			self.video = ()
 			self.record(self.numframes)
 			return 0, self.video
