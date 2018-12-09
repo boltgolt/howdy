@@ -89,7 +89,7 @@ timings.append(time.time())
 max_height = int(config.get("video", "max_height"))
 
 # Fetch config settings out of the loop
-timeout = config.getint("video", "timout")
+timeout = config.getint("video", "timeout")
 dark_threshold = config.getfloat("video", "dark_threshold")
 end_report = config.getboolean("debug", "end_report")
 

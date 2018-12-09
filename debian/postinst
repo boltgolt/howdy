@@ -53,10 +53,17 @@ if not os.path.exists("/tmp/howdy_picked_device"):
 			# Go through every setting in the old config and apply it to the new file
 			for section in oldConf.sections():
 				for (key, value) in oldConf.items(section):
+
+					# MIGRATION 2.3.1 -> 2.4.0
 					# If config is still using the old device_id parameter, convert it to a path
 					if key == "device_id":
 						key = "device_path"
 						value = "/dev/video" + value
+
+					# MIGRATION 2.4.0 -> 2.5.0
+					# Finally correct typo in "timout" config value
+					if key == "timout":
+						key = "timeout"
 
 					try:
 						newConf.set(section, key, value)
