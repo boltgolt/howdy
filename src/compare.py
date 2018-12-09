@@ -56,8 +56,15 @@ for model in models:
 # Add the time needed to start the script
 timings.append(time.time())
 
-# Start video capture on the IR camera
-video_capture = cv2.VideoCapture(config.get("video", "device_path"))
+if config.get("video", "recording_plugin") == "ffmpeg":
+	from ffmpeg_reader import ffmpeg_reader
+
+	# Set the capture source for ffmpeg
+	video_capture = ffmpeg_reader(config.get("video", "device_name"), config.get("video", "device_format"), 10)
+
+else:
+	# Start video capture on the IR camera
+	video_capture = cv2.VideoCapture(config.get("video", "device_path"))
 
 # Force MJPEG decoding if true
 if config.getboolean("video", "force_mjpeg"):
