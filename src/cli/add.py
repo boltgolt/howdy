@@ -46,8 +46,8 @@ except FileNotFoundError:
 
 # Print a warning if too many encodings are being added
 if len(encodings) > 3:
-	print("WARNING: Every additional model slows down the face recognition engine")
-	print("Press ctrl+C to cancel\n")
+	print("NOTICE: Each additional model slows down the face recognition engine slightly")
+	print("Press Ctrl+C to cancel\n")
 
 print("Adding face model for the user " + user)
 
@@ -63,7 +63,7 @@ if builtins.howdy_args.y:
 	print('Using default label "%s" because of -y flag' % (label, ))
 else:
 	# Ask the user for a custom label
-	label_in = input("Enter a label for this new model [" + label + "]: ")
+	label_in = input("Enter a label for this new model [" + label + "] (max 24 characters): ")
 
 	# Set the custom label (if any) and limit it to 24 characters
 	if label_in != "":
