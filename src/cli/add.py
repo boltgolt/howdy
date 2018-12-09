@@ -20,8 +20,8 @@ except ImportError as err:
 	print("pip3 show face_recognition")
 	sys.exit(1)
 
-# Get the absolute path to the current file
-path = os.path.dirname(os.path.abspath(__file__))
+# Get the absolute path to the current directory
+path = os.path.abspath(__file__ + '/..')
 
 # Read config from disk
 config = configparser.ConfigParser()
@@ -81,13 +81,13 @@ insert_model = {
 video_capture = cv2.VideoCapture(config.get("video", "device_path"))
 
 # Force MJPEG decoding if true
-if config.getboolean("video", "force_mjpeg"):
+if config.getboolean("video", "force_mjpeg", fallback=False):
 	# Set a magic number, will enable MJPEG but is badly documentated
 	video_capture.set(cv2.CAP_PROP_FOURCC, 1196444237)
 
 # Set the frame width and height if requested
-fw = config.getint("video", "frame_width")
-fh = config.getint("video", "frame_height")
+fw = config.getint("video", "frame_width", fallback=-1)
+fh = config.getint("video", "frame_height", fallback=-1)
 if fw != -1:
 	video_capture.set(cv2.CAP_PROP_FRAME_WIDTH, fw)
 
@@ -95,7 +95,7 @@ if fh != -1:
 	video_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, fh)
 
 # Request a frame to wake the camera up
-video_capture.read()
+video_capture.grab()
 
 print("\nPlease look straight into the camera")
 
