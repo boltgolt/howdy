@@ -84,11 +84,33 @@ video_capture.grab()
 timings.append(time.time())
 
 # Import face recognition, takes some time
-import face_recognition
+import dlib
+import numpy as np
+
+use_cnn = config.getboolean('core', 'use_cnn', fallback=False)
+if use_cnn:
+	face_detector = dlib.cnn_face_detection_model_v1(
+		PATH + '/dlib-data/mmod_human_face_detector.dat'
+	)
+else:
+	face_detector = dlib.get_frontal_face_detector()
+
+pose_predictor = dlib.shape_predictor(
+	PATH + '/dlib-data/shape_predictor_5_face_landmarks.dat'
+)
+face_encoder = dlib.face_recognition_model_v1(
+	PATH + '/dlib-data/dlib_face_recognition_resnet_model_v1.dat'
+)
+
 timings.append(time.time())
 
 # Fetch the max frame height
 max_height = config.getfloat("video", "max_height", fallback=0.0)
+# Get the height of the image
+height = video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT) or 1
+
+# Calculate the amount the image has to shrink
+scaling_factor = (max_height / height) or 1
 
 # Start the read loop
 frames = 0
@@ -105,80 +127,74 @@ while True:
 		stop(11)
 
 	# Grab a single frame of video
-	# Don't remove ret, it doesn't work without it
-	ret, frame = video_capture.read()
+	_, frame = video_capture.read()
+	gsframe = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
 	# Create a histogram of the image with 8 values
-	hist = cv2.calcHist([frame], [0], None, [8], [0, 256])
+	hist = cv2.calcHist([gsframe], [0], None, [8], [0, 256])
 	# All values combined for percentage calculation
-	hist_total = int(sum(hist)[0])
+	hist_total = np.sum(hist)
 
-	# If the image is fully black, skip to the next frame
-	if hist_total == 0:
+	# If the image is fully black or the frame exceeds threshold,
+	# skip to the next frame
+	if hist_total == 0 or (hist[0] / hist_total * 100 > dark_threshold):
 		dark_tries += 1
 		continue
-
-	# Scrip the frame if it exceeds the threshold
-	if float(hist[0]) / hist_total * 100 > dark_threshold:
-		dark_tries += 1
-		continue
-
-	# Get the height and with of the image
-	height, width = frame.shape[:2]
 
 	# If the hight is too high
-	if max_height < height:
-		# Calculate the amount the image has to shrink
-		scaling_factor = max_height / float(height)
+	if scaling_factor != 1:
 		# Apply that factor to the frame
 		frame = cv2.resize(frame, None, fx=scaling_factor, fy=scaling_factor, interpolation=cv2.INTER_AREA)
-
-	# Save the new size for diagnostics
-	scale_height, scale_width = frame.shape[:2]
+		gsframe = cv2.resize(gsframe, None, fx=scaling_factor, fy=scaling_factor, interpolation=cv2.INTER_AREA)
 
 	# Get all faces from that frame as encodings
-	face_encodings = face_recognition.face_encodings(frame)
+	face_locations = face_detector(gsframe, 1) # upsample 1 time
 
 	# Loop through each face
-	for face_encoding in face_encodings:
+	for fl in face_locations:
+		if use_cnn:
+			fl = fl.rect
+
+		face_landmark = pose_predictor(frame, fl)
+		face_encoding = np.array(
+			face_encoder.compute_face_descriptor(frame, face_landmark, 1) # num_jitters=1
+		)
 		# Match this found face against a known face
-		matches = face_recognition.face_distance(encodings, face_encoding)
+		matches = np.linalg.norm(encodings - face_encoding, axis=1)
 
-		# Check if any match is certain enough to be the user we're looking for
-		match_index = 0
-		for match in matches:
-			match_index += 1
+		# Get best match
+		match_index = np.argmin(matches)
+		match = matches[match_index]
 
-			# Try to find a match that's confident enough
-			if 0 < match < video_certainty:
-				timings.append(time.time())
+		# Check if a match that's confident enough
+		if 0 < match < video_certainty:
+			timings.append(time.time())
 
-				# If set to true in the config, print debug text
-				if end_report:
-					def print_timing(label, offset):
-						"""Helper function to print a timing from the list"""
-						print("  %s: %dms" % (label, round((timings[1 + offset] - timings[offset]) * 1000)))
+			# If set to true in the config, print debug text
+			if end_report:
+				def print_timing(label, offset):
+					"""Helper function to print a timing from the list"""
+					print("  %s: %dms" % (label, round((timings[1 + offset] - timings[offset]) * 1000)))
 
-					print("Time spent")
-					print_timing("Starting up", 0)
-					print_timing("Opening the camera", 1)
-					print_timing("Importing face_recognition", 2)
-					print_timing("Searching for known face", 3)
+				print("Time spent")
+				print_timing("Starting up", 0)
+				print_timing("Opening the camera", 1)
+				print_timing("Importing recognition libs", 2)
+				print_timing("Searching for known face", 3)
 
-					print("\nResolution")
-					print("  Native: %dx%d" % (height, width))
-					print("  Used: %dx%d" % (scale_height, scale_width))
+				print("\nResolution")
+				width = video_capture.get(cv2.CAP_PROP_FRAME_WIDTH) or 1
+				print("  Native: %dx%d" % (height, width))
+				# Save the new size for diagnostics
+				scale_height, scale_width = frame.shape[:2]
+				print("  Used: %dx%d" % (scale_height, scale_width))
 
-					# Show the total number of frames and calculate the FPS by deviding it by the total scan time
-					print("\nFrames searched: %d (%.2f fps)" % (frames, frames / (timings[4] - timings[3])))
-					print("Dark frames ignored: %d " % (dark_tries, ))
-					print("Certainty of winning frame: %.3f" % (match * 10, ))
+				# Show the total number of frames and calculate the FPS by deviding it by the total scan time
+				print("\nFrames searched: %d (%.2f fps)" % (frames, frames / (timings[4] - timings[3])))
+				print("Dark frames ignored: %d " % (dark_tries, ))
+				print("Certainty of winning frame: %.3f" % (match * 10, ))
 
-					# Catch older 3-encoding models
-					if not match_index in models:
-						match_index = 0
+				print("Winning model: %d (\"%s\")" % (match_index, models[match_index]["label"]))
 
-					print("Winning model: %d (\"%s\")" % (match_index,  models[match_index]["label"]))
-
-				# End peacefully
-				stop(0)
+			# End peacefully
+			stop(0)
