@@ -38,7 +38,7 @@ except Exception:
 	# This error is normal
 	pass
 
-# Remove face_recognition and dlib
+# Remove dlib
 subprocess.call(['pip3', 'uninstall', 'dlib', '-y', '--no-cache-dir'])
 
 # Print a tearbending message
