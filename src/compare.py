@@ -14,9 +14,12 @@ import os
 import json
 import configparser
 
+# Get the absolute path to the current directory
+PATH = os.path.abspath(__file__ + '/..')
+
 # Read config from disk
 config = configparser.ConfigParser()
-config.read(os.path.dirname(os.path.abspath(__file__)) + "/config.ini")
+config.read(PATH + "/config.ini")
 
 def stop(status):
 	"""Stop the execution and close video stream"""
@@ -41,7 +44,7 @@ dark_tries = 0
 
 # Try to load the face model from the models folder
 try:
-	models = json.load(open(os.path.dirname(os.path.abspath(__file__)) + "/models/" + user + ".dat"))
+	models = json.load(open(PATH + "/models/" + user + ".dat"))
 
 	# Put all models together into 1 array
 	for model in models:
