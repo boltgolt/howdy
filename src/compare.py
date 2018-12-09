@@ -59,13 +59,13 @@ timings.append(time.time())
 video_capture = cv2.VideoCapture(config.get("video", "device_path"))
 
 # Force MJPEG decoding if true
-if config.getboolean("video", "force_mjpeg"):
+if config.getboolean("video", "force_mjpeg", fallback=False):
 	# Set a magic number, will enable MJPEG but is badly documentated
 	video_capture.set(cv2.CAP_PROP_FOURCC, 1196444237)
 
 # Set the frame width and height if requested
-fw = config.getint("video", "frame_width")
-fh = config.getint("video", "frame_height")
+fw = config.getint("video", "frame_width", fallback=-1)
+fh = config.getint("video", "frame_height", fallback=-1)
 if fw != -1:
 	video_capture.set(cv2.CAP_PROP_FRAME_WIDTH, fw)
 
@@ -84,7 +84,7 @@ import face_recognition
 timings.append(time.time())
 
 # Fetch the max frame height
-max_height = int(config.get("video", "max_height"))
+max_height = config.getfloat("video", "max_height", fallback=0.0)
 
 # Start the read loop
 frames = 0

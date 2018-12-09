@@ -19,13 +19,13 @@ config.read(path + "/../config.ini")
 video_capture = cv2.VideoCapture(config.get("video", "device_path"))
 
 # Force MJPEG decoding if true
-if config.getboolean("video", "force_mjpeg"):
+if config.getboolean("video", "force_mjpeg", fallback=False):
 	# Set a magic number, will enable MJPEG but is badly documented
 	video_capture.set(cv2.CAP_PROP_FOURCC, 1196444237)
 
 # Set the frame width and height if requested
-fw = config.getint("video", "frame_width")
-fh = config.getint("video", "frame_height")
+fw = config.getint("video", "frame_width", fallback=-1)
+fh = config.getint("video", "frame_height", fallback=-1)
 if fw != -1:
 	video_capture.set(cv2.CAP_PROP_FRAME_WIDTH, fw)
 
@@ -52,7 +52,7 @@ def print_text(line_number, text):
 	"""Print the status text by line number"""
 	cv2.putText(overlay, text, (10, height - 10 - (10 * line_number)), cv2.FONT_HERSHEY_SIMPLEX, .3, (0, 255, 0), 0, cv2.LINE_AA)
 
-use_cnn = config.getboolean('core', 'use_cnn')
+use_cnn = config.getboolean('core', 'use_cnn', fallback=False)
 if use_cnn:
 	face_detector = dlib.cnn_face_detection_model_v1(
 		path + '/../dlib-data/mmod_human_face_detector.dat'
