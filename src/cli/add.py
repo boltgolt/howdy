@@ -106,14 +106,26 @@ time.sleep(2)
 enc = []
 # Count the amount or read frames
 frames = 0
+dark_threshold = config.getfloat("video", "dark_threshold")
 
 # Loop through frames till we hit a timeout
 while frames < 60:
-	frames += 1
-
 	# Grab a single frame of video
 	# Don't remove ret, it doesn't work without it
 	ret, frame = video_capture.read()
+	gsframe = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+	# Create a histogram of the image with 8 values
+	hist = cv2.calcHist([gsframe], [0], None, [8], [0, 256])
+	# All values combined for percentage calculation
+	hist_total = np.sum(hist)
+
+	# If the image is fully black or the frame exceeds threshold,
+	# skip to the next frame
+	if hist_total == 0 or (hist[0] / hist_total * 100 > dark_threshold):
+		continue
+
+	frames += 1
 
 	# Get the encodings in the frame
 	enc = face_recognition.face_encodings(frame)
