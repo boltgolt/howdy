@@ -68,28 +68,28 @@ def initialize_cam():
 	global video_capture, timings
 	timings['ic'] = time.time()
 
-# Start video capture on the IR camera
-video_capture = cv2.VideoCapture(config.get("video", "device_path"))
+	# Start video capture on the IR camera
+	video_capture = cv2.VideoCapture(config.get("video", "device_path"))
 
-# Force MJPEG decoding if true
-if config.getboolean("video", "force_mjpeg", fallback=False):
-	# Set a magic number, will enable MJPEG but is badly documentated
-	video_capture.set(cv2.CAP_PROP_FOURCC, 1196444237)
+	# Force MJPEG decoding if true
+	if config.getboolean("video", "force_mjpeg", fallback=False):
+		# Set a magic number, will enable MJPEG but is badly documentated
+		video_capture.set(cv2.CAP_PROP_FOURCC, 1196444237)
 
-# Set the frame width and height if requested
-fw = config.getint("video", "frame_width", fallback=-1)
-fh = config.getint("video", "frame_height", fallback=-1)
-if fw != -1:
-	video_capture.set(cv2.CAP_PROP_FRAME_WIDTH, fw)
+	# Set the frame width and height if requested
+	fw = config.getint("video", "frame_width", fallback=-1)
+	fh = config.getint("video", "frame_height", fallback=-1)
+	if fw != -1:
+		video_capture.set(cv2.CAP_PROP_FRAME_WIDTH, fw)
 
-if fh != -1:
-	video_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, fh)
+	if fh != -1:
+		video_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, fh)
 
-# Capture a single frame so the camera becomes active
-# This will let the camera adjust its light levels while we're importing for faster scanning
-video_capture.grab()
+	# Capture a single frame so the camera becomes active
+	# This will let the camera adjust its light levels while we're importing for faster scanning
+	video_capture.grab()
 
-# Note the time it took to open the camera
+	# Note the time it took to open the camera
 	timings['ic'] = time.time() - timings['ic']
 
 init_thread = Thread(target=initialize_cam)
