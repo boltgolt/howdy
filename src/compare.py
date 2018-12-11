@@ -5,7 +5,9 @@
 import time
 
 # Start timing
-timings = [time.time()]
+timings = {
+	'st': time.time()
+}
 
 # Import required modules
 import cv2
@@ -13,6 +15,7 @@ import sys
 import os
 import json
 import configparser
+from threading import Thread
 
 # Get the absolute path to the current directory
 PATH = os.path.abspath(__file__ + '/..')
@@ -56,8 +59,15 @@ except FileNotFoundError:
 if not encodings:
 	sys.exit(10)
 
+timings['st'] = time.time() - timings['st']
+
+video_capture = None
+
+def initialize_cam():
+	global video_capture, timings
+
 # Add the time needed to start the script
-timings.append(time.time())
+	timings['ic'] = time.time()
 
 # Start video capture on the IR camera
 video_capture = cv2.VideoCapture(config.get("video", "device_path"))
@@ -81,7 +91,12 @@ if fh != -1:
 video_capture.grab()
 
 # Note the time it took to open the camera
-timings.append(time.time())
+	timings['ic'] = time.time() - timings['ic']
+
+init_thread = Thread(target=initialize_cam)
+init_thread.start()
+
+timings['ll'] = time.time()
 
 # Import face recognition, takes some time
 import dlib
@@ -102,7 +117,11 @@ face_encoder = dlib.face_recognition_model_v1(
 	PATH + '/dlib-data/dlib_face_recognition_resnet_model_v1.dat'
 )
 
-timings.append(time.time())
+timings['ll'] = time.time() - timings['ll']
+
+# wait for camera initialization to finish
+init_thread.join()
+del init_thread
 
 # Fetch the max frame height
 max_height = config.getfloat("video", "max_height", fallback=0.0)
@@ -113,6 +132,7 @@ height = video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT) or 1
 scaling_factor = (max_height / height) or 1
 
 # Start the read loop
+timings['fr'] = time.time()
 frames = 0
 timeout = config.getint("video", "timout")
 dark_threshold = config.getfloat("video", "dark_threshold")
@@ -123,7 +143,7 @@ while True:
 	frames += 1
 
 	# Stop if we've exceded the time limit
-	if time.time() - timings[3] > timeout:
+	if time.time() - timings['fr'] > timeout:
 		stop(11)
 
 	# Grab a single frame of video
@@ -168,19 +188,19 @@ while True:
 
 		# Check if a match that's confident enough
 		if 0 < match < video_certainty:
-			timings.append(time.time())
+			timings['fr'] = time.time() - timings['fr']
 
 			# If set to true in the config, print debug text
 			if end_report:
-				def print_timing(label, offset):
+				def print_timing(label, k):
 					"""Helper function to print a timing from the list"""
-					print("  %s: %dms" % (label, round((timings[1 + offset] - timings[offset]) * 1000)))
+					print("  %s: %dms" % (label, round(timings[k] * 1000)))
 
 				print("Time spent")
-				print_timing("Starting up", 0)
-				print_timing("Opening the camera", 1)
-				print_timing("Importing recognition libs", 2)
-				print_timing("Searching for known face", 3)
+				print_timing("Starting up", 'st')
+				print_timing("Opening the camera", 'ic')
+				print_timing("Importing recognition libs", 'll')
+				print_timing("Searching for known face", 'fr')
 
 				print("\nResolution")
 				width = video_capture.get(cv2.CAP_PROP_FRAME_WIDTH) or 1
@@ -190,7 +210,7 @@ while True:
 				print("  Used: %dx%d" % (scale_height, scale_width))
 
 				# Show the total number of frames and calculate the FPS by deviding it by the total scan time
-				print("\nFrames searched: %d (%.2f fps)" % (frames, frames / (timings[4] - timings[3])))
+				print("\nFrames searched: %d (%.2f fps)" % (frames, frames / timings['fr']))
 				print("Dark frames ignored: %d " % (dark_tries, ))
 				print("Certainty of winning frame: %.3f" % (match * 10, ))
 
