@@ -59,14 +59,13 @@ except FileNotFoundError:
 if not encodings:
 	sys.exit(10)
 
+# Add the time needed to start the script
 timings['st'] = time.time() - timings['st']
 
 video_capture = None
 
 def initialize_cam():
 	global video_capture, timings
-
-# Add the time needed to start the script
 	timings['ic'] = time.time()
 
 # Start video capture on the IR camera
@@ -198,8 +197,9 @@ while True:
 
 				print("Time spent")
 				print_timing("Starting up", 'st')
-				print_timing("Opening the camera", 'ic')
-				print_timing("Importing recognition libs", 'll')
+				print("  Open cam + load libs: %dms" % (round(max(timings['ll'], timings['ic']) * 1000, )))
+				print_timing("  Opening the camera", 'ic')
+				print_timing("  Importing recognition libs", 'll')
 				print_timing("Searching for known face", 'fr')
 
 				print("\nResolution")
