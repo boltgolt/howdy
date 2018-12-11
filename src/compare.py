@@ -94,16 +94,19 @@ timings['ll'] = time.time()
 import dlib
 import numpy as np
 
+face_detector = None
 pose_predictor = None
 face_encoder = None
-
 use_cnn = config.getboolean('core', 'use_cnn', fallback=False)
-if use_cnn:
-	face_detector = dlib.cnn_face_detection_model_v1(
-		PATH + '/dlib-data/mmod_human_face_detector.dat'
-	)
-else:
-	face_detector = dlib.get_frontal_face_detector()
+
+def init_detector():
+	global face_detector
+	if use_cnn:
+		face_detector = dlib.cnn_face_detection_model_v1(
+			PATH + '/dlib-data/mmod_human_face_detector.dat'
+		)
+	else:
+		face_detector = dlib.get_frontal_face_detector()
 
 def init_predictor():
 	global pose_predictor
@@ -120,12 +123,15 @@ def init_encoder():
 
 init_thread1 = Thread(target=init_encoder)
 init_thread2 = Thread(target=init_predictor)
+init_thread3 = Thread(target=init_detector)
+init_thread3.start()
 init_thread1.start()
 init_thread2.start()
 
+init_thread3.join()
 init_thread2.join()
 init_thread1.join()
-del init_thread1, init_thread2
+del init_thread1, init_thread2, init_thread3
 timings['ll'] = time.time() - timings['ll']
 
 # Fetch the max frame height
