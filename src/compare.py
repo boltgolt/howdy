@@ -65,8 +65,7 @@ timings['st'] = time.time() - timings['st']
 video_capture = None
 
 def initialize_cam():
-	global video_capture, timings
-	timings['ic'] = time.time()
+	global video_capture
 
 	# Start video capture on the IR camera
 	video_capture = cv2.VideoCapture(config.get("video", "device_path"))
@@ -89,9 +88,7 @@ def initialize_cam():
 	# This will let the camera adjust its light levels while we're importing for faster scanning
 	video_capture.grab()
 
-	# Note the time it took to open the camera
-	timings['ic'] = time.time() - timings['ic']
-
+timings['ic'] = time.time()
 init_thread = Thread(target=initialize_cam)
 init_thread.start()
 
@@ -121,6 +118,8 @@ timings['ll'] = time.time() - timings['ll']
 # wait for camera initialization to finish
 init_thread.join()
 del init_thread
+# Note the time it took to open the camera
+timings['ic'] = time.time() - timings['ic']
 
 # Fetch the max frame height
 max_height = config.getfloat("video", "max_height", fallback=0.0)
