@@ -62,41 +62,40 @@ if not encodings:
 # Add the time needed to start the script
 timings['st'] = time.time() - timings['st']
 
-video_capture = None
-
-def initialize_cam():
-	global video_capture
-
-	# Start video capture on the IR camera
-	video_capture = cv2.VideoCapture(config.get("video", "device_path"))
-
-	# Force MJPEG decoding if true
-	if config.getboolean("video", "force_mjpeg", fallback=False):
-		# Set a magic number, will enable MJPEG but is badly documentated
-		video_capture.set(cv2.CAP_PROP_FOURCC, 1196444237)
-
-	# Set the frame width and height if requested
-	fw = config.getint("video", "frame_width", fallback=-1)
-	fh = config.getint("video", "frame_height", fallback=-1)
-	if fw != -1:
-		video_capture.set(cv2.CAP_PROP_FRAME_WIDTH, fw)
-
-	if fh != -1:
-		video_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, fh)
-
-	# Capture a single frame so the camera becomes active
-	# This will let the camera adjust its light levels while we're importing for faster scanning
-	video_capture.grab()
-
 timings['ic'] = time.time()
-init_thread = Thread(target=initialize_cam)
-init_thread.start()
+
+# Start video capture on the IR camera
+video_capture = cv2.VideoCapture(config.get("video", "device_path"))
+
+# Force MJPEG decoding if true
+if config.getboolean("video", "force_mjpeg", fallback=False):
+	# Set a magic number, will enable MJPEG but is badly documentated
+	video_capture.set(cv2.CAP_PROP_FOURCC, 1196444237)
+
+# Set the frame width and height if requested
+fw = config.getint("video", "frame_width", fallback=-1)
+fh = config.getint("video", "frame_height", fallback=-1)
+if fw != -1:
+	video_capture.set(cv2.CAP_PROP_FRAME_WIDTH, fw)
+
+if fh != -1:
+	video_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, fh)
+
+# Capture a single frame so the camera becomes active
+# This will let the camera adjust its light levels while we're importing for faster scanning
+video_capture.grab()
+
+# Note the time it took to open the camera
+timings['ic'] = time.time() - timings['ic']
 
 timings['ll'] = time.time()
 
 # Import face recognition, takes some time
 import dlib
 import numpy as np
+
+pose_predictor = None
+face_encoder = None
 
 use_cnn = config.getboolean('core', 'use_cnn', fallback=False)
 if use_cnn:
@@ -106,20 +105,28 @@ if use_cnn:
 else:
 	face_detector = dlib.get_frontal_face_detector()
 
-pose_predictor = dlib.shape_predictor(
-	PATH + '/dlib-data/shape_predictor_5_face_landmarks.dat'
-)
-face_encoder = dlib.face_recognition_model_v1(
-	PATH + '/dlib-data/dlib_face_recognition_resnet_model_v1.dat'
-)
+def init_predictor():
+	global pose_predictor
+	pose_predictor = dlib.shape_predictor(
+		PATH + '/dlib-data/shape_predictor_5_face_landmarks.dat'
+	)
 
+def init_encoder():
+	global face_encoder
+	face_encoder = dlib.face_recognition_model_v1(
+		PATH + '/dlib-data/dlib_face_recognition_resnet_model_v1.dat'
+	)
+
+
+init_thread1 = Thread(target=init_encoder)
+init_thread2 = Thread(target=init_predictor)
+init_thread1.start()
+init_thread2.start()
+
+init_thread2.join()
+init_thread1.join()
+del init_thread1, init_thread2
 timings['ll'] = time.time() - timings['ll']
-
-# wait for camera initialization to finish
-init_thread.join()
-del init_thread
-# Note the time it took to open the camera
-timings['ic'] = time.time() - timings['ic']
 
 # Fetch the max frame height
 max_height = config.getfloat("video", "max_height", fallback=0.0)
