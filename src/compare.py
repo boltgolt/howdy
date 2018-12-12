@@ -35,6 +35,8 @@ def init_detector(lock):
 	face_encoder = dlib.face_recognition_model_v1(
 		PATH + '/dlib-data/dlib_face_recognition_resnet_model_v1.dat'
 	)
+	# Note the time it took to initalize detectors
+	timings['ll'] = time.time() - timings['ll']
 	lock.release()
 
 def stop(status):
@@ -91,7 +93,7 @@ video_certainty = config.getfloat("video", "certainty", fallback=3.5) / 10
 end_report = config.getboolean("debug", "end_report", fallback=False)
 
 # Save the time needed to start the script
-timings['st'] = time.time() - timings['st']
+timings['in'] = time.time() - timings['st']
 
 # Import face recognition, takes some time
 timings['ll'] = time.time()
@@ -130,8 +132,6 @@ lock.acquire()
 lock.release()
 del lock
 
-# Note the time it took to initalize detectors
-timings['ll'] = time.time() - timings['ll']
 
 # Fetch the max frame height
 max_height = config.getfloat("video", "max_height", fallback=0.0)
@@ -193,6 +193,7 @@ while True:
 
 		# Check if a match that's confident enough
 		if 0 < match < video_certainty:
+			timings['tt'] = time.time() - timings['st']
 			timings['fr'] = time.time() - timings['fr']
 
 			# If set to true in the config, print debug text
@@ -202,11 +203,12 @@ while True:
 					print("  %s: %dms" % (label, round(timings[k] * 1000)))
 
 				print("Time spent")
-				print_timing("Starting up", 'st')
+				print_timing("Starting up", 'in')
 				print("  Open cam + load libs: %dms" % (round(max(timings['ll'], timings['ic']) * 1000, )))
 				print_timing("  Opening the camera", 'ic')
 				print_timing("  Importing recognition libs", 'll')
 				print_timing("Searching for known face", 'fr')
+				print_timing("Total time", 'tt')
 
 				print("\nResolution")
 				width = video_capture.get(cv2.CAP_PROP_FRAME_WIDTH) or 1
