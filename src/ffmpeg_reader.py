@@ -44,25 +44,24 @@ class ffmpeg_reader:
 	def probe(self):
 		""" Probe the video device to get height and width info """
 
+		# Running this command on ffmpeg unfortunatly returns with an exit code of 1, which is silly. 
+		# Returns an error code of 1 and this text:  "/dev/video2: Immediate exit requested"
 		args = ["ffmpeg", "-f", self.device_format, "-list_formats", "all", "-i", self.device_name]
 		process = Popen(args, stdout=PIPE, stderr=PIPE)
 		out, err = process.communicate()
+		return_code = process.poll()
 
-		if not err:
-			print("Error opening subprocess for ffmpeg.\n\n%s" % err)
-			sys.exit(1)
-
+		# worst case scenario, err will equal en empty byte string, b'', so probe will get set to [] here.
 		regex = re.compile('\s\d{3,4}x\d{3,4}')
-
 		probe = regex.findall(str(err.decode("utf-8")))
-		if len(probe) < 1: 
-			# Could not determine the resolution from v4l2-ctl call. Reverting to ffmpeg.probe()
+
+		if not return_code == 1 or len(probe) < 1: 
+			# Could not determine the resolution from ffmpeg call. Reverting to ffmpeg.probe()
 			probe = ffmpeg.probe(self.device_name)
 			height = probe['streams'][0]['height']
 			width = probe['streams'][0]['width']
 		else:
 			(height, width) = [x.strip() for x in probe[0].split('x')]
-
 
 		if height.isdigit() and self.get(CAP_PROP_FRAME_HEIGHT) == 0:
 			self.set(CAP_PROP_FRAME_HEIGHT, int(height))
