@@ -31,14 +31,12 @@ def stop(status):
 	video_capture.release()
 	sys.exit(status)
 
-# Make sure we were given an username to tast against
-try:
-	if not isinstance(sys.argv[1], str):
-		sys.exit(1)
-except IndexError:
+
+# Make sure we were got an username to test against
+if len(sys.argv) < 2:
 	sys.exit(1)
 
-# The username of the authenticating user
+# The username of the user being authenticated
 user = sys.argv[1]
 # The model file contents
 models = []
@@ -61,7 +59,7 @@ except FileNotFoundError:
 if not encodings:
 	sys.exit(10)
 
-# Add the time needed to start the script
+# Save the time needed to start the script
 timings['st'] = time.time() - timings['st']
 
 timings['ic'] = time.time()
@@ -71,8 +69,8 @@ video_capture = cv2.VideoCapture(config.get("video", "device_path"))
 
 # Force MJPEG decoding if true
 if config.getboolean("video", "force_mjpeg", fallback=False):
-	# Set a magic number, will enable MJPEG but is badly documentated
-	video_capture.set(cv2.CAP_PROP_FOURCC, 1196444237)
+	# Set a magic number, will enable MJPEG but is badly documented
+	video_capture.set(cv2.CAP_PROP_FOURCC, 1196444237) # 1196444237 is 'MJPEG' in ASCII
 
 # Set the frame width and height if requested
 fw = config.getint("video", "frame_width", fallback=-1)
