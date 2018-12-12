@@ -14,15 +14,28 @@ import sys
 import os
 import json
 import configparser
-from threading import Thread
 import cv2
 import dlib
 import numpy as np
+import _thread as thread
 
+def init_detector(lock):
+	global face_detector, pose_predictor, face_encoder
+	if use_cnn:
+		face_detector = dlib.cnn_face_detection_model_v1(
+			PATH + '/dlib-data/mmod_human_face_detector.dat'
+		)
+	else:
+		face_detector = dlib.get_frontal_face_detector()
 
-# Read config from disk
-config = configparser.ConfigParser()
-config.read(PATH + "/config.ini")
+	pose_predictor = dlib.shape_predictor(
+		PATH + '/dlib-data/shape_predictor_5_face_landmarks.dat'
+	)
+
+	face_encoder = dlib.face_recognition_model_v1(
+		PATH + '/dlib-data/dlib_face_recognition_resnet_model_v1.dat'
+	)
+	lock.release()
 
 def stop(status):
 	"""Stop the execution and close video stream"""
@@ -80,9 +93,15 @@ end_report = config.getboolean("debug", "end_report", fallback=False)
 # Save the time needed to start the script
 timings['st'] = time.time() - timings['st']
 
-timings['ic'] = time.time()
+# Import face recognition, takes some time
+timings['ll'] = time.time()
+
+lock = thread.allocate_lock()
+lock.acquire()
+thread.start_new_thread(init_detector, (lock, ))
 
 # Start video capture on the IR camera
+timings['ic'] = time.time()
 video_capture = cv2.VideoCapture(config.get("video", "device_path"))
 
 # Force MJPEG decoding if true
@@ -106,41 +125,11 @@ video_capture.grab()
 # Note the time it took to open the camera
 timings['ic'] = time.time() - timings['ic']
 
-timings['ll'] = time.time()
+# wait for thread to finish
+lock.acquire()
+lock.release()
+del lock
 
-def init_detector():
-	global face_detector
-	if use_cnn:
-		face_detector = dlib.cnn_face_detection_model_v1(
-			PATH + '/dlib-data/mmod_human_face_detector.dat'
-		)
-	else:
-		face_detector = dlib.get_frontal_face_detector()
-
-def init_predictor():
-	global pose_predictor
-	pose_predictor = dlib.shape_predictor(
-		PATH + '/dlib-data/shape_predictor_5_face_landmarks.dat'
-	)
-
-def init_encoder():
-	global face_encoder
-	face_encoder = dlib.face_recognition_model_v1(
-		PATH + '/dlib-data/dlib_face_recognition_resnet_model_v1.dat'
-	)
-
-
-init_thread1 = Thread(target=init_encoder)
-init_thread2 = Thread(target=init_predictor)
-init_thread3 = Thread(target=init_detector)
-init_thread3.start()
-init_thread1.start()
-init_thread2.start()
-
-init_thread3.join()
-init_thread2.join()
-init_thread1.join()
-del init_thread1, init_thread2, init_thread3
 # Note the time it took to initalize detectors
 timings['ll'] = time.time() - timings['ll']
 
