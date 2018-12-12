@@ -10,12 +10,14 @@ timings = {
 }
 
 # Import required modules
-import cv2
 import sys
 import os
 import json
 import configparser
 from threading import Thread
+import cv2
+import dlib
+import numpy as np
 
 # Get the absolute path to the current directory
 PATH = os.path.abspath(__file__ + '/..')
@@ -89,10 +91,6 @@ video_capture.grab()
 timings['ic'] = time.time() - timings['ic']
 
 timings['ll'] = time.time()
-
-# Import face recognition, takes some time
-import dlib
-import numpy as np
 
 face_detector = None
 pose_predictor = None
