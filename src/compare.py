@@ -109,7 +109,7 @@ video_capture = cv2.VideoCapture(config.get("video", "device_path"))
 # Force MJPEG decoding if true
 if config.getboolean("video", "force_mjpeg", fallback=False):
 	# Set a magic number, will enable MJPEG but is badly documented
-	video_capture.set(cv2.CAP_PROP_FOURCC, 1196444237) # 1196444237 is 'MJPEG' in ASCII
+	video_capture.set(cv2.CAP_PROP_FOURCC, 1196444237) # 1196444237 is 'GPJM' in ASCII
 
 # Set the frame width and height if requested
 fw = config.getint("video", "frame_width", fallback=-1)
