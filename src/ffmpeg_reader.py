@@ -4,6 +4,8 @@ from cv2 import CAP_PROP_FRAME_WIDTH
 from cv2 import CAP_PROP_FRAME_HEIGHT
 from cv2 import CAP_PROP_FOURCC
 import sys
+from subprocess import Popen, PIPE
+import re
 
 class ffmpeg_reader:
 	""" This class was created to look as similar to the openCV features used in Howdy as possible for overall code cleanliness. """
@@ -41,12 +43,33 @@ class ffmpeg_reader:
 			
 	def probe(self):
 		""" Probe the video device to get height and width info """
-		probe = ffmpeg.probe(self.device_name)
 
-		if self.get(CAP_PROP_FRAME_WIDTH) == 0 or self.get(CAP_PROP_FRAME_WIDTH) > int(probe['streams'][0]['width']):
-			self.set(CAP_PROP_FRAME_WIDTH, probe['streams'][0]['width'])
-		if self.get(CAP_PROP_FRAME_HEIGHT) == 0  or self.get(CAP_PROP_FRAME_HEIGHT) > int(probe['streams'][0]['height']):
-			self.set(CAP_PROP_FRAME_HEIGHT, probe['streams'][0]['height'])
+		args = ["ffmpeg", "-f", self.device_format, "-list_formats", "all", "-i", self.device_name]
+		process = Popen(args, stdout=PIPE, stderr=PIPE)
+		out, err = process.communicate()
+
+		if not err:
+			print("Error opening subprocess for ffmpeg.\n\n%s" % err)
+			sys.exit(1)
+
+		regex = re.compile('\s\d{3,4}x\d{3,4}')
+
+		probe = regex.findall(str(err.decode("utf-8")))
+		if len(probe) < 1: 
+			# Could not determine the resolution from v4l2-ctl call. Reverting to ffmpeg.probe()
+			probe = ffmpeg.probe(self.device_name)
+			height = probe['streams'][0]['height']
+			width = probe['streams'][0]['width']
+		else:
+			(height, width) = [x.strip() for x in probe[0].split('x')]
+
+
+		if height.isdigit() and self.get(CAP_PROP_FRAME_HEIGHT) == 0:
+			self.set(CAP_PROP_FRAME_HEIGHT, int(height))
+
+		if width.isdigit() and self.get(CAP_PROP_FRAME_WIDTH) == 0:
+			self.set(CAP_PROP_FRAME_WIDTH, int(width))
+
 
 	def record(self, numframes):
 		""" Record a video, saving it to self.video array for processing later """
