@@ -19,8 +19,6 @@ import cv2
 import dlib
 import numpy as np
 
-# Get the absolute path to the current directory
-PATH = os.path.abspath(__file__ + '/..')
 
 # Read config from disk
 config = configparser.ConfigParser()
@@ -36,6 +34,9 @@ def stop(status):
 if len(sys.argv) < 2:
 	sys.exit(1)
 
+# Get the absolute path to the current directory
+PATH = os.path.abspath(__file__ + '/..')
+
 # The username of the user being authenticated
 user = sys.argv[1]
 # The model file contents
@@ -44,6 +45,12 @@ models = []
 encodings = []
 # Amount of ingnored dark frames
 dark_tries = 0
+# Total amount of frames captured
+frames = 0
+# face recognition/detection instances
+face_detector = None
+pose_predictor = None
+face_encoder = None
 
 # Try to load the face model from the models folder
 try:
@@ -58,6 +65,17 @@ except FileNotFoundError:
 # Check if the file contains a model
 if not encodings:
 	sys.exit(10)
+
+# Read config from disk
+config = configparser.ConfigParser()
+config.read(PATH + "/config.ini")
+
+# CNN usage flag
+use_cnn = config.getboolean('core', 'use_cnn', fallback=False)
+timeout = config.getint("video", "timout", fallback=5)
+dark_threshold = config.getfloat("video", "dark_threshold", fallback=50.0)
+video_certainty = config.getfloat("video", "certainty", fallback=3.5) / 10
+end_report = config.getboolean("debug", "end_report", fallback=False)
 
 # Save the time needed to start the script
 timings['st'] = time.time() - timings['st']
@@ -89,11 +107,6 @@ video_capture.grab()
 timings['ic'] = time.time() - timings['ic']
 
 timings['ll'] = time.time()
-
-face_detector = None
-pose_predictor = None
-face_encoder = None
-use_cnn = config.getboolean('core', 'use_cnn', fallback=False)
 
 def init_detector():
 	global face_detector
@@ -128,6 +141,7 @@ init_thread3.join()
 init_thread2.join()
 init_thread1.join()
 del init_thread1, init_thread2, init_thread3
+# Note the time it took to initalize detectors
 timings['ll'] = time.time() - timings['ll']
 
 # Fetch the max frame height
@@ -140,11 +154,6 @@ scaling_factor = (max_height / height) or 1
 
 # Start the read loop
 timings['fr'] = time.time()
-frames = 0
-timeout = config.getint("video", "timout")
-dark_threshold = config.getfloat("video", "dark_threshold")
-end_report = config.getboolean("debug", "end_report")
-video_certainty = config.getfloat("video", "certainty") / 10
 while True:
 	# Increment the frame count every loop
 	frames += 1
