@@ -16,7 +16,7 @@ config = configparser.ConfigParser()
 config.read(config_path)
 
 # Check if enough arguments have been passed
-if builtins.howdy_args.argument == None:
+if builtins.howdy_args.argument is None:
 	print("Please add a 0 (enable) or a 1 (disable) as an argument")
 	sys.exit(1)
 

@@ -18,10 +18,12 @@ import configparser
 config = configparser.ConfigParser()
 config.read(os.path.dirname(os.path.abspath(__file__)) + "/config.ini")
 
+
 def stop(status):
 	"""Stop the execution and close video stream"""
 	video_capture.release()
 	sys.exit(status)
+
 
 # Make sure we were given an username to tast against
 try:
@@ -182,7 +184,7 @@ while True:
 					print("Certainty of winning frame: %.3f" % (match * 10, ))
 
 					# Catch older 3-encoding models
-					if not match_index in models:
+					if match_index not in models:
 						match_index = 0
 
 					print("Winning model: %d (\"%s\")" % (match_index,  models[match_index]["label"]))

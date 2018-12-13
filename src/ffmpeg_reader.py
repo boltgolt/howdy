@@ -7,7 +7,6 @@ import re
 from subprocess import Popen, PIPE
 from cv2 import CAP_PROP_FRAME_WIDTH
 from cv2 import CAP_PROP_FRAME_HEIGHT
-from cv2 import CAP_PROP_FOURCC
 
 try:
 	import ffmpeg
@@ -15,6 +14,7 @@ except ImportError:
 	print("Missing ffmpeg module, please run:")
 	print(" pip3 install ffmpeg-python\n")
 	sys.exit(12)
+
 
 class ffmpeg_reader:
 	""" This class was created to look as similar to the openCV features used in Howdy as possible for overall code cleanliness. """
@@ -54,23 +54,22 @@ class ffmpeg_reader:
 		return_code = process.poll()
 
 		# Worst case scenario, err will equal en empty byte string, b'', so probe will get set to [] here.
-		regex = re.compile('\s\d{3,4}x\d{3,4}')
+		regex = re.compile(r"\s\d{3,4}x\d{3,4}")
 		probe = regex.findall(str(err.decode("utf-8")))
 
 		if not return_code == 1 or len(probe) < 1:
 			# Could not determine the resolution from ffmpeg call. Reverting to ffmpeg.probe()
 			probe = ffmpeg.probe(self.device_path)
-			height = probe['streams'][0]['height']
-			width = probe['streams'][0]['width']
+			height = probe["streams"][0]["height"]
+			width = probe["streams"][0]["width"]
 		else:
-			(height, width) = [x.strip() for x in probe[0].split('x')]
+			(height, width) = [x.strip() for x in probe[0].split("x")]
 
 		# Set height and width from probe if they haven't been set already
 		if height.isdigit() and self.get(CAP_PROP_FRAME_HEIGHT) == 0:
 			self.set(CAP_PROP_FRAME_HEIGHT, int(height))
 		if width.isdigit() and self.get(CAP_PROP_FRAME_WIDTH) == 0:
 			self.set(CAP_PROP_FRAME_WIDTH, int(width))
-
 
 	def record(self, numframes):
 		""" Record a video, saving it to self.video array for processing later """
@@ -86,7 +85,7 @@ class ffmpeg_reader:
 		stream, ret = (
 			ffmpeg
 			.input(self.device_path, format=self.device_format)
-			.output('pipe:', format='rawvideo', pix_fmt='rgb24', vframes=numframes)
+			.output("pipe:", format="rawvideo", pix_fmt="rgb24", vframes=numframes)
 			.run(capture_stdout=True, quiet=True)
 		)
 		self.video = (
@@ -94,7 +93,6 @@ class ffmpeg_reader:
 			.frombuffer(stream, numpy.uint8)
 			.reshape([-1, self.width, self.height, 3])
 		)
-
 
 	def read(self):
 		""" Read a sigle frame from the self.video array. Will record a video if array is empty. """

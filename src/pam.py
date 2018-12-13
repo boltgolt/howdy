@@ -12,6 +12,7 @@ import ConfigParser
 config = ConfigParser.ConfigParser()
 config.read(os.path.dirname(os.path.abspath(__file__)) + "/config.ini")
 
+
 def doAuth(pamh):
 	"""Starts authentication in a seperate process"""
 
@@ -56,17 +57,21 @@ def doAuth(pamh):
 	pamh.conversation(pamh.Message(pamh.PAM_ERROR_MSG, "Unknown error: " + str(status)))
 	return pamh.PAM_SYSTEM_ERR
 
+
 def pam_sm_authenticate(pamh, flags, args):
 	"""Called by PAM when the user wants to authenticate, in sudo for example"""
 	return doAuth(pamh)
+
 
 def pam_sm_open_session(pamh, flags, args):
 	"""Called when starting a session, such as su"""
 	return doAuth(pamh)
 
+
 def pam_sm_close_session(pamh, flags, argv):
 	"""We don't need to clean anyting up at the end of a session, so returns true"""
 	return pamh.PAM_SUCCESS
+
 
 def pam_sm_setcred(pamh, flags, argv):
 	"""We don't need set any credentials, so returns true"""

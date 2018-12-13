@@ -45,6 +45,7 @@ Press ctrl+C in this terminal to quit
 Click on the image to enable or disable slow mode
 """)
 
+
 def mouse(event, x, y, flags, param):
 	"""Handle mouse events"""
 	global slow_mode
@@ -53,9 +54,11 @@ def mouse(event, x, y, flags, param):
 	if event == cv2.EVENT_LBUTTONDOWN:
 		slow_mode = not slow_mode
 
+
 def print_text(line_number, text):
 	"""Print the status text by line number"""
 	cv2.putText(overlay, text, (10, height - 10 - (10 * line_number)), cv2.FONT_HERSHEY_SIMPLEX, .3, (0, 255, 0), 0, cv2.LINE_AA)
+
 
 # Open the window and attach a a mouse listener
 cv2.namedWindow("Howdy Test")
@@ -89,7 +92,6 @@ try:
 			# Set the new second and reset the counter
 			sec = int(time.time())
 			sec_frames = 0
-
 
 		# Grab a single frame of video
 		ret, frame = (video_capture.read())
