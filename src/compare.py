@@ -28,7 +28,7 @@ try:
 	if not isinstance(sys.argv[1], str):
 		sys.exit(1)
 except IndexError:
-	sys.exit(1)
+	sys.exit(12)
 
 # The username of the authenticating user
 user = sys.argv[1]
@@ -56,14 +56,15 @@ for model in models:
 # Add the time needed to start the script
 timings.append(time.time())
 
+# Check if the user explicitly set ffmpeg as recorder
 if config.get("video", "recording_plugin") == "ffmpeg":
 	from ffmpeg_reader import ffmpeg_reader
 
 	# Set the capture source for ffmpeg
-	video_capture = ffmpeg_reader(config.get("video", "device_name"), config.get("video", "device_format"), 10)
+	video_capture = ffmpeg_reader(config.get("video", "device_path"), config.get("video", "device_format"))
 
 else:
-	# Start video capture on the IR camera
+	# Start video capture on the IR camera through OpenCV
 	video_capture = cv2.VideoCapture(config.get("video", "device_path"))
 
 # Force MJPEG decoding if true

@@ -3,6 +3,7 @@
 # Import required modules
 import configparser
 import os
+import sys
 import time
 import cv2
 import face_recognition
@@ -13,6 +14,11 @@ path = os.path.dirname(os.path.abspath(__file__))
 # Read config from disk
 config = configparser.ConfigParser()
 config.read(path + "/../config.ini")
+
+if config.get("video", "recording_plugin") == "ffmpeg":
+	print("Howdy has been configured to use ffmpeg as recorder, which doesn't support the test command yet")
+	print("Aborting")
+	sys.exit(12)
 
 # Start capturing from the configured webcam
 video_capture = cv2.VideoCapture(config.get("video", "device_path"))

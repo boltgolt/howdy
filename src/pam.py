@@ -33,11 +33,14 @@ def doAuth(pamh):
 			pamh.conversation(pamh.Message(pamh.PAM_ERROR_MSG, "No face model known"))
 		return pamh.PAM_USER_UNKNOWN
 	# Status 11 means we exceded the maximum retry count
-	if status == 11:
+	elif status == 11:
 		pamh.conversation(pamh.Message(pamh.PAM_ERROR_MSG, "Face detection timeout reached"))
 		return pamh.PAM_AUTH_ERR
+	# Status 12 means we aborted
+	elif status == 12:
+		return pamh.PAM_AUTH_ERR
 	# Status 0 is a successful exit
-	if status == 0:
+	elif status == 0:
 		# Show the success message if it isn't suppressed
 		if not config.getboolean("core", "no_confirmation"):
 			pamh.conversation(pamh.Message(pamh.PAM_TEXT_INFO, "Identified face as " + pamh.get_user()))

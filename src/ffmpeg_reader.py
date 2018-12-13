@@ -1,18 +1,26 @@
-import ffmpeg
+# Class that simulates the functionality of opencv so howdy can use ffmpeg seamlessly
+
+# Import required modules
 import numpy
+import sys
+import re
+from subprocess import Popen, PIPE
 from cv2 import CAP_PROP_FRAME_WIDTH
 from cv2 import CAP_PROP_FRAME_HEIGHT
 from cv2 import CAP_PROP_FOURCC
-import sys
-from subprocess import Popen, PIPE
-import re
+
+try:
+	import ffmpeg
+except ImportError:
+	print("Missing ffmpeg module, please run:")
+	print(" pip3 install ffmpeg-python\n")
+	sys.exit(12)
 
 class ffmpeg_reader:
 	""" This class was created to look as similar to the openCV features used in Howdy as possible for overall code cleanliness. """
 
-	# Init
-	def __init__(self, device_name, device_format, numframes):
-		self.device_name = device_name
+	def __init__(self, device_path, device_format, numframes=10):
+		self.device_path = device_path
 		self.device_format = device_format
 		self.numframes = numframes
 		self.video = ()
@@ -20,7 +28,6 @@ class ffmpeg_reader:
 		self.height = 0
 		self.width = 0
 		self.init_camera = True
-		self.force_jpeg = 0
 
 	def set(self, prop, setting):
 		""" Setter method for height and width """
@@ -28,9 +35,6 @@ class ffmpeg_reader:
 			self.width = setting
 		elif prop == CAP_PROP_FRAME_HEIGHT:
 			self.height = setting
-		elif prop == CAP_PROP_FOURCC:
-			self.force_jpeg = setting
-
 
 	def get(self, prop):
 		""" Getter method for height and width """
@@ -38,34 +42,32 @@ class ffmpeg_reader:
 			return self.width
 		elif prop == CAP_PROP_FRAME_HEIGHT:
 			return self.height
-		elif prop == CAP_PROP_FOURCC:
-			return self.force_jpeg
-			
+
 	def probe(self):
 		""" Probe the video device to get height and width info """
 
-		# Running this command on ffmpeg unfortunatly returns with an exit code of 1, which is silly. 
+		# Running this command on ffmpeg unfortunatly returns with an exit code of 1, which is silly.
 		# Returns an error code of 1 and this text:  "/dev/video2: Immediate exit requested"
-		args = ["ffmpeg", "-f", self.device_format, "-list_formats", "all", "-i", self.device_name]
+		args = ["ffmpeg", "-f", self.device_format, "-list_formats", "all", "-i", self.device_path]
 		process = Popen(args, stdout=PIPE, stderr=PIPE)
 		out, err = process.communicate()
 		return_code = process.poll()
 
-		# worst case scenario, err will equal en empty byte string, b'', so probe will get set to [] here.
+		# Worst case scenario, err will equal en empty byte string, b'', so probe will get set to [] here.
 		regex = re.compile('\s\d{3,4}x\d{3,4}')
 		probe = regex.findall(str(err.decode("utf-8")))
 
-		if not return_code == 1 or len(probe) < 1: 
+		if not return_code == 1 or len(probe) < 1:
 			# Could not determine the resolution from ffmpeg call. Reverting to ffmpeg.probe()
-			probe = ffmpeg.probe(self.device_name)
+			probe = ffmpeg.probe(self.device_path)
 			height = probe['streams'][0]['height']
 			width = probe['streams'][0]['width']
 		else:
 			(height, width) = [x.strip() for x in probe[0].split('x')]
 
+		# Set height and width from probe if they haven't been set already
 		if height.isdigit() and self.get(CAP_PROP_FRAME_HEIGHT) == 0:
 			self.set(CAP_PROP_FRAME_HEIGHT, int(height))
-
 		if width.isdigit() and self.get(CAP_PROP_FRAME_WIDTH) == 0:
 			self.set(CAP_PROP_FRAME_WIDTH, int(width))
 
@@ -80,9 +82,10 @@ class ffmpeg_reader:
 		# Ensure num_frames_read is reset to 0
 		self.num_frames_read = 0
 
+		# Record a predetermined amount of frames from the camera
 		stream, ret = (
 			ffmpeg
-			.input(self.device_name, format=self.device_format)
+			.input(self.device_path, format=self.device_format)
 			.output('pipe:', format='rawvideo', pix_fmt='rgb24', vframes=numframes)
 			.run(capture_stdout=True, quiet=True)
 		)
