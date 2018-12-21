@@ -8,24 +8,40 @@ import json
 import configparser
 import builtins
 import cv2
+import numpy as np
 
-# Try to import face_recognition and give a nice error if we can't
+# Try to import dlib and give a nice error if we can't
 # Add should be the first point where import issues show up
 try:
-	import face_recognition
+	import dlib
 except ImportError as err:
 	print(err)
 
-	print("\nCan't import the face_recognition module, check the output of")
-	print("pip3 show face_recognition")
+	print("\nCan't import the dlib module, check the output of")
+	print("pip3 show dlib")
 	sys.exit(1)
 
-# Get the absolute path to the current file
-path = os.path.dirname(os.path.abspath(__file__))
+# Get the absolute path to the current directory
+path = os.path.abspath(__file__ + '/..')
 
 # Read config from disk
 config = configparser.ConfigParser()
 config.read(path + "/../config.ini")
+
+use_cnn = config.getboolean('core', 'use_cnn', fallback=False)
+if use_cnn:
+	face_detector = dlib.cnn_face_detection_model_v1(
+		path + '/../dlib-data/mmod_human_face_detector.dat'
+	)
+else:
+	face_detector = dlib.get_frontal_face_detector()
+
+pose_predictor = dlib.shape_predictor(
+	path + '/../dlib-data/shape_predictor_5_face_landmarks.dat'
+)
+face_encoder = dlib.face_recognition_model_v1(
+	path + '/../dlib-data/dlib_face_recognition_resnet_model_v1.dat'
+)
 
 user = builtins.howdy_user
 # The permanent file to store the encoded model in
@@ -46,8 +62,8 @@ except FileNotFoundError:
 
 # Print a warning if too many encodings are being added
 if len(encodings) > 3:
-	print("WARNING: Every additional model slows down the face recognition engine")
-	print("Press ctrl+C to cancel\n")
+	print("NOTICE: Each additional model slows down the face recognition engine slightly")
+	print("Press Ctrl+C to cancel\n")
 
 print("Adding face model for the user " + user)
 
@@ -63,7 +79,7 @@ if builtins.howdy_args.y:
 	print('Using default label "%s" because of -y flag' % (label, ))
 else:
 	# Ask the user for a custom label
-	label_in = input("Enter a label for this new model [" + label + "]: ")
+	label_in = input("Enter a label for this new model [" + label + "] (max 24 characters): ")
 
 	# Set the custom label (if any) and limit it to 24 characters
 	if label_in != "":
@@ -89,13 +105,13 @@ else:
 	video_capture = cv2.VideoCapture(config.get("video", "device_path"))
 
 # Force MJPEG decoding if true
-if config.getboolean("video", "force_mjpeg"):
+if config.getboolean("video", "force_mjpeg", fallback=False):
 	# Set a magic number, will enable MJPEG but is badly documentated
 	video_capture.set(cv2.CAP_PROP_FOURCC, 1196444237)
 
 # Set the frame width and height if requested
-fw = config.getint("video", "frame_width")
-fh = config.getint("video", "frame_height")
+fw = config.getint("video", "frame_width", fallback=-1)
+fh = config.getint("video", "frame_height", fallback=-1)
 if fw != -1:
 	video_capture.set(cv2.CAP_PROP_FRAME_WIDTH, fw)
 
@@ -103,7 +119,7 @@ if fh != -1:
 	video_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, fh)
 
 # Request a frame to wake the camera up
-video_capture.read()
+video_capture.grab()
 
 print("\nPlease look straight into the camera")
 
@@ -114,39 +130,55 @@ time.sleep(2)
 enc = []
 # Count the amount or read frames
 frames = 0
+dark_threshold = config.getfloat("video", "dark_threshold")
 
 # Loop through frames till we hit a timeout
 while frames < 60:
-	frames += 1
-
 	# Grab a single frame of video
 	# Don't remove ret, it doesn't work without it
 	ret, frame = video_capture.read()
+	gsframe = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-	# Get the encodings in the frame
-	enc = face_recognition.face_encodings(frame)
+	# Create a histogram of the image with 8 values
+	hist = cv2.calcHist([gsframe], [0], None, [8], [0, 256])
+	# All values combined for percentage calculation
+	hist_total = np.sum(hist)
+
+	# If the image is fully black or the frame exceeds threshold,
+	# skip to the next frame
+	if hist_total == 0 or (hist[0] / hist_total * 100 > dark_threshold):
+		continue
+
+	frames += 1
+
+	# Get all faces from that frame as encodings
+	face_locations = face_detector(gsframe, 1) # upsample 1 time
 
 	# If we've found at least one, we can continue
-	if enc:
+	if face_locations:
 		break
 
-if not enc:
+video_capture.release()
+
+# If more than 1 faces are detected we can't know wich one belongs to the user
+if len(face_locations) > 1:
+	print("Multiple faces detected, aborting")
+	sys.exit(1)
+elif not face_locations:
 	print("No face detected, aborting")
 	sys.exit(1)
 
-# If more than 1 faces are detected we can't know wich one belongs to the user
-if len(enc) > 1:
-	print("Multiple faces detected, aborting")
-	sys.exit(1)
+face_location = face_locations[0]
+if use_cnn:
+	face_location = face_location.rect
 
-# Totally clean array that can be exported as JSON
-clean_enc = []
+# Get the encodings in the frame
+face_landmark = pose_predictor(frame, face_location)
+face_encoding = np.array(
+	face_encoder.compute_face_descriptor(frame, face_landmark, 1) # num_jitters=1
+)
 
-# Copy the values into a clean array so we can export it as JSON later on
-for point in enc[0]:
-	clean_enc.append(point)
-
-insert_model["data"].append(clean_enc)
+insert_model["data"].append(face_encoding.tolist())
 
 # Insert full object into the list
 encodings.append(insert_model)
