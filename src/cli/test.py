@@ -1,3 +1,4 @@
+#! /usr/bin/python3
 # Show a windows with the video stream and testing information
 
 # Import required modules
@@ -6,7 +7,7 @@ import os
 import sys
 import time
 import cv2
-import face_recognition
+import dlib
 
 # Get the absolute path to the current file
 path = os.path.dirname(os.path.abspath(__file__))
@@ -24,13 +25,13 @@ if config.get("video", "recording_plugin") == "ffmpeg":
 video_capture = cv2.VideoCapture(config.get("video", "device_path"))
 
 # Force MJPEG decoding if true
-if config.getboolean("video", "force_mjpeg"):
+if config.getboolean("video", "force_mjpeg", fallback=False):
 	# Set a magic number, will enable MJPEG but is badly documented
 	video_capture.set(cv2.CAP_PROP_FOURCC, 1196444237)
 
 # Set the frame width and height if requested
-fw = config.getint("video", "frame_width")
-fh = config.getint("video", "frame_height")
+fw = config.getint("video", "frame_width", fallback=-1)
+fh = config.getint("video", "frame_height", fallback=-1)
 if fw != -1:
 	video_capture.set(cv2.CAP_PROP_FRAME_WIDTH, fw)
 
@@ -59,6 +60,15 @@ def print_text(line_number, text):
 	"""Print the status text by line number"""
 	cv2.putText(overlay, text, (10, height - 10 - (10 * line_number)), cv2.FONT_HERSHEY_SIMPLEX, .3, (0, 255, 0), 0, cv2.LINE_AA)
 
+use_cnn = config.getboolean('core', 'use_cnn', fallback=False)
+if use_cnn:
+	face_detector = dlib.cnn_face_detection_model_v1(
+		path + '/../dlib-data/mmod_human_face_detector.dat'
+	)
+else:
+	face_detector = dlib.get_frontal_face_detector()
+
+clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
 
 # Open the window and attach a a mouse listener
 cv2.namedWindow("Howdy Test")
@@ -80,21 +90,25 @@ rec_tm = 0
 # Wrap everything in an keyboard interupt handler
 try:
 	while True:
+		frame_tm = time.time()
+
 		# Increment the frames
 		total_frames += 1
 		sec_frames += 1
 
 		# Id we've entered a new second
-		if sec != int(time.time()):
+		if sec != int(frame_tm):
 			# Set the last seconds FPS
 			fps = sec_frames
 
 			# Set the new second and reset the counter
-			sec = int(time.time())
+			sec = int(frame_tm)
 			sec_frames = 0
 
 		# Grab a single frame of video
-		ret, frame = (video_capture.read())
+		ret, frame = video_capture.read()
+		frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+		frame = clahe.apply(frame)
 		# Make a frame to put overlays in
 		overlay = frame.copy()
 
@@ -108,7 +122,7 @@ try:
 		# Fill with the overal containing percentage
 		hist_perc = []
 
-		# Loop though all values to calculate a pensentage and add it to the overlay
+		# Loop though all values to calculate a percentage and add it to the overlay
 		for index, value in enumerate(hist):
 			value_perc = float(value[0]) / hist_total * 100
 			hist_perc.append(value_perc)
@@ -143,17 +157,20 @@ try:
 
 			rec_tm = time.time()
 			# Get the locations of all faces and their locations
-			face_locations = face_recognition.face_locations(frame)
+			face_locations = face_detector(frame, 1) # upsample 1 time
 			rec_tm = time.time() - rec_tm
 
 			# Loop though all faces and paint a circle around them
 			for loc in face_locations:
+				if use_cnn:
+					loc = loc.rect
+
 				# Get the center X and Y from the rectangular points
-				x = int((loc[1] - loc[3]) / 2) + loc[3]
-				y = int((loc[2] - loc[0]) / 2) + loc[0]
+				x = int((loc.right() - loc.left()) / 2) + loc.left()
+				y = int((loc.bottom() - loc.top()) / 2) + loc.top()
 
 				# Get the raduis from the with of the square
-				r = (loc[1] - loc[3]) / 2
+				r = (loc.right() - loc.left()) / 2
 				# Add 20% padding
 				r = int(r + (r * 0.2))
 
@@ -171,9 +188,11 @@ try:
 		if cv2.waitKey(1) != -1:
 			raise KeyboardInterrupt()
 
+		frame_time = time.time() - frame_tm
+
 		# Delay the frame if slowmode is on
 		if slow_mode:
-			time.sleep(.55)
+			time.sleep(.5 - frame_time)
 
 # On ctrl+C
 except KeyboardInterrupt:
