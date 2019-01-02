@@ -107,11 +107,13 @@ timings["ic"] = time.time()
 
 # Check if the user explicitly set ffmpeg as recorder
 if config.get("video", "recording_plugin") == "ffmpeg":
-	from ffmpeg_reader import ffmpeg_reader
-
 	# Set the capture source for ffmpeg
+	from ffmpeg_reader import ffmpeg_reader
 	video_capture = ffmpeg_reader(config.get("video", "device_path"), config.get("video", "device_format"))
-
+elif config.get("video", "recording_plugin") == "pyv4l2":
+	# Set the capture source for pyv4l2
+	from pyv4l2_reader import pyv4l2_reader
+	video_capture = pyv4l2_reader(config.get("video", "device_path"), config.get("video", "device_format"))
 else:
 	# Start video capture on the IR camera through OpenCV
 	video_capture = cv2.VideoCapture(config.get("video", "device_path"))
