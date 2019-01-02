@@ -72,7 +72,7 @@ if not os.path.exists("/tmp/howdy_picked_device"):
 					try:
 						newConf.set(section, key, value)
 					# Add a new section where needed
-					except configparser.NoSectionError as e:
+					except configparser.NoSectionError:
 						newConf.add_section(section)
 						newConf.set(section, key, value)
 
@@ -94,21 +94,25 @@ os.unlink("/tmp/howdy_picked_device")
 log("Upgrading pip to the latest version")
 
 # Update pip
-handleStatus(sc(["pip3", "install", "--upgrade", "pip"]))
+handleStatus(sc(["pip3", "install", "--no-cache-dir", "--upgrade", "pip"]))
 
-dlib_archive = '/tmp/dlib_latest.tar.gz'
+log("Downloading and unpacking data files")
+
+handleStatus(subprocess.call(["./install.sh"], shell=True, cwd="/lib/security/howdy/dlib-data"))
 
 log('Downloading dlib')
+
+dlib_archive = '/tmp/v19.16.tar.gz'
 
 loader = which('curl')
 LOADER_CMD = None
 if loader:
-	LOADER_CMD = [loader, '--silent', '--retry', '5', '--location', '--output']
+	LOADER_CMD = [loader, '--retry', '5', '--location', '--output']
 else:
 	loader = which('wget')
-	LOADER_CMD = [loader, '--quiet', '--tries', '5', '--output-document']
+	LOADER_CMD = [loader, '--tries', '5', '--output-document']
 
-cmd = LOADER_CMD + [dlib_archive, 'https://api.github.com/repos/davisking/dlib/tarball/latest']
+cmd = LOADER_CMD + [dlib_archive, 'https://github.com/davisking/dlib/archive/v19.16.tar.gz']
 
 handleStatus(sc(cmd))
 
@@ -119,13 +123,14 @@ excludes = re.compile(
 	'(docs|examples|python_examples)|'
 	'tools/(archive|convert_dlib_nets_to_caffe|htmlify|imglab|python/test|visual_studio_natvis))'
 )
+
 with tarfile.open(dlib_archive) as tf:
 	for item in tf:
 		# tarball contains directory davisking-dlib-<commit id>, so peek into archive for the name
 		if not DLIB_DIR:
-			DLIB_DIR = item.name
+			DLIB_DIR = "/tmp/" + item.name
 
-		# extract only files sufficent for building
+		# extract only files sufficient for building
 		if not excludes.match(item.name):
 			tf.extract(item, '/tmp')
 
@@ -134,7 +139,8 @@ os.unlink(dlib_archive)
 log("Building dlib")
 
 # Start the build
-cmd = ["python3", "setup.py", "install"]
+cmd = ["sudo", "python3", "setup.py", "install"]
+cuda_used = False
 
 flags = ''
 with open('/proc/cpuinfo') as info:
@@ -152,11 +158,19 @@ elif 'sse3' in flags:
 elif 'sse2' in flags:
 	cmd += ["--yes", "USE_SSE2_INSTRUCTIONS"]
 
-sp = subprocess.run(cmd, cwd=DLIB_DIR, stderr=subprocess.STDOUT)
-handleStatus(sp.returncode)
+try:
+	sp = subprocess.Popen(cmd, cwd=DLIB_DIR, stdout=subprocess.PIPE)
+except subprocess.CalledProcessError:
+	print("Error while building dlib")
+	raise
 
-# simple check for CUDA
-cuda_used = 'DLIB WILL USE CUDA' in sp.stdout
+while sp.poll() is None:
+	line = sp.stdout.readline().decode("utf-8")
+
+	if 'DLIB WILL USE CUDA' in line:
+		cuda_used = True
+
+	print(line, end='')
 
 log("Cleaning up dlib")
 
@@ -164,8 +178,11 @@ log("Cleaning up dlib")
 del sp
 rmtree(DLIB_DIR)
 
-log("Temporary dlib files removed")
+print("Temporary dlib files removed")
 
+log("Installing OpenCV")
+
+handleStatus(subprocess.call(["pip3", "install", "--no-cache-dir", "opencv-python"]))
 
 log("Configuring howdy")
 
