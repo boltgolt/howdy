@@ -11,7 +11,7 @@ import builtins
 # Try to get the original username (not "root") from shell
 try:
 	user = os.getlogin()
-except:
+except Exception:
 	user = os.environ.get("SUDO_USER")
 
 # If that fails, try to get the direct user

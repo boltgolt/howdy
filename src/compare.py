@@ -6,7 +6,7 @@ import time
 
 # Start timing
 timings = {
-	'st': time.time()
+	"st": time.time()
 }
 
 # Import required modules
@@ -21,23 +21,21 @@ import _thread as thread
 
 
 def init_detector(lock):
+	"""Start face detector, encoder and predictor in a new thread"""
 	global face_detector, pose_predictor, face_encoder
+
+	# Use the CNN detector if enabled
 	if use_cnn:
-		face_detector = dlib.cnn_face_detection_model_v1(
-			PATH + '/dlib-data/mmod_human_face_detector.dat'
-		)
+		face_detector = dlib.cnn_face_detection_model_v1(PATH + "/dlib-data/mmod_human_face_detector.dat")
 	else:
 		face_detector = dlib.get_frontal_face_detector()
 
-	pose_predictor = dlib.shape_predictor(
-		PATH + '/dlib-data/shape_predictor_5_face_landmarks.dat'
-	)
+	# Start the others regardless
+	pose_predictor = dlib.shape_predictor(PATH + "/dlib-data/shape_predictor_5_face_landmarks.dat")
+	face_encoder = dlib.face_recognition_model_v1(PATH + "/dlib-data/dlib_face_recognition_resnet_model_v1.dat")
 
-	face_encoder = dlib.face_recognition_model_v1(
-		PATH + '/dlib-data/dlib_face_recognition_resnet_model_v1.dat'
-	)
 	# Note the time it took to initialize detectors
-	timings['ll'] = time.time() - timings['ll']
+	timings["ll"] = time.time() - timings["ll"]
 	lock.release()
 
 
@@ -52,7 +50,7 @@ if len(sys.argv) < 2:
 	sys.exit(12)
 
 # Get the absolute path to the current directory
-PATH = os.path.abspath(__file__ + '/..')
+PATH = os.path.abspath(__file__ + "/..")
 
 # The username of the user being authenticated
 user = sys.argv[1]
@@ -86,25 +84,26 @@ if len(models) < 1:
 config = configparser.ConfigParser()
 config.read(PATH + "/config.ini")
 
-# CNN usage flag
-use_cnn = config.getboolean('core', 'use_cnn', fallback=False)
+# Get all config values needed
+use_cnn = config.getboolean("core", "use_cnn", fallback=False)
 timeout = config.getint("video", "timout", fallback=5)
 dark_threshold = config.getfloat("video", "dark_threshold", fallback=50.0)
 video_certainty = config.getfloat("video", "certainty", fallback=3.5) / 10
 end_report = config.getboolean("debug", "end_report", fallback=False)
 
 # Save the time needed to start the script
-timings['in'] = time.time() - timings['st']
+timings["in"] = time.time() - timings["st"]
 
 # Import face recognition, takes some time
-timings['ll'] = time.time()
+timings["ll"] = time.time()
 
+# Start threading and wait for init to finish
 lock = thread.allocate_lock()
 lock.acquire()
 thread.start_new_thread(init_detector, (lock, ))
 
 # Start video capture on the IR camera
-timings['ic'] = time.time()
+timings["ic"] = time.time()
 
 # Check if the user explicitly set ffmpeg as recorder
 if config.get("video", "recording_plugin") == "ffmpeg":
@@ -120,7 +119,8 @@ else:
 # Force MJPEG decoding if true
 if config.getboolean("video", "force_mjpeg", fallback=False):
 	# Set a magic number, will enable MJPEG but is badly documented
-	video_capture.set(cv2.CAP_PROP_FOURCC, 1196444237) # 1196444237 is 'GPJM' in ASCII
+	# 1196444237 is "GPJM" in ASCII
+	video_capture.set(cv2.CAP_PROP_FOURCC, 1196444237)
 
 # Set the frame width and height if requested
 fw = config.getint("video", "frame_width", fallback=-1)
@@ -135,13 +135,12 @@ if fh != -1:
 video_capture.grab()
 
 # Note the time it took to open the camera
-timings['ic'] = time.time() - timings['ic']
+timings["ic"] = time.time() - timings["ic"]
 
 # wait for thread to finish
 lock.acquire()
 lock.release()
 del lock
-
 
 # Fetch the max frame height
 max_height = config.getfloat("video", "max_height", fallback=0.0)
@@ -158,14 +157,14 @@ end_report = config.getboolean("debug", "end_report")
 
 # Start the read loop
 frames = 0
-timings['fr'] = time.time()
+timings["fr"] = time.time()
 
 while True:
 	# Increment the frame count every loop
 	frames += 1
 
 	# Stop if we've exceded the time limit
-	if time.time() - timings['fr'] > timeout:
+	if time.time() - timings["fr"] > timeout:
 		stop(11)
 
 	# Grab a single frame of video
@@ -190,17 +189,18 @@ while True:
 		gsframe = cv2.resize(gsframe, None, fx=scaling_factor, fy=scaling_factor, interpolation=cv2.INTER_AREA)
 
 	# Get all faces from that frame as encodings
-	face_locations = face_detector(gsframe, 1) # upsample 1 time
+	# Upsamples 1 time
+	face_locations = face_detector(gsframe, 1)
 
 	# Loop through each face
 	for fl in face_locations:
 		if use_cnn:
 			fl = fl.rect
 
+		# Fetch the faces in the image
 		face_landmark = pose_predictor(frame, fl)
-		face_encoding = np.array(
-			face_encoder.compute_face_descriptor(frame, face_landmark, 1) # num_jitters=1
-		)
+		face_encoding = np.array(face_encoder.compute_face_descriptor(frame, face_landmark, 1))
+
 		# Match this found face against a known face
 		matches = np.linalg.norm(encodings - face_encoding, axis=1)
 
@@ -210,8 +210,8 @@ while True:
 
 		# Check if a match that's confident enough
 		if 0 < match < video_certainty:
-			timings['tt'] = time.time() - timings['st']
-			timings['fr'] = time.time() - timings['fr']
+			timings["tt"] = time.time() - timings["st"]
+			timings["fr"] = time.time() - timings["fr"]
 
 			# If set to true in the config, print debug text
 			if end_report:
@@ -219,13 +219,14 @@ while True:
 					"""Helper function to print a timing from the list"""
 					print("  %s: %dms" % (label, round(timings[k] * 1000)))
 
+				# Print a nice timing report
 				print("Time spent")
-				print_timing("Starting up", 'in')
-				print("  Open cam + load libs: %dms" % (round(max(timings['ll'], timings['ic']) * 1000, )))
-				print_timing("  Opening the camera", 'ic')
-				print_timing("  Importing recognition libs", 'll')
-				print_timing("Searching for known face", 'fr')
-				print_timing("Total time", 'tt')
+				print_timing("Starting up", "in")
+				print("  Open cam + load libs: %dms" % (round(max(timings["ll"], timings["ic"]) * 1000, )))
+				print_timing("  Opening the camera", "ic")
+				print_timing("  Importing recognition libs", "ll")
+				print_timing("Searching for known face", "fr")
+				print_timing("Total time", "tt")
 
 				print("\nResolution")
 				width = video_capture.get(cv2.CAP_PROP_FRAME_WIDTH) or 1
@@ -235,7 +236,7 @@ while True:
 				print("  Used: %dx%d" % (scale_height, scale_width))
 
 				# Show the total number of frames and calculate the FPS by deviding it by the total scan time
-				print("\nFrames searched: %d (%.2f fps)" % (frames, frames / timings['fr']))
+				print("\nFrames searched: %d (%.2f fps)" % (frames, frames / timings["fr"]))
 				print("Dark frames ignored: %d " % (dark_tries, ))
 				print("Certainty of winning frame: %.3f" % (match * 10, ))
 

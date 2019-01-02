@@ -38,6 +38,7 @@ def handleStatus(status):
 		sys.exit(1)
 
 
+# Create shorthand for subprocess creation
 sc = subprocess.call
 
 # We're not in fresh configuration mode so don't continue the setup
@@ -98,79 +99,88 @@ handleStatus(sc(["pip3", "install", "--no-cache-dir", "--upgrade", "pip"]))
 
 log("Downloading and unpacking data files")
 
+# Run the bash script to download and unpack the .dat files needed
 handleStatus(subprocess.call(["./install.sh"], shell=True, cwd="/lib/security/howdy/dlib-data"))
 
-log('Downloading dlib')
+log("Downloading dlib")
 
-dlib_archive = '/tmp/v19.16.tar.gz'
-
-loader = which('curl')
+dlib_archive = "/tmp/v19.16.tar.gz"
+loader = which("curl")
 LOADER_CMD = None
+
+# If curl is installed, use that as the downloader
 if loader:
-	LOADER_CMD = [loader, '--retry', '5', '--location', '--output']
+	LOADER_CMD = [loader, "--retry", "5", "--location", "--output"]
+# Otherwise, fall back on wget
 else:
-	loader = which('wget')
-	LOADER_CMD = [loader, '--tries', '5', '--output-document']
+	loader = which("wget")
+	LOADER_CMD = [loader, "--tries", "5", "--output-document"]
 
-cmd = LOADER_CMD + [dlib_archive, 'https://github.com/davisking/dlib/archive/v19.16.tar.gz']
-
+# Assemble and execute the download command
+cmd = LOADER_CMD + [dlib_archive, "https://github.com/davisking/dlib/archive/v19.16.tar.gz"]
 handleStatus(sc(cmd))
 
+# The folder containing the dlib source
 DLIB_DIR = None
-
+# A regex of all files to ignore while unpacking the archive
 excludes = re.compile(
-	'davisking-dlib-\w+/(dlib/(http_client|java|matlab|test/)|'
-	'(docs|examples|python_examples)|'
-	'tools/(archive|convert_dlib_nets_to_caffe|htmlify|imglab|python/test|visual_studio_natvis))'
+	"davisking-dlib-\w+/(dlib/(http_client|java|matlab|test/)|"
+	"(docs|examples|python_examples)|"
+	"tools/(archive|convert_dlib_nets_to_caffe|htmlify|imglab|python/test|visual_studio_natvis))"
 )
 
+# Open the archive
 with tarfile.open(dlib_archive) as tf:
 	for item in tf:
-		# tarball contains directory davisking-dlib-<commit id>, so peek into archive for the name
+		# Set the destenation dir if unset
 		if not DLIB_DIR:
 			DLIB_DIR = "/tmp/" + item.name
 
 		# extract only files sufficient for building
 		if not excludes.match(item.name):
-			tf.extract(item, '/tmp')
+			tf.extract(item, "/tmp")
 
+# Delete the downloaded archive
 os.unlink(dlib_archive)
 
 log("Building dlib")
 
-# Start the build
 cmd = ["sudo", "python3", "setup.py", "install"]
 cuda_used = False
+flags = ""
 
-flags = ''
-with open('/proc/cpuinfo') as info:
+# Get the CPU details
+with open("/proc/cpuinfo") as info:
 	for line in info:
-		if 'flags' in line:
+		if "flags" in line:
 			flags = line
 			break
 
-if 'avx' in flags:
+# Use the most efficient instruction set the CPU supports
+if "avx" in flags:
 	cmd += ["--yes", "USE_AVX_INSTRUCTIONS"]
-elif 'sse4' in flags:
+elif "sse4" in flags:
 	cmd += ["--yes", "USE_SSE4_INSTRUCTIONS"]
-elif 'sse3' in flags:
+elif "sse3" in flags:
 	cmd += ["--yes", "USE_SSE3_INSTRUCTIONS"]
-elif 'sse2' in flags:
+elif "sse2" in flags:
 	cmd += ["--yes", "USE_SSE2_INSTRUCTIONS"]
 
+# Compile and link dlib
 try:
 	sp = subprocess.Popen(cmd, cwd=DLIB_DIR, stdout=subprocess.PIPE)
 except subprocess.CalledProcessError:
 	print("Error while building dlib")
 	raise
 
+# Go through each line from stdout
 while sp.poll() is None:
 	line = sp.stdout.readline().decode("utf-8")
 
-	if 'DLIB WILL USE CUDA' in line:
+	if "DLIB WILL USE CUDA" in line:
 		cuda_used = True
 
-	print(line, end='')
+	print(line, end="")
 
 log("Cleaning up dlib")
 
@@ -188,20 +198,19 @@ log("Configuring howdy")
 
 # Manually change the camera id to the one picked
 for line in fileinput.input(["/lib/security/howdy/config.ini"], inplace=1):
-	print(
-		line
-			.replace("device_path = none", "device_path = " + picked)
-			.replace("use_cnn = false", "use_cnn = " + str(cuda_used).lower()),
-		end=""
-	)
+	line = line.replace("device_path = none", "device_path = " + picked)
+	line = line.replace("use_cnn = false", "use_cnn = " + str(cuda_used).lower())
+
+	print(line, end="")
+
 print("Camera ID saved")
 
 # Secure the howdy folder
 handleStatus(sc(["chmod 744 -R /lib/security/howdy/"], shell=True))
 
 # Allow anyone to execute the python CLI
-os.chmod('/lib/security/howdy', 0o755)
-os.chmod('/lib/security/howdy/cli.py', 0o755)
+os.chmod("/lib/security/howdy", 0o755)
+os.chmod("/lib/security/howdy/cli.py", 0o755)
 handleStatus(sc(["chmod 755 -R /lib/security/howdy/cli"], shell=True))
 print("Permissions set")
 
