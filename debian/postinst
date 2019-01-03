@@ -104,44 +104,48 @@ handleStatus(subprocess.call(["./install.sh"], shell=True, cwd="/lib/security/ho
 
 log("Downloading dlib")
 
-dlib_archive = "/tmp/v19.16.tar.gz"
-loader = which("wget")
-LOADER_CMD = None
 
-# If wget is installed, use that as the downloader
-if loader:
-	LOADER_CMD = [loader, "--tries", "5", "--output-document"]
-# Otherwise, fall back on curl
+if "HOWDY_SKIP_DLIB" in os.environ:
+	print(col(2) + "SKIPPING DLIB INSTALLATION BECAUSE OF HOWDY_SKIP_DLIB FLAG" + col(0))
 else:
-	loader = which("curl")
-	LOADER_CMD = [loader, "--retry", "5", "--location", "--output"]
+	dlib_archive = "/tmp/v19.16.tar.gz"
+	loader = which("wget")
+	LOADER_CMD = None
 
-# Assemble and execute the download command
-cmd = LOADER_CMD + [dlib_archive, "https://github.com/davisking/dlib/archive/v19.16.tar.gz"]
-handleStatus(sc(cmd))
+	# If wget is installed, use that as the downloader
+	if loader:
+		LOADER_CMD = [loader, "--tries", "5", "--output-document"]
+	# Otherwise, fall back on curl
+	else:
+		loader = which("curl")
+		LOADER_CMD = [loader, "--retry", "5", "--location", "--output"]
 
-# The folder containing the dlib source
-DLIB_DIR = None
-# A regex of all files to ignore while unpacking the archive
-excludes = re.compile(
-	"davisking-dlib-\w+/(dlib/(http_client|java|matlab|test/)|"
-	"(docs|examples|python_examples)|"
-	"tools/(archive|convert_dlib_nets_to_caffe|htmlify|imglab|python/test|visual_studio_natvis))"
-)
+	# Assemble and execute the download command
+	cmd = LOADER_CMD + [dlib_archive, "https://github.com/davisking/dlib/archive/v19.16.tar.gz"]
+	handleStatus(sc(cmd))
 
-# Open the archive
-with tarfile.open(dlib_archive) as tf:
-	for item in tf:
-		# Set the destenation dir if unset
-		if not DLIB_DIR:
-			DLIB_DIR = "/tmp/" + item.name
+	# The folder containing the dlib source
+	DLIB_DIR = None
+	# A regex of all files to ignore while unpacking the archive
+	excludes = re.compile(
+		"davisking-dlib-\w+/(dlib/(http_client|java|matlab|test/)|"
+		"(docs|examples|python_examples)|"
+		"tools/(archive|convert_dlib_nets_to_caffe|htmlify|imglab|python/test|visual_studio_natvis))"
+	)
 
-		# extract only files sufficient for building
-		if not excludes.match(item.name):
-			tf.extract(item, "/tmp")
+	# Open the archive
+	with tarfile.open(dlib_archive) as tf:
+		for item in tf:
+			# Set the destenation dir if unset
+			if not DLIB_DIR:
+				DLIB_DIR = "/tmp/" + item.name
 
-# Delete the downloaded archive
-os.unlink(dlib_archive)
+			# extract only files sufficient for building
+			if not excludes.match(item.name):
+				tf.extract(item, "/tmp")
+
+	# Delete the downloaded archive
+	os.unlink(dlib_archive)
 
 log("Building dlib")
 
@@ -149,46 +153,47 @@ cmd = ["sudo", "python3", "setup.py", "install"]
 cuda_used = False
 flags = ""
 
-# Get the CPU details
-with open("/proc/cpuinfo") as info:
-	for line in info:
-		if "flags" in line:
-			flags = line
-			break
+if "HOWDY_SKIP_DLIB" not in os.environ:
+	# Get the CPU details
+	with open("/proc/cpuinfo") as info:
+		for line in info:
+			if "flags" in line:
+				flags = line
+				break
 
-# Use the most efficient instruction set the CPU supports
-if "avx" in flags:
-	cmd += ["--yes", "USE_AVX_INSTRUCTIONS"]
-elif "sse4" in flags:
-	cmd += ["--yes", "USE_SSE4_INSTRUCTIONS"]
-elif "sse3" in flags:
-	cmd += ["--yes", "USE_SSE3_INSTRUCTIONS"]
-elif "sse2" in flags:
-	cmd += ["--yes", "USE_SSE2_INSTRUCTIONS"]
+	# Use the most efficient instruction set the CPU supports
+	if "avx" in flags:
+		cmd += ["--yes", "USE_AVX_INSTRUCTIONS"]
+	elif "sse4" in flags:
+		cmd += ["--yes", "USE_SSE4_INSTRUCTIONS"]
+	elif "sse3" in flags:
+		cmd += ["--yes", "USE_SSE3_INSTRUCTIONS"]
+	elif "sse2" in flags:
+		cmd += ["--yes", "USE_SSE2_INSTRUCTIONS"]
 
-# Compile and link dlib
-try:
-	sp = subprocess.Popen(cmd, cwd=DLIB_DIR, stdout=subprocess.PIPE)
-except subprocess.CalledProcessError:
-	print("Error while building dlib")
-	raise
+	# Compile and link dlib
+	try:
+		sp = subprocess.Popen(cmd, cwd=DLIB_DIR, stdout=subprocess.PIPE)
+	except subprocess.CalledProcessError:
+		print("Error while building dlib")
+		raise
 
-# Go through each line from stdout
-while sp.poll() is None:
-	line = sp.stdout.readline().decode("utf-8")
+	# Go through each line from stdout
+	while sp.poll() is None:
+		line = sp.stdout.readline().decode("utf-8")
 
-	if "DLIB WILL USE CUDA" in line:
-		cuda_used = True
+		if "DLIB WILL USE CUDA" in line:
+			cuda_used = True
 
-	print(line, end="")
+		print(line, end="")
 
-log("Cleaning up dlib")
+	log("Cleaning up dlib")
 
-# Remove the no longer needed git clone
-del sp
-rmtree(DLIB_DIR)
+	# Remove the no longer needed git clone
+	del sp
+	rmtree(DLIB_DIR)
 
-print("Temporary dlib files removed")
+	print("Temporary dlib files removed")
 
 log("Installing OpenCV")
 
