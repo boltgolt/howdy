@@ -95,7 +95,7 @@ os.unlink("/tmp/howdy_picked_device")
 log("Upgrading pip to the latest version")
 
 # Update pip
-handleStatus(sc(["pip3", "install", "--no-cache-dir", "--upgrade", "pip"]))
+handleStatus(sc(["pip3", "install", "--upgrade", "pip"]))
 
 log("Downloading and unpacking data files")
 
@@ -105,16 +105,16 @@ handleStatus(subprocess.call(["./install.sh"], shell=True, cwd="/lib/security/ho
 log("Downloading dlib")
 
 dlib_archive = "/tmp/v19.16.tar.gz"
-loader = which("curl")
+loader = which("wget")
 LOADER_CMD = None
 
-# If curl is installed, use that as the downloader
+# If wget is installed, use that as the downloader
 if loader:
-	LOADER_CMD = [loader, "--retry", "5", "--location", "--output"]
-# Otherwise, fall back on wget
-else:
-	loader = which("wget")
 	LOADER_CMD = [loader, "--tries", "5", "--output-document"]
+# Otherwise, fall back on curl
+else:
+	loader = which("curl")
+	LOADER_CMD = [loader, "--retry", "5", "--location", "--output"]
 
 # Assemble and execute the download command
 cmd = LOADER_CMD + [dlib_archive, "https://github.com/davisking/dlib/archive/v19.16.tar.gz"]

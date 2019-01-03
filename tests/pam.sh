@@ -6,7 +6,7 @@ set -e
 sudo howdy clear -y || true
 
 # Change active camera to match video 1
-sudo sed -i "s,device_path.*,device_path = $PWD\/tests\/video\/match1.m4v,g" /lib/security/howdy/config.ini
+sudo sed -i "s,device_path.*,device_path = $PWD/tests\/video\/match1.m4v,g" /lib/security/howdy/config.ini
 
 # Let howdy add the match face
 sudo howdy add -y

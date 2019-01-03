@@ -24,6 +24,14 @@ def init_detector(lock):
 	"""Start face detector, encoder and predictor in a new thread"""
 	global face_detector, pose_predictor, face_encoder
 
+	# Test if at lest 1 of the data files is there and abort if it's not
+	if not os.path.isfile(PATH + "/dlib-data/shape_predictor_5_face_landmarks.dat"):
+		print("Data files have not been downloaded, please run the following commands:")
+		print("\n\tcd " + PATH + "/dlib-data")
+		print("\tsudo ./install.sh\n")
+		lock.release()
+		sys.exit(1)
+
 	# Use the CNN detector if enabled
 	if use_cnn:
 		face_detector = dlib.cnn_face_detection_model_v1(PATH + "/dlib-data/mmod_human_face_detector.dat")
@@ -171,7 +179,12 @@ while True:
 
 	# Grab a single frame of video
 	_, frame = video_capture.read()
-	gsframe = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+	try:
+		gsframe = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+	except cv2.error:
+		print("Unknown camera, please check your 'device_path' config value.\n")
+		raise
 
 	# Create a histogram of the image with 8 values
 	hist = cv2.calcHist([gsframe], [0], None, [8], [0, 256])

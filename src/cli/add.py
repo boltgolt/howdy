@@ -22,26 +22,31 @@ except ImportError as err:
 	sys.exit(1)
 
 # Get the absolute path to the current directory
-path = os.path.abspath(__file__ + '/..')
+path = os.path.abspath(__file__ + "/..")
+
+# Test if at lest 1 of the data files is there and abort if it's not
+if not os.path.isfile(path + "/../dlib-data/shape_predictor_5_face_landmarks.dat"):
+	print("Data files have not been downloaded, please run the following commands:")
+	print("\n\tcd " + os.path.realpath(path + "/../dlib-data"))
+	print("\tsudo ./install.sh\n")
+	sys.exit(1)
 
 # Read config from disk
 config = configparser.ConfigParser()
 config.read(path + "/../config.ini")
 
-use_cnn = config.getboolean('core', 'use_cnn', fallback=False)
+if not os.path.exists(config.get("video", "device_path")):
+	print("Camera path is not configured correctly, please edit the 'device_path' config value.")
+	sys.exit(1)
+
+use_cnn = config.getboolean("core", "use_cnn", fallback=False)
 if use_cnn:
-	face_detector = dlib.cnn_face_detection_model_v1(
-		path + '/../dlib-data/mmod_human_face_detector.dat'
-	)
+	face_detector = dlib.cnn_face_detection_model_v1(path + "/../dlib-data/mmod_human_face_detector.dat")
 else:
 	face_detector = dlib.get_frontal_face_detector()
 
-pose_predictor = dlib.shape_predictor(
-	path + '/../dlib-data/shape_predictor_5_face_landmarks.dat'
-)
-face_encoder = dlib.face_recognition_model_v1(
-	path + '/../dlib-data/dlib_face_recognition_resnet_model_v1.dat'
-)
+pose_predictor = dlib.shape_predictor(path + "/../dlib-data/shape_predictor_5_face_landmarks.dat")
+face_encoder = dlib.face_recognition_model_v1(path + "/../dlib-data/dlib_face_recognition_resnet_model_v1.dat")
 
 user = builtins.howdy_user
 # The permanent file to store the encoded model in
@@ -154,7 +159,7 @@ while frames < 60:
 	frames += 1
 
 	# Get all faces from that frame as encodings
-	face_locations = face_detector(gsframe, 1) # upsample 1 time
+	face_locations = face_detector(gsframe, 1)
 
 	# If we've found at least one, we can continue
 	if face_locations:
@@ -176,9 +181,7 @@ if use_cnn:
 
 # Get the encodings in the frame
 face_landmark = pose_predictor(frame, face_location)
-face_encoding = np.array(
-	face_encoder.compute_face_descriptor(frame, face_landmark, 1) # num_jitters=1
-)
+face_encoding = np.array(face_encoder.compute_face_descriptor(frame, face_landmark, 1))
 
 insert_model["data"].append(face_encoding.tolist())
 
