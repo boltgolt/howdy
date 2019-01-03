@@ -3,9 +3,6 @@ language: python
 python: "3.6"
 
 script:
-  - pip3 install --upgrade pip
-  - pip3 install dlib
-
   # Build the binary (.deb)
   - debuild -i -us -uc -b
   # Install the binary, running the debian scripts in the process
@@ -35,4 +32,3 @@ addons:
       - devscripts
       - fakeroot
       - pamtester
-      - python3-pip
