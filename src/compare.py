@@ -116,11 +116,11 @@ timings["ic"] = time.time()
 # Check if the user explicitly set ffmpeg as recorder
 if config.get("video", "recording_plugin") == "ffmpeg":
 	# Set the capture source for ffmpeg
-	from ffmpeg_reader import ffmpeg_reader
+	from recorders.ffmpeg_reader import ffmpeg_reader
 	video_capture = ffmpeg_reader(config.get("video", "device_path"), config.get("video", "device_format"))
 elif config.get("video", "recording_plugin") == "pyv4l2":
 	# Set the capture source for pyv4l2
-	from pyv4l2_reader import pyv4l2_reader
+	from recorders.pyv4l2_reader import pyv4l2_reader
 	video_capture = pyv4l2_reader(config.get("video", "device_path"), config.get("video", "device_format"))
 else:
 	# Start video capture on the IR camera through OpenCV
@@ -178,12 +178,14 @@ while True:
 		stop(11)
 
 	# Grab a single frame of video
-	_, frame = video_capture.read()
+	ret, frame = video_capture.read()
 
 	try:
+		# Convert from color to grayscale
+		# First processing of frame, so frame errors show up here
 		gsframe = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 	except cv2.error:
-		print("Unknown camera, please check your 'device_path' config value.\n")
+		print("\nUnknown camera, please check your 'device_path' config value.\n")
 		raise
 
 	# Create a histogram of the image with 8 values

@@ -1,18 +1,19 @@
 # Class that simulates the functionality of opencv so howdy can use v4l2 devices seamlessly
 
 # Import required modules. lib4l-dev package is also required.
-import v4l2
+from recorders import v4l2
 import fcntl
 import numpy
 import sys
 from cv2 import cvtColor, COLOR_GRAY2BGR, CAP_PROP_FRAME_WIDTH, CAP_PROP_FRAME_HEIGHT
 
 try:
-	from pyv4l2.frame import Frame
+	from v4l2.frame import Frame
 except ImportError:
 	print("Missing pyv4l2 module, please run:")
 	print(" pip3 install pyv4l2\n")
 	sys.exit(13)
+
 
 class pyv4l2_reader:
 	""" This class was created to look as similar to the openCV features used in Howdy as possible for overall code cleanliness. """
@@ -39,7 +40,7 @@ class pyv4l2_reader:
 			return self.width
 		elif prop == CAP_PROP_FRAME_HEIGHT:
 			return self.height
-			
+
 	def probe(self):
 		""" Probe the video device to get height and width info """
 
@@ -51,7 +52,7 @@ class pyv4l2_reader:
 		if ret == 0:
 			height = fmt.fmt.pix.height
 			width = fmt.fmt.pix.width
-		else: 
+		else:
 			# Could not determine the resolution from ioctl call. Reverting to slower ffmpeg.probe() method
 			import ffmpeg
 			probe = ffmpeg.probe(self.device_name)
@@ -68,7 +69,6 @@ class pyv4l2_reader:
 		""" Start recording """
 		self.frame = Frame(self.device_name)
 
-
 	def grab(self):
 		""" Read a sigle frame from the IR camera. """
 		self.read()
@@ -77,26 +77,19 @@ class pyv4l2_reader:
 		""" Read a sigle frame from the IR camera. """
 
 		if not self.frame:
-			self.record() 
+			self.record()
 
 		# Grab a raw frame from the camera
 		frame_data = self.frame.get_frame()
 
 		# Convert the raw frame_date to a numpy array
-		img = (
-		   numpy
-		   .frombuffer(frame_data, numpy.uint8)
-		)
+		img = (numpy.frombuffer(frame_data, numpy.uint8))
 
 		# Convert the numpy array to a proper grayscale image array
 		img_bgr = cvtColor(img, COLOR_GRAY2BGR)
 
 		# Convert the grayscale image array into a proper RGB style numpy array
-		img2 = (
-		   numpy
-		   .frombuffer(img_bgr, numpy.uint8)
-		   .reshape([352, 352, 3])
-		)
+		img2 = (numpy.frombuffer(img_bgr, numpy.uint8).reshape([352, 352, 3]))
 
 		# Return a single frame of video
 		return 0, img2
@@ -107,4 +100,3 @@ class pyv4l2_reader:
 		self.num_frames_read = 0
 		if self.frame:
 			self.frame.close()
-

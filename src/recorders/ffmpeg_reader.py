@@ -126,3 +126,7 @@ class ffmpeg_reader:
 		""" Empty our array. If we had a hold on the camera, we would give it back here. """
 		self.video = ()
 		self.num_frames_read = 0
+
+	def grab(self):
+		""" Redirect grab() to read() for compatibility """
+		self.read()
