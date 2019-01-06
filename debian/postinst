@@ -81,6 +81,11 @@ if not os.path.exists("/tmp/howdy_picked_device"):
 			with open("/lib/security/howdy/config.ini", "w") as configfile:
 				newConf.write(configfile)
 
+		# Install dlib data files if needed
+		if not os.path.exists("/lib/security/howdy/dlib-data/shape_predictor_5_face_landmarks.dat"):
+			print("Attempting installation of missing data files")
+			handleStatus(subprocess.call(["./install.sh"], shell=True, cwd="/lib/security/howdy/dlib-data"))
+
 	sys.exit(0)
 
 # Open the temporary file containing the device ID

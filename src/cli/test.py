@@ -1,4 +1,3 @@
-#! /usr/bin/python3
 # Show a windows with the video stream and testing information
 
 # Import required modules
