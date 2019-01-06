@@ -26,7 +26,7 @@ def doAuth(pamh):
 			sys.exit(0)
 
 	# Alert the user that we are doing face detection
-	if config.get("core", "show_detection_attempt") == "true":
+	if config.get("core", "detection_notice") == "true":
 		pamh.conversation(pamh.Message(pamh.PAM_TEXT_INFO, "Attempting face detection"))
 
 	# Run compare as python3 subprocess to circumvent python version and import issues

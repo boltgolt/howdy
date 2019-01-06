@@ -1,3 +1,15 @@
+howdy (2.5.0) xenial; urgency=medium
+
+  * Added FFmpeg and v4l2 recorders (thanks @timwelch!)
+  * Added automatic PAM inclusion on installation
+  * Added optional notice on detection attempt (thanks @mrkmg!)
+  * Added support for grayscale frame encoding (thanks @dmig and @sapjunior!)
+  * Massively improved recognition speed (thanks @dmig!)
+  * Fixed typo in "timout" config value
+  * Removed unneeded dependencies (thanks @dmig!)
+
+ -- boltgolt <boltgolt@gmail.com>  Sun, 06 Jan 2019 14:37:41 +0100
+
 howdy (2.4.0) xenial; urgency=medium
 
   * Cameras are now selected by path instead of by video device number (thanks @Rhiyo!)

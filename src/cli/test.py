@@ -15,8 +15,8 @@ path = os.path.dirname(os.path.abspath(__file__))
 config = configparser.ConfigParser()
 config.read(path + "/../config.ini")
 
-if config.get("video", "recording_plugin") == "ffmpeg":
-	print("Howdy has been configured to use ffmpeg as recorder, which doesn't support the test command yet")
+if config.get("video", "recording_plugin") != "opencv":
+	print("Howdy has been configured to use a recorder which doesn't support the test command yet")
 	print("Aborting")
 	sys.exit(12)
 
