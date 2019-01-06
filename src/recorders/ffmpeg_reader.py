@@ -46,7 +46,7 @@ class ffmpeg_reader:
 	def probe(self):
 		""" Probe the video device to get height and width info """
 
-		# Running this command on ffmpeg unfortunatly returns with an exit code of 1, which is silly.
+		# Running this command on ffmpeg unfortunately returns with an exit code of 1, which is silly.
 		# Returns an error code of 1 and this text:  "/dev/video2: Immediate exit requested"
 		args = ["ffmpeg", "-f", self.device_format, "-list_formats", "all", "-i", self.device_path]
 		process = Popen(args, stdout=PIPE, stderr=PIPE)
