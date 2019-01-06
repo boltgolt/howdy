@@ -2,6 +2,7 @@
 # Installation script to install howdy
 # Executed after primary apt install
 
+
 def col(id):
 	"""Add color escape sequences"""
 	if id == 1: return "\033[32m"
@@ -9,15 +10,15 @@ def col(id):
 	if id == 3: return "\033[31m"
 	return "\033[0m"
 
+
 # Import required modules
+import fileinput
 import subprocess
-import time
 import sys
 import os
 import re
-import signal
-import fileinput
-import urllib.parse
+import tarfile
+from shutil import rmtree, which
 
 # Don't run unless we need to configure the install
 # Will also happen on upgrade but we will catch that later on
@@ -29,12 +30,16 @@ def log(text):
 	"""Print a nicely formatted line to stdout"""
 	print("\n>>> " + col(1) + text + col(0) + "\n")
 
+
 def handleStatus(status):
 	"""Abort if a command fails"""
 	if (status != 0):
 		print(col(3) + "Error while running last command" + col(0))
 		sys.exit(1)
 
+
+# Create shorthand for subprocess creation
+sc = subprocess.call
 
 # We're not in fresh configuration mode so don't continue the setup
 if not os.path.exists("/tmp/howdy_picked_device"):
@@ -53,21 +58,33 @@ if not os.path.exists("/tmp/howdy_picked_device"):
 			# Go through every setting in the old config and apply it to the new file
 			for section in oldConf.sections():
 				for (key, value) in oldConf.items(section):
+
+					# MIGRATION 2.3.1 -> 2.4.0
 					# If config is still using the old device_id parameter, convert it to a path
 					if key == "device_id":
 						key = "device_path"
 						value = "/dev/video" + value
 
+					# MIGRATION 2.4.0 -> 2.5.0
+					# Finally correct typo in "timout" config value
+					if key == "timout":
+						key = "timeout"
+
 					try:
 						newConf.set(section, key, value)
 					# Add a new section where needed
-					except configparser.NoSectionError as e:
+					except configparser.NoSectionError:
 						newConf.add_section(section)
 						newConf.set(section, key, value)
 
 			# Write it all to file
 			with open("/lib/security/howdy/config.ini", "w") as configfile:
 				newConf.write(configfile)
+
+		# Install dlib data files if needed
+		if not os.path.exists("/lib/security/howdy/dlib-data/shape_predictor_5_face_landmarks.dat"):
+			print("Attempting installation of missing data files")
+			handleStatus(subprocess.call(["./install.sh"], shell=True, cwd="/lib/security/howdy/dlib-data"))
 
 	sys.exit(0)
 
@@ -78,137 +95,139 @@ picked = in_file.read()
 in_file.close()
 
 # Remove the temporary file
-subprocess.call(["rm /tmp/howdy_picked_device"], shell=True)
+os.unlink("/tmp/howdy_picked_device")
 
 log("Upgrading pip to the latest version")
 
 # Update pip
-handleStatus(subprocess.call(["pip3 install --upgrade pip"], shell=True))
+handleStatus(sc(["pip3", "install", "--upgrade", "pip"]))
 
-log("Cloning dlib")
+log("Downloading and unpacking data files")
 
-# Clone the dlib git to /tmp, but only the last commit
-handleStatus(subprocess.call(["git", "clone", "--depth", "1", "https://github.com/davisking/dlib.git", "/tmp/dlib_clone"]))
+# Run the bash script to download and unpack the .dat files needed
+handleStatus(subprocess.call(["./install.sh"], shell=True, cwd="/lib/security/howdy/dlib-data"))
+
+log("Downloading dlib")
+
+dlib_archive = "/tmp/v19.16.tar.gz"
+loader = which("wget")
+LOADER_CMD = None
+
+# If wget is installed, use that as the downloader
+if loader:
+	LOADER_CMD = [loader, "--tries", "5", "--output-document"]
+# Otherwise, fall back on curl
+else:
+	loader = which("curl")
+	LOADER_CMD = [loader, "--retry", "5", "--location", "--output"]
+
+# Assemble and execute the download command
+cmd = LOADER_CMD + [dlib_archive, "https://github.com/davisking/dlib/archive/v19.16.tar.gz"]
+handleStatus(sc(cmd))
+
+# The folder containing the dlib source
+DLIB_DIR = None
+# A regex of all files to ignore while unpacking the archive
+excludes = re.compile(
+	"davisking-dlib-\w+/(dlib/(http_client|java|matlab|test/)|"
+	"(docs|examples|python_examples)|"
+	"tools/(archive|convert_dlib_nets_to_caffe|htmlify|imglab|python/test|visual_studio_natvis))"
+)
+
+# Open the archive
+with tarfile.open(dlib_archive) as tf:
+	for item in tf:
+		# Set the destenation dir if unset
+		if not DLIB_DIR:
+			DLIB_DIR = "/tmp/" + item.name
+
+		# extract only files sufficient for building
+		if not excludes.match(item.name):
+			tf.extract(item, "/tmp")
+
+# Delete the downloaded archive
+os.unlink(dlib_archive)
 
 log("Building dlib")
 
-# Start the build without GPU
-handleStatus(subprocess.call(["cd /tmp/dlib_clone/; python3 setup.py install --yes USE_AVX_INSTRUCTIONS --no DLIB_USE_CUDA"], shell=True))
+cmd = ["sudo", "python3", "setup.py", "install"]
+cuda_used = False
+flags = ""
+
+# Get the CPU details
+with open("/proc/cpuinfo") as info:
+	for line in info:
+		if "flags" in line:
+			flags = line
+			break
+
+# Use the most efficient instruction set the CPU supports
+if "avx" in flags:
+	cmd += ["--yes", "USE_AVX_INSTRUCTIONS"]
+elif "sse4" in flags:
+	cmd += ["--yes", "USE_SSE4_INSTRUCTIONS"]
+elif "sse3" in flags:
+	cmd += ["--yes", "USE_SSE3_INSTRUCTIONS"]
+elif "sse2" in flags:
+	cmd += ["--yes", "USE_SSE2_INSTRUCTIONS"]
+
+# Compile and link dlib
+try:
+	sp = subprocess.Popen(cmd, cwd=DLIB_DIR, stdout=subprocess.PIPE)
+except subprocess.CalledProcessError:
+	print("Error while building dlib")
+	raise
+
+# Go through each line from stdout
+while sp.poll() is None:
+	line = sp.stdout.readline().decode("utf-8")
+
+	if "DLIB WILL USE CUDA" in line:
+		cuda_used = True
+
+	print(line, end="")
 
 log("Cleaning up dlib")
 
 # Remove the no longer needed git clone
-handleStatus(subprocess.call(["rm", "-rf", "/tmp/dlib_clone"]))
+del sp
+rmtree(DLIB_DIR)
+
 print("Temporary dlib files removed")
 
-log("Installing python dependencies")
+log("Installing OpenCV")
 
-# Install direct dependencies so pip does not freak out with the manual dlib install
-handleStatus(subprocess.call(["pip3", "install", "--cache-dir", "/tmp/pip_howdy", "face_recognition_models==0.3.0", "Click>=6.0", "numpy", "Pillow"]))
-
-log("Installing face_recognition")
-
-# Install face_recognition though pip
-handleStatus(subprocess.call(["pip3", "install", "--cache-dir", "/tmp/pip_howdy", "--no-deps", "face_recognition==1.2.2"]))
-
-try:
-	import cv2
-except Exception as e:
-	log("Reinstalling opencv2")
-	handleStatus(subprocess.call(["pip3", "install", "opencv-python"]))
+handleStatus(subprocess.call(["pip3", "install", "--no-cache-dir", "opencv-python"]))
 
 log("Configuring howdy")
 
 # Manually change the camera id to the one picked
-for line in fileinput.input(["/lib/security/howdy/config.ini"], inplace = 1):
-	print(line.replace("device_path = none", "device_path = " + picked), end="")
+for line in fileinput.input(["/lib/security/howdy/config.ini"], inplace=1):
+	line = line.replace("device_path = none", "device_path = " + picked)
+	line = line.replace("use_cnn = false", "use_cnn = " + str(cuda_used).lower())
+
+	print(line, end="")
+
 print("Camera ID saved")
 
 # Secure the howdy folder
-handleStatus(subprocess.call(["chmod 744 -R /lib/security/howdy/"], shell=True))
+handleStatus(sc(["chmod 744 -R /lib/security/howdy/"], shell=True))
 
 # Allow anyone to execute the python CLI
-handleStatus(subprocess.call(["chmod 755 /lib/security/howdy"], shell=True))
-handleStatus(subprocess.call(["chmod 755 /lib/security/howdy/cli.py"], shell=True))
-handleStatus(subprocess.call(["chmod 755 -R /lib/security/howdy/cli"], shell=True))
+os.chmod("/lib/security/howdy", 0o755)
+os.chmod("/lib/security/howdy/cli.py", 0o755)
+handleStatus(sc(["chmod 755 -R /lib/security/howdy/cli"], shell=True))
 print("Permissions set")
 
 # Make the CLI executable as howdy
-handleStatus(subprocess.call(["ln -s /lib/security/howdy/cli.py /usr/local/bin/howdy"], shell=True))
-handleStatus(subprocess.call(["chmod +x /usr/local/bin/howdy"], shell=True))
+os.symlink("/lib/security/howdy/cli.py", "/usr/local/bin/howdy")
+os.chmod("/usr/local/bin/howdy", 0o755)
 print("Howdy command installed")
 
 log("Adding howdy as PAM module")
 
-# Will be filled with the actual output lines
-outlines = []
-# Will be fillled with lines that contain coloring
-printlines = []
-# Track if the new lines have been insterted yet
-inserted = False
-
-# Open the PAM config file
-with open("/etc/pam.d/common-auth") as fp:
-	# Read the first line
-	line = fp.readline()
-
-	while line:
-		# Add the line to the output directly, we're not deleting anything
-		outlines.append(line)
-
-		# Print the comments in gray and don't insert into comments
-		if line[:1] == "#":
-			printlines.append("\033[37m" + line + "\033[0m")
-		else:
-			printlines.append(line)
-
-			# If it's not a comment and we haven't inserted yet
-			if not inserted:
-				# Set both the comment and the linking line
-				line_comment = "# Howdy IR face recognition\n"
-				line_link	= "auth	sufficient			pam_python.so /lib/security/howdy/pam.py\n\n"
-
-				# Add them to the output without any markup
-				outlines.append(line_comment)
-				outlines.append(line_link)
-
-				# Make the print orange to make it clear what's being added
-				printlines.append("\033[33m" + line_comment + "\033[0m")
-				printlines.append("\033[33m" + line_link + "\033[0m")
-
-				# Mark as inserted
-				inserted = True
-
-		# Go to the next line
-		line = fp.readline()
-
-# Print a file Header
-print("\033[33m" + ">>> START OF /etc/pam.d/common-auth" + "\033[0m")
-
-# Loop though all printing lines and use the enters from the file
-for line in printlines:
-	print(line, end="")
-
-# Print a footer
-print("\033[33m" + ">>> END OF /etc/pam.d/common-auth" + "\033[0m" + "\n")
-
-# Do not prompt for a yes if we're in no promt mode
-if "HOWDY_NO_PROMPT" not in os.environ:
-	# Ask the user if this change is okay
-	print("Lines will be insterted in /etc/pam.d/common-auth as shown above")
-	ans = input("Apply this change? [y/N]: ")
-
-	# Abort the whole thing if it's not
-	if ans.lower().strip() != "y" or ans.lower().strip() == "yes":
-		print("Interpreting as a \"NO\", aborting")
-		sys.exit(1)
-
-print("Adding lines to PAM\n")
-
-# Write to PAM
-common_auth = open("/etc/pam.d/common-auth", "w")
-common_auth.write("".join(outlines))
-common_auth.close()
+# Activate the pam-config file
+handleStatus(subprocess.call(["pam-auth-update --package"], shell=True))
 
 # Sign off
 print("Installation complete.")

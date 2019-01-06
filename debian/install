@@ -1,2 +1,3 @@
 src/. lib/security/howdy
+src/pam-config/.  /usr/share/pam-configs
 autocomplete/. usr/share/bash-completion/completions

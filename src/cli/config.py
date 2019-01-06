@@ -17,4 +17,4 @@ elif "EDITOR" in os.environ:
 	editor = os.environ["EDITOR"]
 
 # Open the editor as a subprocess and fork it
-subprocess.call([editor, os.path.dirname(os.path.realpath(__file__))  + "/../config.ini"])
+subprocess.call([editor, os.path.dirname(os.path.realpath(__file__)) + "/../config.ini"])

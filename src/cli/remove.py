@@ -7,11 +7,11 @@ import json
 import builtins
 
 # Get the absolute path and the username
-path = os.path.dirname(os.path.realpath(__file__))  + "/.."
+path = os.path.dirname(os.path.realpath(__file__)) + "/.."
 user = builtins.howdy_user
 
 # Check if enough arguments have been passed
-if builtins.howdy_args.argument == None:
+if builtins.howdy_args.argument is None:
 	print("Please add the ID of the model you want to remove as an argument")
 	print("You can find the IDs by running:")
 	print("\n\thowdy list\n")

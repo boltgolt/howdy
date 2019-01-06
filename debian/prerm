@@ -2,17 +2,11 @@
 # Executed on deinstallation
 # Completely remove howdy from the system
 
-def col(id):
-	"""Add color escape sequences"""
-	if id == 1: return "\033[32m"
-	if id == 2: return "\033[33m"
-	if id == 3: return "\033[31m"
-	return "\033[0m"
-
 # Import required modules
 import subprocess
 import sys
 import os
+from shutil import rmtree
 
 # Only run when we actually want to remove
 if "remove" not in sys.argv and "purge" not in sys.argv:
@@ -24,24 +18,28 @@ if not os.path.exists("/lib/security/howdy/cli"):
 
 # Remove files and symlinks
 try:
-	subprocess.call(["rm /usr/local/bin/howdy"], shell=True)
-except e:
+	os.unlink('/usr/local/bin/howdy')
+except Exception:
 	print("Can't remove executable")
 try:
-	subprocess.call(["rm /usr/share/bash-completion/completions/howdy"], shell=True)
-except e:
+	os.unlink('/usr/share/bash-completion/completions/howdy')
+except Exception:
 	print("Can't remove autocompletion script")
+
+# Refresh and remove howdy from pam-config
 try:
-	subprocess.call(["rm -rf /lib/security/howdy"], shell=True)
-except e:
+	subprocess.call(["pam-auth-update --package"], shell=True)
+	subprocess.call(["rm /usr/share/pam-configs/howdy"], shell=True)
+	subprocess.call(["pam-auth-update --package"], shell=True)
+except Exception:
+	print("Can't remove pam module")
+
+# Remove full installation folder, just to be sure
+try:
+	rmtree('/lib/security/howdy')
+except Exception:
 	# This error is normal
 	pass
 
-# Remove face_recognition and dlib
-subprocess.call(["pip3 uninstall face_recognition face_recognition_models dlib -y --no-cache-dir"], shell=True)
-
-# Print a tearbending message
-print(col(2) + """
-There are still lines in /etc/pam.d/common-auth that can't be removed automatically
-Run "nano /etc/pam.d/common-auth" to remove them by hand\
-""" + col(0))
+# Remove dlib
+subprocess.call(['pip3', 'uninstall', 'dlib', '-y', '--no-cache-dir'])
