@@ -25,6 +25,11 @@ def doAuth(pamh):
 		if "SSH_CONNECTION" in os.environ or "SSH_CLIENT" in os.environ or "SSHD_OPTS" in os.environ:
 			sys.exit(0)
 
+	# Send a notification to the user
+	if config.get("core", "show_notification") == "true":
+		cmd = "notify-send -i camera -t 4000 \"Howdy\" \"Authenticating with camera, please look directly into it...\""
+		os.system(cmd)	
+
 	# Alert the user that we are doing face detection
 	if config.get("core", "detection_notice") == "true":
 		pamh.conversation(pamh.Message(pamh.PAM_TEXT_INFO, "Attempting face detection"))
