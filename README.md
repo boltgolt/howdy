@@ -1,4 +1,19 @@
-# Howdy for Linux  [![](https://img.shields.io/travis/boltgolt/howdy/master.svg)](https://travis-ci.org/boltgolt/howdy) [![](https://img.shields.io/github/release/boltgolt/howdy.svg?colorB=4c1)](https://github.com/boltgolt/howdy/releases)
+![](https://boltgolt.nl/howdy/banner.png)
+
+<p align="center">
+	<a href="https://travis-ci.org/boltgolt/howdy">
+		<img src="https://img.shields.io/travis/boltgolt/howdy/master.svg">
+	</a>
+	<a href="https://github.com/boltgolt/howdy/releases">
+		<img src="https://img.shields.io/github/release/boltgolt/howdy.svg?colorB=4c1">
+	</a>
+	<a href="https://github.com/boltgolt/howdy/graphs/contributors">
+		<img src="https://img.shields.io/github/contributors/boltgolt/howdy.svg?style=flat">
+	</a>
+	<a href="https://www.buymeacoffee.com/boltgolt">
+		<img src="https://img.shields.io/badge/endpoint.svg?url=https://boltgolt.nl/howdy/shield.json">
+	</a>
+</p>
 
 Howdy provides Windows Hello™ style authentication for Linux. Use your built-in IR emitters and camera in combination with facial recognition to prove who you are.
 
@@ -29,6 +44,8 @@ Install the `howdy` package from the AUR. For AUR installation instructions, tak
 You will need to do some additional configuration steps. Please read the [ArchWiki entry](https://wiki.archlinux.org/index.php/Howdy) for more information.
 
 ### Fedora
+_Maintainer: [@luyatshimbalanga](https://github.com/luyatshimbalanga)_
+
 The `howdy` package is available as a [Fedora COPR repository](https://copr.fedorainfracloud.org/coprs/luya/howdy/), install it by simply executing the following commands in a terminal:
 
 ```
@@ -63,7 +80,7 @@ howdy [-U user] [-y] command [argument]
 | `remove`  | Remove a specific model for an user           |
 | `test`    | Test the camera and recognition methods       |
 
-## Contributing [![](https://img.shields.io/travis/boltgolt/howdy/dev.svg?label=dev%20build)](https://github.com/boltgolt/howdy/tree/dev) [![](https://img.shields.io/github/issues-raw/boltgolt/howdy/enhancement.svg?label=feature+requests&colorB=4c1)](https://github.com/boltgolt/howdy/issues?q=is%3Aissue+is%3Aopen+label%3Aenhancement) [![](https://img.shields.io/badge/endpoint.svg?url=https://boltgolt.nl/howdy/shield.json)](https://www.buymeacoffee.com/boltgolt)
+## Contributing [![](https://img.shields.io/travis/boltgolt/howdy/dev.svg?label=dev%20build)](https://github.com/boltgolt/howdy/tree/dev) [![](https://img.shields.io/github/issues-raw/boltgolt/howdy/enhancement.svg?label=feature+requests&colorB=4c1)](https://github.com/boltgolt/howdy/issues?q=is%3Aissue+is%3Aopen+label%3Aenhancement)
 
 The easiest ways to contribute to Howdy is by starring the repository and opening GitHub issues for features you'd like to see. If you want to do more, you can also [buy me a coffee](https://www.buymeacoffee.com/boltgolt).
 
