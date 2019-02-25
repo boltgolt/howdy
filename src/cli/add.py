@@ -108,8 +108,16 @@ elif config.get("video", "recording_plugin") == "pyv4l2":
 	from recorders.pyv4l2_reader import pyv4l2_reader
 	video_capture = pyv4l2_reader(config.get("video", "device_path"), config.get("video", "device_format"))
 else:
+	# Lookup dictionary for different format strings in the config file -> opencv enum
+	opencv_api_pref = {
+		"v4l2"   : cv2.CAP_V4L2,
+		"vfwcap" : cv2.CAP_VFW
+	}
 	# Start video capture on the IR camera through OpenCV
-	video_capture = cv2.VideoCapture(config.get("video", "device_path"))
+	video_capture = cv2.VideoCapture(
+			config.get("video", "device_path"),
+			opencv_api_pref.get(config.get("video", "device_format"), cv2.CAP_V4L2)
+	)
 
 # Force MJPEG decoding if true
 if config.getboolean("video", "force_mjpeg", fallback=False):
