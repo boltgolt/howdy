@@ -1,7 +1,7 @@
 # Maintainer: boltgolt <boltgolt@gmail.com>
 # Maintainer: Kelley McChesney <kelley@kelleymcchesney.us>
 pkgname=howdy
-pkgver=2.3.1
+pkgver=2.5.0
 pkgrel=1
 pkgdesc="Windows Hello for Linux"
 arch=('x86_64')
@@ -25,11 +25,11 @@ makedepends=(
 	'python-pip'
 )
 backup=('usr/lib/security/howdy/config.ini')
-source=("https://github.com/boltgolt/howdy/archive/v2.3.1.tar.gz"
+source=("https://github.com/boltgolt/howdy/archive/v2.5.0.tar.gz"
         "https://downloads.sourceforge.net/project/pam-python/pam-python-1.0.6-1/pam-python-1.0.6.tar.gz"
 	"https://sourceforge.net/p/pam-python/tickets/_discuss/thread/5dc8cfd5/5839/attachment/pam-python-1.0.6-fedora.patch"
 	"https://sourceforge.net/p/pam-python/tickets/_discuss/thread/5dc8cfd5/5839/attachment/pam-python-1.0.6-gcc8.patch")
-sha256sums=('d4057fd4f27c1d14e30718e9412eac578b383846d70cbb7a57725d8132c90b1e'
+sha256sums=('a42c278f05866a6a616e8f5dd8349e35769063a229c236e680e566c5a6580334'
 	    '0ef4dda35da14088afb1640266415730a6e0274bea934917beb5aca90318f853'
 	    'acb9d1b5cf7cad73d5524334b7954431bb9b90f960980378c538907e468c34b5'
 	    '02dd9a4d8ec921ff9a2408183f290f08102e3f9e0151786ae7220a4d550bfe24')
@@ -37,7 +37,7 @@ prepare() {
 	# Preparing dlib with GPU here
 	git clone --depth 1 https://github.com/davisking/dlib.git dlib_clone
 
-	# Preparing pam-python to be installed 
+	# Preparing pam-python to be installed
 	cd pam-python-1.0.6
 	sed -i'' 's|#!/usr/bin/python -W default|#!/usr/bin/python2 -W default|g' src/setup.py
 	sed -i'' 's|#!/usr/bin/python -W default|#!/usr/bin/python2 -W default|g' src/test.py
@@ -45,7 +45,7 @@ prepare() {
 	sed -i'' 's|sphinx-build|sphinx-build2|g' doc/Makefile
 	patch -p1 < ../pam-python-1.0.6-fedora.patch
 	patch -p1 < ../pam-python-1.0.6-gcc8.patch
-	
+
 	# Doing some fixes for pam-python so that it can compile
 	sudo pkgfile -u
 	sudo pkgfile /usr/include/sys/cdefs.h core/glibc
@@ -75,7 +75,7 @@ package() {
 	cd ..
 
 	# Installing the proper license files and the rest of howdy
-	cd howdy-2.3.1
+	cd howdy-$pkgver
 	install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
 	mkdir -p "$pkgdir/usr/lib/security/howdy"
 	cp -r src/* "$pkgdir/usr/lib/security/howdy"
