@@ -4,6 +4,7 @@
 import subprocess
 import sys
 import os
+import glob
 
 # pam-python is running python 2, so we use the old module here
 import ConfigParser
@@ -23,6 +24,11 @@ def doAuth(pamh):
 	# Abort if we're in a remote SSH env
 	if config.getboolean("core", "ignore_ssh"):
 		if "SSH_CONNECTION" in os.environ or "SSH_CLIENT" in os.environ or "SSHD_OPTS" in os.environ:
+			sys.exit(0)
+
+	# Abort if lid is closed
+	if config.getboolean("core", "ignore_closed_lid"):
+		if any('closed' in open(f).read() for f in glob.glob('/proc/acpi/button/lid/*/state')):
 			sys.exit(0)
 
 	# Alert the user that we are doing face detection
