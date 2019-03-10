@@ -37,6 +37,17 @@ if fw != -1:
 if fh != -1:
 	video_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, fh)
 
+# Disable autoexposure
+exposure = config.getint("video", "exposure", fallback=-1)
+if exposure != -1:
+	# For a strange reason on some cameras (e.g. Lenoxo X1E)
+	# setting manual exposure works only after a couple frames
+	# are captured.
+	for i in range(6):
+		video_capture.grab()
+	video_capture.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1.0)  # 1 = Manual
+	video_capture.set(cv2.CAP_PROP_EXPOSURE, 167.0)
+
 # Let the user know what's up
 print("""
 Opening a window with a test feed
