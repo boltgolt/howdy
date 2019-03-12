@@ -144,6 +144,9 @@ if fh != -1:
 # This will let the camera adjust its light levels while we're importing for faster scanning
 video_capture.grab()
 
+# Read exposure from config to use in the main loop
+exposure = config.getint("video", "exposure", fallback=-1)
+
 # Note the time it took to open the camera
 timings["ic"] = time.time() - timings["ic"]
 
@@ -261,3 +264,12 @@ while True:
 
 			# End peacefully
 			stop(0)
+
+	if exposure != -1:
+		# For a strange reason on some cameras (e.g. Lenoxo X1E)
+		# setting manual exposure works only after a couple frames
+		# are captured and even after a delay it does not
+		# always work. Setting exposure at every frame is
+		# reliable though.
+		video_capture.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1.0)  # 1 = Manual
+		video_capture.set(cv2.CAP_PROP_EXPOSURE, float(exposure))
