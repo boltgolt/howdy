@@ -1,4 +1,4 @@
-# Show a windows with the video stream and testing information
+# Show a window with the video stream and testing information
 
 # Import required modules
 import configparser
@@ -109,6 +109,17 @@ try:
 
 		# Grab a single frame of video
 		ret, frame = video_capture.read()
+
+		try:
+			# Convert from color to grayscale
+			# First processing of frame, so frame errors show up here
+			frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+		except RuntimeError:
+			pass
+		except cv2.error:
+			print("\nUnknown camera, please check your 'device_path' config value.\n")
+			raise
+
 		frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 		frame = clahe.apply(frame)
 		# Make a frame to put overlays in
@@ -159,7 +170,8 @@ try:
 
 			rec_tm = time.time()
 			# Get the locations of all faces and their locations
-			face_locations = face_detector(frame, 1) # upsample 1 time
+			# Upsample it once
+			face_locations = face_detector(frame, 1)
 			rec_tm = time.time() - rec_tm
 
 			# Loop though all faces and paint a circle around them

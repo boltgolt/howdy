@@ -18,21 +18,21 @@ def doAuth(pamh):
 	"""Starts authentication in a seperate process"""
 
 	# Abort is Howdy is disabled
-	if config.getboolean("core", "disabled"):
+	if config.getboolean("core", "disabled", fallback=False):
 		sys.exit(0)
 
 	# Abort if we're in a remote SSH env
-	if config.getboolean("core", "ignore_ssh"):
+	if config.getboolean("core", "ignore_ssh", fallback=True):
 		if "SSH_CONNECTION" in os.environ or "SSH_CLIENT" in os.environ or "SSHD_OPTS" in os.environ:
 			sys.exit(0)
 
 	# Abort if lid is closed
-	if config.getboolean("core", "ignore_closed_lid"):
-		if any('closed' in open(f).read() for f in glob.glob('/proc/acpi/button/lid/*/state')):
+	if config.getboolean("core", "ignore_closed_lid", fallback=True):
+		if any("closed" in open(f).read() for f in glob.glob("/proc/acpi/button/lid/*/state")):
 			sys.exit(0)
 
 	# Alert the user that we are doing face detection
-	if config.get("core", "detection_notice") == "true":
+	if config.getboolean("core", "detection_notice", fallback=False):
 		pamh.conversation(pamh.Message(pamh.PAM_TEXT_INFO, "Attempting face detection"))
 
 	# Run compare as python3 subprocess to circumvent python version and import issues
@@ -40,7 +40,7 @@ def doAuth(pamh):
 
 	# Status 10 means we couldn't find any face models
 	if status == 10:
-		if not config.getboolean("core", "suppress_unknown"):
+		if not config.getboolean("core", "suppress_unknown", fallback=False):
 			pamh.conversation(pamh.Message(pamh.PAM_ERROR_MSG, "No face model known"))
 		return pamh.PAM_USER_UNKNOWN
 	# Status 11 means we exceded the maximum retry count
@@ -53,11 +53,11 @@ def doAuth(pamh):
 	# Status 0 is a successful exit
 	elif status == 0:
 		# Show the success message if it isn't suppressed
-		if not config.getboolean("core", "no_confirmation"):
+		if not config.getboolean("core", "no_confirmation", fallback=False):
 			pamh.conversation(pamh.Message(pamh.PAM_TEXT_INFO, "Identified face as " + pamh.get_user()))
 
 		# Try to dismiss the lock screen if enabled
-		if config.get("core", "dismiss_lockscreen"):
+		if config.getboolean("core", "dismiss_lockscreen", fallback=False):
 			# Run it as root with a timeout of 1s, and never ask for a password through the UI
 			subprocess.Popen(["sudo", "timeout", "1", "loginctl", "unlock-sessions", "--no-ask-password"])
 

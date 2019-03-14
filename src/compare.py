@@ -187,6 +187,8 @@ while True:
 		# Convert from color to grayscale
 		# First processing of frame, so frame errors show up here
 		gsframe = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+	except RuntimeError:
+		gsframe = frame
 	except cv2.error:
 		print("\nUnknown camera, please check your 'device_path' config value.\n")
 		raise
