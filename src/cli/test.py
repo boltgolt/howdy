@@ -1,4 +1,4 @@
-# Show a windows with the video stream and testing information
+# Show a window with the video stream and testing information
 
 # Import required modules
 import configparser
@@ -36,6 +36,10 @@ if fw != -1:
 
 if fh != -1:
 	video_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, fh)
+
+# Read exposure and dark_thresholds from config to use in the main loop
+exposure = config.getint("video", "exposure", fallback=-1)
+dark_threshold = config.getfloat("video", "dark_threshold")
 
 # Let the user know what's up
 print("""
@@ -106,7 +110,17 @@ try:
 
 		# Grab a single frame of video
 		ret, frame = video_capture.read()
-		frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+		try:
+			# Convert from color to grayscale
+			# First processing of frame, so frame errors show up here
+			frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+		except RuntimeError:
+			pass
+		except cv2.error:
+			print("\nUnknown camera, please check your 'device_path' config value.\n")
+			raise
+
 		frame = clahe.apply(frame)
 		# Make a frame to put overlays in
 		overlay = frame.copy()
@@ -133,9 +147,6 @@ try:
 			# Draw the bar in green
 			cv2.rectangle(overlay, p1, p2, (0, 200, 0), thickness=cv2.FILLED)
 
-		# Draw a stripe indicating the dark threshold
-		cv2.rectangle(overlay, (8, 35), (20, 36), (255, 0, 0), thickness=cv2.FILLED)
-
 		# Print the statis in the bottom left
 		print_text(0, "RESOLUTION: %dx%d" % (height, width))
 		print_text(1, "FPS: %d" % (fps, ))
@@ -147,7 +158,7 @@ try:
 			cv2.putText(overlay, "SLOW MODE", (width - 66, height - 10), cv2.FONT_HERSHEY_SIMPLEX, .3, (0, 0, 255), 0, cv2.LINE_AA)
 
 		# Ignore dark frames
-		if hist_perc[0] > 50:
+		if hist_perc[0] > dark_threshold:
 			# Show that this is an ignored frame in the top right
 			cv2.putText(overlay, "DARK FRAME", (width - 68, 16), cv2.FONT_HERSHEY_SIMPLEX, .3, (0, 0, 255), 0, cv2.LINE_AA)
 		else:
@@ -156,7 +167,8 @@ try:
 
 			rec_tm = time.time()
 			# Get the locations of all faces and their locations
-			face_locations = face_detector(frame, 1) # upsample 1 time
+			# Upsample it once
+			face_locations = face_detector(frame, 1)
 			rec_tm = time.time() - rec_tm
 
 			# Loop though all faces and paint a circle around them
@@ -192,6 +204,15 @@ try:
 		# Delay the frame if slowmode is on
 		if slow_mode:
 			time.sleep(.5 - frame_time)
+
+		if exposure != -1:
+			# For a strange reason on some cameras (e.g. Lenoxo X1E)
+			# setting manual exposure works only after a couple frames
+			# are captured and even after a delay it does not
+			# always work. Setting exposure at every frame is
+			# reliable though.
+			video_capture.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1.0)  # 1 = Manual
+			video_capture.set(cv2.CAP_PROP_EXPOSURE, float(exposure))
 
 # On ctrl+C
 except KeyboardInterrupt:

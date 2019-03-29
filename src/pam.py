@@ -4,6 +4,7 @@
 import subprocess
 import sys
 import os
+import glob
 
 # pam-python is running python 2, so we use the old module here
 import ConfigParser
@@ -25,8 +26,13 @@ def doAuth(pamh):
 		if "SSH_CONNECTION" in os.environ or "SSH_CLIENT" in os.environ or "SSHD_OPTS" in os.environ:
 			sys.exit(0)
 
+	# Abort if lid is closed
+	if config.getboolean("core", "ignore_closed_lid"):
+		if any("closed" in open(f).read() for f in glob.glob("/proc/acpi/button/lid/*/state")):
+			sys.exit(0)
+
 	# Alert the user that we are doing face detection
-	if config.get("core", "detection_notice") == "true":
+	if config.getboolean("core", "detection_notice"):
 		pamh.conversation(pamh.Message(pamh.PAM_TEXT_INFO, "Attempting face detection"))
 
 	# Run compare as python3 subprocess to circumvent python version and import issues
@@ -49,11 +55,6 @@ def doAuth(pamh):
 		# Show the success message if it isn't suppressed
 		if not config.getboolean("core", "no_confirmation"):
 			pamh.conversation(pamh.Message(pamh.PAM_TEXT_INFO, "Identified face as " + pamh.get_user()))
-
-		# Try to dismiss the lock screen if enabled
-		if config.get("core", "dismiss_lockscreen"):
-			# Run it as root with a timeout of 1s, and never ask for a password through the UI
-			subprocess.Popen(["sudo", "timeout", "1", "loginctl", "unlock-sessions", "--no-ask-password"])
 
 		return pamh.PAM_SUCCESS
 

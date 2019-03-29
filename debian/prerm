@@ -12,7 +12,7 @@ from shutil import rmtree
 if "remove" not in sys.argv and "purge" not in sys.argv:
 	sys.exit(0)
 
-# Don't try running this if it's already gome
+# Don't try running this if it's already gone
 if not os.path.exists("/lib/security/howdy/cli"):
 	sys.exit(0)
 
