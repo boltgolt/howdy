@@ -70,6 +70,13 @@ if not os.path.exists("/tmp/howdy_picked_device"):
 					if key == "timout":
 						key = "timeout"
 
+					# MIGRATION 2.5.0 -> 2.5.1
+					# Remove unsafe automatic dismissal of lock screen
+					if key == "dismiss_lockscreen":
+						if (value == "true"):
+							print("DEPRECATION: Config falue dismiss_lockscreen is no longer supported because of login loop issues.")
+						continue
+
 					try:
 						newConf.set(section, key, value)
 					# Add a new section where needed
