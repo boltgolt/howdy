@@ -183,6 +183,10 @@ while True:
 	# Grab a single frame of video
 	ret, frame = video_capture.read()
 
+	if frames == 1 and ret is False:
+		print("Could not read from camera")
+		exit(12)
+
 	try:
 		# Convert from color to grayscale
 		# First processing of frame, so frame errors show up here
