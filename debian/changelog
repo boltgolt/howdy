@@ -1,3 +1,14 @@
+howdy (2.5.1) xenial; urgency=medium
+
+  * Removed dismiss_lockscreen as it could lock users out of their system (thanks @ujjwalbe, @ju916 and many others!)
+  * Added option to disable howdy when the laptop lid is closed (thanks @accek!)
+  * Added automatic fallback to default frame color palette (thanks @Ethiarpus!)
+  * Added manual exposure setting (thanks @accek!)
+  * Fixed test command ignoring dark frame threshold (thanks @eduncan911!)
+  * Fixed import error in v4l2 recorder (thanks @timwelch!)
+
+ -- boltgolt <boltgolt@gmail.com>  Fri, 29 Mar 2019 23:02:21 +0100
+
 howdy (2.5.0) xenial; urgency=medium
 
   * Added FFmpeg and v4l2 recorders (thanks @timwelch!)

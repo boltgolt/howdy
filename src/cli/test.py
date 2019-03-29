@@ -121,7 +121,6 @@ try:
 			print("\nUnknown camera, please check your 'device_path' config value.\n")
 			raise
 
-		frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 		frame = clahe.apply(frame)
 		# Make a frame to put overlays in
 		overlay = frame.copy()
