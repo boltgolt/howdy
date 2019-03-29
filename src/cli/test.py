@@ -37,8 +37,9 @@ if fw != -1:
 if fh != -1:
 	video_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, fh)
 
-# Read exposure from config to use in the main loop
+# Read exposure and dark_thresholds from config to use in the main loop
 exposure = config.getint("video", "exposure", fallback=-1)
+dark_threshold = config.getfloat("video", "dark_threshold")
 
 # Let the user know what's up
 print("""
@@ -147,9 +148,6 @@ try:
 			# Draw the bar in green
 			cv2.rectangle(overlay, p1, p2, (0, 200, 0), thickness=cv2.FILLED)
 
-		# Draw a stripe indicating the dark threshold
-		cv2.rectangle(overlay, (8, 35), (20, 36), (255, 0, 0), thickness=cv2.FILLED)
-
 		# Print the statis in the bottom left
 		print_text(0, "RESOLUTION: %dx%d" % (height, width))
 		print_text(1, "FPS: %d" % (fps, ))
@@ -161,7 +159,7 @@ try:
 			cv2.putText(overlay, "SLOW MODE", (width - 66, height - 10), cv2.FONT_HERSHEY_SIMPLEX, .3, (0, 0, 255), 0, cv2.LINE_AA)
 
 		# Ignore dark frames
-		if hist_perc[0] > 50:
+		if hist_perc[0] > dark_threshold:
 			# Show that this is an ignored frame in the top right
 			cv2.putText(overlay, "DARK FRAME", (width - 68, 16), cv2.FONT_HERSHEY_SIMPLEX, .3, (0, 0, 255), 0, cv2.LINE_AA)
 		else:
