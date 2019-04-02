@@ -24,7 +24,7 @@ Source0:        https://github.com/boltgolt/%{name}/archive/v%{version}/%{name}-
 
 %if 0%{?fedora}
 # We need python3-devel for pathfix.py
-BuildRequires:	python3-devel	
+BuildRequires:  python3-devel	
 Requires:       python3dist(dlib) >= 6.0
 Requires:       python3dist(v4l2)
 Requires:       python3-face_recognition
