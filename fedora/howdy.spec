@@ -1,8 +1,8 @@
-%global 	with_snapshot 0
-%global 	date 20181109.
-%global		commit b4ecafe61c83a4aaab56a52a713296143c87b576
-%global		shortcommit %(c=%{commit}; echo ${c:0:7})
-%global		debug_package %{nil}	
+%global         with_snapshot 0
+%global         date 20181109.
+%global         commit b4ecafe61c83a4aaab56a52a713296143c87b576
+%global         shortcommit %(c=%{commit}; echo ${c:0:7})
+%global         debug_package %{nil}	
 
 Name:           howdy
 Version:        2.5.1
