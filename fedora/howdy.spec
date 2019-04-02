@@ -7,9 +7,9 @@
 Name:           howdy
 Version:        2.5.1
 %if %{with_snapshot}
-Release:	0.1.git.%{date}%{shortcommit}%{?dist}
+Release:        0.1.git.%{date}%{shortcommit}%{?dist}
 %else
-Release:	1%{?dist}
+Release:        1%{?dist}
 %endif
 Summary:        Windows Hello™ style authentication for Linux
 
@@ -17,20 +17,20 @@ Summary:        Windows Hello™ style authentication for Linux
 License:        MIT
 URL:            https://github.com/boltgolt/%{name}
 %if %{with_snapshot}
-Source0:	https://github.com/boltgolt/%{name}/archive/%{commit}/%{name}-%{shortcommit}.tar.gz
+Source0:        https://github.com/boltgolt/%{name}/archive/%{commit}/%{name}-%{shortcommit}.tar.gz
 %else
-Source0:	https://github.com/boltgolt/%{name}/archive/v%{version}/%{name}-%{version}.tar.gz
+Source0:        https://github.com/boltgolt/%{name}/archive/v%{version}/%{name}-%{version}.tar.gz
 %endif
 
 %if 0%{?fedora}
 # We need python3-devel for pathfix.py
 BuildRequires:	python3-devel	
 Requires:       python3dist(dlib) >= 6.0
-Requires:	python3dist(v4l2)
-Requires:	python3-face_recognition
-Supplements:	python3-face_recognition_models
-Requires:	python3-opencv
-Requires:	python3-pam
+Requires:       python3dist(v4l2)
+Requires:       python3-face_recognition
+Supplements:    python3-face_recognition_models
+Requires:       python3-opencv
+Requires:       python3-pam
 %endif
 
 %description
