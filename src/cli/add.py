@@ -9,6 +9,7 @@ import configparser
 import builtins
 import cv2
 import numpy as np
+from recorders.video_capture import VideoCapture
 
 # Try to import dlib and give a nice error if we can't
 # Add should be the first point where import issues show up
@@ -34,10 +35,6 @@ if not os.path.isfile(path + "/../dlib-data/shape_predictor_5_face_landmarks.dat
 # Read config from disk
 config = configparser.ConfigParser()
 config.read(path + "/../config.ini")
-
-if not os.path.exists(config.get("video", "device_path")):
-	print("Camera path is not configured correctly, please edit the 'device_path' config value.")
-	sys.exit(1)
 
 use_cnn = config.getboolean("core", "use_cnn", fallback=False)
 if use_cnn:
@@ -98,36 +95,8 @@ insert_model = {
 	"data": []
 }
 
-# Check if the user explicitly set ffmpeg as recorder
-if config.get("video", "recording_plugin") == "ffmpeg":
-	# Set the capture source for ffmpeg
-	from recorders.ffmpeg_reader import ffmpeg_reader
-	video_capture = ffmpeg_reader(config.get("video", "device_path"), config.get("video", "device_format"))
-elif config.get("video", "recording_plugin") == "pyv4l2":
-	# Set the capture source for pyv4l2
-	from recorders.pyv4l2_reader import pyv4l2_reader
-	video_capture = pyv4l2_reader(config.get("video", "device_path"), config.get("video", "device_format"))
-else:
-	# Start video capture on the IR camera through OpenCV
-	video_capture = cv2.VideoCapture(config.get("video", "device_path"))
-
-# Force MJPEG decoding if true
-if config.getboolean("video", "force_mjpeg", fallback=False):
-	# Set a magic number, will enable MJPEG but is badly documentated
-	video_capture.set(cv2.CAP_PROP_FOURCC, 1196444237)
-
-# Set the frame width and height if requested
-fw = config.getint("video", "frame_width", fallback=-1)
-fh = config.getint("video", "frame_height", fallback=-1)
-if fw != -1:
-	video_capture.set(cv2.CAP_PROP_FRAME_WIDTH, fw)
-
-if fh != -1:
-	video_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, fh)
-
-# Request a frame to wake the camera up
-video_capture.grab()
-
+# Set up video_capture
+video_capture = VideoCapture(config)
 print("\nPlease look straight into the camera")
 
 # Give the user time to read
@@ -141,10 +110,7 @@ dark_threshold = config.getfloat("video", "dark_threshold")
 
 # Loop through frames till we hit a timeout
 while frames < 60:
-	# Grab a single frame of video
-	# Don't remove ret, it doesn't work without it
-	ret, frame = video_capture.read()
-	gsframe = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+	frame, gsframe = video_capture.read_frame()
 
 	# Create a histogram of the image with 8 values
 	hist = cv2.calcHist([gsframe], [0], None, [8], [0, 256])
@@ -164,8 +130,6 @@ while frames < 60:
 	# If we've found at least one, we can continue
 	if face_locations:
 		break
-
-video_capture.release()
 
 # If more than 1 faces are detected we can't know wich one belongs to the user
 if len(face_locations) > 1:
