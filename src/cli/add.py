@@ -144,7 +144,19 @@ while frames < 60:
 	# Grab a single frame of video
 	# Don't remove ret, it doesn't work without it
 	ret, frame = video_capture.read()
-	gsframe = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+	if not ret:
+		print("Failed to read camera specified in your 'device_path', aborting")
+		sys.exit(1)
+
+	try:
+		# Convert from color to grayscale
+		# First processing of frame, so frame errors show up here
+		gsframe = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+	except RuntimeError:
+		gsframe = frame
+	except cv2.error:
+		print("\nUnknown camera, please check your 'device_path' config value.\n")
+		raise
 
 	# Create a histogram of the image with 8 values
 	hist = cv2.calcHist([gsframe], [0], None, [8], [0, 256])

@@ -110,6 +110,9 @@ try:
 
 		# Grab a single frame of video
 		ret, frame = video_capture.read()
+		if not ret:
+			print("Failed to read camera specified in your 'device_path', aborting")
+			sys.exit(1)
 
 		try:
 			# Convert from color to grayscale
