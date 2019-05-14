@@ -42,4 +42,7 @@ except Exception:
 	pass
 
 # Remove dlib
-subprocess.call(['pip3', 'uninstall', 'dlib', '-y', '--no-cache-dir'])
+pip3 = 'pip3'
+if not os.path.exists(pip3):
+    raise RuntimeError("pip3 binary '%s' doesn't exist, please reinstall python-pip3" % (pip3,))
+subprocess.call([pip3, 'uninstall', 'dlib', '-y', '--no-cache-dir'])
