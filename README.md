@@ -61,7 +61,7 @@ sudo dnf install howdy
 
 After installation, Howdy needs needs to learn what you look like so it can recognise you later. Run `sudo howdy add` to add a face model.
 
-If nothing went wrong we should be able to run sudo by just showing your face. Open a new terminal and run `sudo -i` to see it in action.
+If nothing went wrong we should be able to run sudo by just showing your face. Open a new terminal and run `sudo -i` to see it in action. Please check [this wiki page](https://github.com/boltgolt/howdy/wiki/Common-issues) if you've experiencing problems or [search](https://github.com/boltgolt/howdy/issues) for similar issues.
 
 If you're curious you can run `sudo howdy config` to open the central config file and see the options Howdy has to offer. On most systems this will open the nano editor, where you have to press `ctrl`+`x` to save your changes.
 
