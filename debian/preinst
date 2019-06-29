@@ -73,7 +73,12 @@ for dev in devices:
 	print("Trying " + device_name)
 
 	# Let fswebcam keep the camera open in the background
-	sub = subprocess.Popen(["streamer -t 1:0:0 -c /dev/v4l/by-path/" + dev + " -b 16 -f rgb24 -o /dev/null 1>/dev/null 2>/dev/null"], shell=True, preexec_fn=os.setsid)
+	sub = subprocess.Popen(
+		"ffmpeg -f v4l2 -framerate 25 -video_size 640_480 -i /dev/v4l/by-path/%s -f null -loglevel -8 /dev/null" % dev,
+		shell=True,
+		preexec_fn=os.setsid,
+		stdout=subprocess.PIPE,
+		stdin=subprocess.PIPE)
 
 	try:
 		# Ask the user if this is the right one
