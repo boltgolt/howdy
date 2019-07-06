@@ -57,6 +57,12 @@ sudo dnf copr enable luya/howdy
 sudo dnf install howdy
 ```
 
+### openSUSE
+_Maintainer: [@dmafanasyev](https://github.com/dmafanasyev)_
+
+The `howdy` package is available for openSUSE Tumbleweed and Leap 15.0/15.1, see installation manual [here](https://en.opensuse.org/SDB:Facial_authentication).
+
+
 ## Setup
 
 After installation, Howdy needs needs to learn what you look like so it can recognise you later. Run `sudo howdy add` to add a face model.
