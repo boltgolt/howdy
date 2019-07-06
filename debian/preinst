@@ -74,7 +74,7 @@ for dev in devices:
 
 	# Let fswebcam keep the camera open in the background
 	sub = subprocess.Popen(
-		"ffmpeg -f v4l2 -framerate 25 -video_size 640_480 -i /dev/v4l/by-path/%s -f null -loglevel -8 /dev/null" % dev,
+                "fswebcam -l 1 -d /dev/v4l/by-path/%s" % dev,
 		shell=True,
 		preexec_fn=os.setsid,
 		stdout=subprocess.PIPE,
