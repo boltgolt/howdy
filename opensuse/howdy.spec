@@ -44,7 +44,7 @@ mkdir -p %{buildroot}%{_libdir}/security/%{name}
 rm -fr src/*~
 cp -pr src/* %{buildroot}%{_libdir}/security/%{name}
 
-# Facial recognition model preinstalled manualy (before packaging), need to delete some files
+# Facial recognition model preinstalled manually (before packaging), need to delete some files
 rm -fr %{buildroot}%{_libdir}/security/%{name}/dlib-data/{Readme.md,install.sh,.gitignore}
 
 #Add bash completion
