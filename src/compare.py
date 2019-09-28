@@ -94,7 +94,7 @@ config.read(PATH + "/config.ini")
 
 # Get all config values needed
 use_cnn = config.getboolean("core", "use_cnn", fallback=False)
-timeout = config.getint("video", "timout", fallback=5)
+timeout = config.getint("video", "timeout", fallback=5)
 dark_threshold = config.getfloat("video", "dark_threshold", fallback=50.0)
 video_certainty = config.getfloat("video", "certainty", fallback=3.5) / 10
 end_report = config.getboolean("debug", "end_report", fallback=False)
