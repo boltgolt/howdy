@@ -21,7 +21,7 @@ Using the central authentication system (PAM), this works everywhere you would o
 
 ## Installation
 
-Howdy is currently available for Debian/Ubuntu, Arch Linux and Fedora. If you’re interested in packaging Howdy for your distro, don’t hesitate to open an issue.
+Howdy is currently available and packaged for Debian/Ubuntu, Arch Linux, Fedora and openSUSE. If you’re interested in packaging Howdy for your distro, don’t hesitate to open an issue.
 
 **Note:** The build of dlib can hang on 100% for over a minute, give it time.
 
