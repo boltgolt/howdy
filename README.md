@@ -42,6 +42,7 @@ This will guide you through the installation.
 Download the .deb file from the [Releases page](https://github.com/boltgolt/howdy/releases) and install with gdebi.
 
 ### Arch Linux
+_Maintainer wanted._
 
 Install the `howdy` package from the AUR. For AUR installation instructions, take a look at this [wiki page](https://wiki.archlinux.org/index.php/Arch_User_Repository#Installing_packages).
 
@@ -56,6 +57,11 @@ The `howdy` package is available as a [Fedora COPR repository](https://copr.fedo
 sudo dnf copr enable luya/howdy
 sudo dnf install howdy
 ```
+
+### openSUSE
+_Maintainer: [@dmafanasyev](https://github.com/dmafanasyev)_
+
+Go to the [openSUSE wiki page](https://en.opensuse.org/SDB:Facial_authentication) for detailed installation instructions. 
 
 ## Setup
 
