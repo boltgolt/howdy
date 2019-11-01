@@ -172,6 +172,8 @@ end_report = config.getboolean("debug", "end_report")
 frames = 0
 timings["fr"] = time.time()
 
+clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+
 while True:
 	# Increment the frame count every loop
 	frames += 1
@@ -196,6 +198,8 @@ while True:
 	except cv2.error:
 		print("\nUnknown camera, please check your 'device_path' config value.\n")
 		raise
+
+	gsframe = clahe.apply(gsframe)	
 
 	# Create a histogram of the image with 8 values
 	hist = cv2.calcHist([gsframe], [0], None, [8], [0, 256])

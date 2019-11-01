@@ -139,12 +139,15 @@ enc = []
 frames = 0
 dark_threshold = config.getfloat("video", "dark_threshold")
 
+clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+
 # Loop through frames till we hit a timeout
 while frames < 60:
 	# Grab a single frame of video
 	# Don't remove ret, it doesn't work without it
 	ret, frame = video_capture.read()
 	gsframe = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+	gsframe = clahe.apply(gsframe)
 
 	# Create a histogram of the image with 8 values
 	hist = cv2.calcHist([gsframe], [0], None, [8], [0, 256])
