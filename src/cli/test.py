@@ -100,6 +100,7 @@ try:
 		frame = clahe.apply(frame)
 		# Make a frame to put overlays in
 		overlay = frame.copy()
+		overlay = cv2.cvtColor(overlay, cv2.COLOR_GRAY2BGR)
 
 		# Fetch the frame height and width
 		height, width = frame.shape[:2]
@@ -166,6 +167,7 @@ try:
 
 		# Add the overlay to the frame with some transparency
 		alpha = 0.65
+		frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
 		cv2.addWeighted(overlay, alpha, frame, 1 - alpha, 0, frame)
 
 		# Show the image in a window
