@@ -13,7 +13,6 @@ depends=(
 	'opencv'
 	'hdf5'
 	'pam-python'
-	'python2'
 	'python3'
 	'python-pillow'
 	'python-dlib'
