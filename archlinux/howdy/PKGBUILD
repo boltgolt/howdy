@@ -1,5 +1,6 @@
+# Maintainer: Frank Tackitt <frank@tackitt.net>
 # Maintainer: boltgolt <boltgolt@gmail.com>
-# Maintainer: Kelley McChesney <kelley@kelleymcchesney.us>
+# Contributor: Kelley McChesney <kelley@kelleymcchesney.us>
 
 pkgname=howdy
 pkgver=2.5.1
