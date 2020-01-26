@@ -8,7 +8,7 @@ import sys
 from cv2 import cvtColor, COLOR_GRAY2BGR, CAP_PROP_FRAME_WIDTH, CAP_PROP_FRAME_HEIGHT
 
 try:
-	from v4l2.frame import Frame
+	from pyv4l2.frame import Frame
 except ImportError:
 	print("Missing pyv4l2 module, please run:")
 	print(" pip3 install pyv4l2\n")

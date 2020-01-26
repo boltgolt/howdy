@@ -21,7 +21,7 @@ Using the central authentication system (PAM), this works everywhere you would o
 
 ## Installation
 
-Howdy is currently available for Debian/Ubuntu, Arch Linux and Fedora. If you’re interested in packaging Howdy for your distro, don’t hesitate to open an issue.
+Howdy is currently available and packaged for Debian/Ubuntu, Arch Linux, Fedora and openSUSE. If you’re interested in packaging Howdy for your distro, don’t hesitate to open an issue.
 
 **Note:** The build of dlib can hang on 100% for over a minute, give it time.
 
@@ -42,6 +42,7 @@ This will guide you through the installation.
 Download the .deb file from the [Releases page](https://github.com/boltgolt/howdy/releases) and install with gdebi.
 
 ### Arch Linux
+_Maintainer wanted._
 
 Install the `howdy` package from the AUR. For AUR installation instructions, take a look at this [wiki page](https://wiki.archlinux.org/index.php/Arch_User_Repository#Installing_packages).
 
@@ -57,11 +58,16 @@ sudo dnf copr enable luya/howdy
 sudo dnf install howdy
 ```
 
+### openSUSE
+_Maintainer: [@dmafanasyev](https://github.com/dmafanasyev)_
+
+Go to the [openSUSE wiki page](https://en.opensuse.org/SDB:Facial_authentication) for detailed installation instructions. 
+
 ## Setup
 
 After installation, Howdy needs needs to learn what you look like so it can recognise you later. Run `sudo howdy add` to add a face model.
 
-If nothing went wrong we should be able to run sudo by just showing your face. Open a new terminal and run `sudo -i` to see it in action.
+If nothing went wrong we should be able to run sudo by just showing your face. Open a new terminal and run `sudo -i` to see it in action. Please check [this wiki page](https://github.com/boltgolt/howdy/wiki/Common-issues) if you've experiencing problems or [search](https://github.com/boltgolt/howdy/issues) for similar issues.
 
 If you're curious you can run `sudo howdy config` to open the central config file and see the options Howdy has to offer. On most systems this will open the nano editor, where you have to press `ctrl`+`x` to save your changes.
 

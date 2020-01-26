@@ -70,6 +70,13 @@ if not os.path.exists("/tmp/howdy_picked_device"):
 					if key == "timout":
 						key = "timeout"
 
+					# MIGRATION 2.5.0 -> 2.5.1
+					# Remove unsafe automatic dismissal of lock screen
+					if key == "dismiss_lockscreen":
+						if value == "true":
+							print("DEPRECATION: Config falue dismiss_lockscreen is no longer supported because of login loop issues.")
+						continue
+
 					try:
 						newConf.set(section, key, value)
 					# Add a new section where needed
@@ -152,24 +159,6 @@ log("Building dlib")
 
 cmd = ["sudo", "python3", "setup.py", "install"]
 cuda_used = False
-flags = ""
-
-# Get the CPU details
-with open("/proc/cpuinfo") as info:
-	for line in info:
-		if "flags" in line:
-			flags = line
-			break
-
-# Use the most efficient instruction set the CPU supports
-if "avx" in flags:
-	cmd += ["--yes", "USE_AVX_INSTRUCTIONS"]
-elif "sse4" in flags:
-	cmd += ["--yes", "USE_SSE4_INSTRUCTIONS"]
-elif "sse3" in flags:
-	cmd += ["--yes", "USE_SSE3_INSTRUCTIONS"]
-elif "sse2" in flags:
-	cmd += ["--yes", "USE_SSE2_INSTRUCTIONS"]
 
 # Compile and link dlib
 try:

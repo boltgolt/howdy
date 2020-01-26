@@ -1,0 +1,19 @@
+pkgbase = pam-python
+	pkgdesc = Python for PAM
+	pkgver = 1.0.6
+	pkgrel = 1
+	url = https://github.com/boltgolt/howdy
+	arch = x86_64
+	license = MIT
+	makedepends = python2-sphinx
+	makedepends = cmake
+	depends = python2
+	source = https://downloads.sourceforge.net/project/pam-python/pam-python-1.0.6-1/pam-python-1.0.6.tar.gz
+	source = https://sourceforge.net/p/pam-python/tickets/_discuss/thread/5dc8cfd5/5839/attachment/pam-python-1.0.6-fedora.patch
+	source = https://sourceforge.net/p/pam-python/tickets/_discuss/thread/5dc8cfd5/5839/attachment/pam-python-1.0.6-gcc8.patch
+	sha256sums = 0ef4dda35da14088afb1640266415730a6e0274bea934917beb5aca90318f853
+	sha256sums = acb9d1b5cf7cad73d5524334b7954431bb9b90f960980378c538907e468c34b5
+	sha256sums = 02dd9a4d8ec921ff9a2408183f290f08102e3f9e0151786ae7220a4d550bfe24
+
+pkgname = pam-python
+
