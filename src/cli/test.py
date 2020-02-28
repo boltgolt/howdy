@@ -21,7 +21,7 @@ if config.get("video", "recording_plugin") != "opencv":
 	sys.exit(12)
 
 # Start capturing from the configured webcam
-video_capture = cv2.VideoCapture(config.get("video", "device_path"))
+video_capture = cv2.VideoCapture(config.get("video", "device_path"), cv2.CAP_V4L)
 
 # Force MJPEG decoding if true
 if config.getboolean("video", "force_mjpeg", fallback=False):
