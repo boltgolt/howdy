@@ -32,7 +32,7 @@ Requires:	python3dist(v4l2)
 Requires:	python3-face_recognition
 Supplements:	python3-face_recognition_models
 Requires:	python3-opencv
-Requires:	python3-pam
+Requires:	pam_python
 %endif
 
 
