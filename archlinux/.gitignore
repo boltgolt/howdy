@@ -1,0 +1,7 @@
+pkg
+src
+*.tar.gz
+*.zip
+*.tar.xz
+*.patch
+*.dat.bz2
