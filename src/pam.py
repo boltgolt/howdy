@@ -50,6 +50,10 @@ def doAuth(pamh):
 	# Status 12 means we aborted
 	elif status == 12:
 		return pamh.PAM_AUTH_ERR
+	# Status 13 means the image was too dark
+	elif status == 13:
+		pamh.conversation(pamh.Message(pamh.PAM_ERROR_MSG, "Face detection image too dark"))
+		return pamh.PAM_AUTH_ERR
 	# Status 0 is a successful exit
 	elif status == 0:
 		# Show the success message if it isn't suppressed
