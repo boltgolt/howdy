@@ -182,7 +182,6 @@ while True:
 
 	# Stop if we've exceded the time limit
 	if time.time() - timings["fr"] > timeout:
-		average_darkness = dark_running_total / frames
 		if (dark_tries == valid_frames ):
 			print("All frames were too dark, please check dark_threshold in config")
 			print("Average darkness: " + str(dark_running_total / valid_frames) + ", Threshold: " + str(dark_threshold))

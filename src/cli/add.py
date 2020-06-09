@@ -135,12 +135,22 @@ time.sleep(2)
 
 # Will contain found face encodings
 enc = []
-# Count the amount or read frames
+# Count the number of read frames
 frames = 0
+# Count the number of illuminated read frames
+valid_frames = 0
+# Count the number of illuminated frames that
+# were rejected for being too dark
+dark_tries = 0
+# Track the running darkness total
+dark_running_total = 0
+face_locations = None
+
 dark_threshold = config.getfloat("video", "dark_threshold")
 
 # Loop through frames till we hit a timeout
 while frames < 60:
+	frames += 1
 	# Grab a single frame of video
 	# Don't remove ret, it doesn't work without it
 	ret, frame = video_capture.read()
@@ -151,12 +161,23 @@ while frames < 60:
 	# All values combined for percentage calculation
 	hist_total = np.sum(hist)
 
-	# If the image is fully black or the frame exceeds threshold,
+	# Calculate frame darkness
+	darkness = (hist[0] / hist_total * 100)
+
+	# If the image is fully black due to a bad camera read,
 	# skip to the next frame
-	if hist_total == 0 or (hist[0] / hist_total * 100 > dark_threshold):
+	if (hist_total == 0) or (darkness == 100):
 		continue
 
-	frames += 1
+	# Include this frame in calculating our average session brightness
+	dark_running_total += darkness
+	valid_frames += 1
+
+	# If the image exceeds darkness threshold due to subject distance,
+	# skip to the next frame
+	if (darkness > dark_threshold):
+		dark_tries += 1
+		continue
 
 	# Get all faces from that frame as encodings
 	face_locations = face_detector(gsframe, 1)
@@ -167,12 +188,19 @@ while frames < 60:
 
 video_capture.release()
 
-# If more than 1 faces are detected we can't know wich one belongs to the user
-if len(face_locations) > 1:
-	print("Multiple faces detected, aborting")
+# If we've found no faces, try to determine why
+if face_locations is None or not face_locations:
+	if valid_frames == 0:
+		print("Camera saw only black frames - is IR emitter working?")
+	elif valid_frames == dark_tries:
+		print("All frames were too dark, please check dark_threshold in config")
+		print("Average darkness: " + str(dark_running_total / valid_frames) + ", Threshold: " + str(dark_threshold))
+	else:
+		print("No face detected, aborting")
 	sys.exit(1)
-elif not face_locations:
-	print("No face detected, aborting")
+# If more than 1 faces are detected we can't know wich one belongs to the user
+elif len(face_locations) > 1:
+	print("Multiple faces detected, aborting")
 	sys.exit(1)
 
 face_location = face_locations[0]
