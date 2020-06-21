@@ -60,6 +60,8 @@ user = sys.argv[1]
 models = []
 # Encoded face models
 encodings = []
+# Amount of ignored 100% black frames
+black_tries = 0
 # Amount of ingnored dark frames
 dark_tries = 0
 # Total amount of frames captured
@@ -135,7 +137,9 @@ end_report = config.getboolean("debug", "end_report")
 
 # Start the read loop
 frames = 0
+valid_frames = 0
 timings["fr"] = time.time()
+dark_running_total = 0
 
 clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
 
@@ -145,7 +149,12 @@ while True:
 
 	# Stop if we've exceded the time limit
 	if time.time() - timings["fr"] > timeout:
-		sys.exit(11)
+		if (dark_tries == valid_frames ):
+			print("All frames were too dark, please check dark_threshold in config")
+			print("Average darkness: " + str(dark_running_total / valid_frames) + ", Threshold: " + str(dark_threshold))
+      sys.exit(13)
+		else:
+      sys.exit(11)
 
 	# Grab a single frame of video
 	frame, gsframe = video_capture.read_frame()
@@ -157,9 +166,20 @@ while True:
 	# All values combined for percentage calculation
 	hist_total = np.sum(hist)
 
-	# If the image is fully black or the frame exceeds threshold,
+	# Calculate frame darkness
+	darkness = (hist[0] / hist_total * 100)
+
+	# If the image is fully black due to a bad camera read,
 	# skip to the next frame
-	if hist_total == 0 or (hist[0] / hist_total * 100 > dark_threshold):
+	if (hist_total == 0) or (darkness == 100):
+		black_tries += 1
+		continue
+
+	dark_running_total += darkness
+	valid_frames += 1
+	# If the image exceeds darkness threshold due to subject distance,
+	# skip to the next frame
+	if (darkness > dark_threshold):
 		dark_tries += 1
 		continue
 
@@ -218,6 +238,7 @@ while True:
 
 				# Show the total number of frames and calculate the FPS by deviding it by the total scan time
 				print("\nFrames searched: %d (%.2f fps)" % (frames, frames / timings["fr"]))
+				print("Black frames ignored: %d " % (black_tries, ))
 				print("Dark frames ignored: %d " % (dark_tries, ))
 				print("Certainty of winning frame: %.3f" % (match * 10, ))
 
