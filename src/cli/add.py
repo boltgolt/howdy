@@ -97,6 +97,7 @@ insert_model = {
 
 # Set up video_capture
 video_capture = VideoCapture(config)
+
 print("\nPlease look straight into the camera")
 
 # Give the user time to read
