@@ -57,3 +57,6 @@ def generate(frames, text_lines):
 	filename = datetime.datetime.utcnow().strftime("%Y%m%dT%H%M%S.jpg")
 	# Write the image to that file
 	cv2.imwrite(abpath + "/snapshots/" + filename, snap)
+
+	# Return the saved file location
+	return abpath + "/snapshots/" + filename

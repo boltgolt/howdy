@@ -34,9 +34,9 @@ parser = argparse.ArgumentParser(description="Command line interface for Howdy f
 
 # Add an argument for the command
 parser.add_argument("command",
-					help="The command option to execute, can be one of the following: add, clear, config, disable, list, remove or test.",
+					help="The command option to execute, can be one of the following: add, clear, config, disable, list, remove, test or snapshot.",
 					metavar="command",
-					choices=["add", "clear", "config", "disable", "list", "remove", "test"])
+					choices=["add", "clear", "config", "disable", "list", "remove", "test", "snapshot"])
 
 # Add an argument for the extra arguments of diable and remove
 parser.add_argument("argument",
@@ -99,3 +99,5 @@ elif args.command == "remove":
 	import cli.remove
 elif args.command == "test":
 	import cli.test
+elif args.command == "snapshot":
+	import cli.snap
