@@ -9,7 +9,7 @@ Version:        2.5.1
 %if %{with_snapshot}
 Release:	0.1.git.%{date}%{shortcommit}%{?dist}
 %else
-Release:	3%{?dist}
+Release:	4%{?dist}
 %endif
 Summary:        Windows Hello™ style authentication for Linux
 
@@ -27,12 +27,9 @@ BuildRequires:	polkit-devel
 %if 0%{?fedora}
 # We need python3-devel for pathfix.py
 BuildRequires:	python3-devel	
-Requires:       python3dist(dlib) >= 6.0
-Requires:	python3dist(v4l2)
-Requires:	python3-face_recognition
-Supplements:	python3-face_recognition_models
+Requires:	python3dist(dlib) >= 6.0
 Requires:	python3-opencv
-Requires:	python3-pam
+Requires:	pam_python
 %endif
 
 
