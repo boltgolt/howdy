@@ -15,7 +15,6 @@ import sys
 
 
 class VideoCapture:
-
 	def __init__(self, config):
 		"""
 		Creates a new VideoCapture instance depending on the settings in the
@@ -23,6 +22,8 @@ class VideoCapture:
 
 		Config can either be a string to the path, or a pre-setup configparser.
 		"""
+
+		# Parse config from string if nedded
 		if isinstance(config, str):
 			self.config = configparser.ConfigParser()
 			self.config.read(config)
@@ -30,7 +31,7 @@ class VideoCapture:
 			self.config = config
 
 		# Check device path
-		if not os.path.exists(config.get("video", "device_path")):
+		if not os.path.exists(self.config.get("video", "device_path")):
 			print("Camera path is not configured correctly, please edit the 'device_path' config value.")
 			sys.exit(1)
 
