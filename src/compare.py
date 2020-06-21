@@ -47,6 +47,7 @@ def init_detector(lock):
 	timings["ll"] = time.time() - timings["ll"]
 	lock.release()
 
+
 # Make sure we were given an username to tast against
 if len(sys.argv) < 2:
 	sys.exit(12)
@@ -149,17 +150,17 @@ while True:
 
 	# Stop if we've exceded the time limit
 	if time.time() - timings["fr"] > timeout:
-		if (dark_tries == valid_frames ):
+		if (dark_tries == valid_frames):
 			print("All frames were too dark, please check dark_threshold in config")
 			print("Average darkness: " + str(dark_running_total / valid_frames) + ", Threshold: " + str(dark_threshold))
-      sys.exit(13)
+			sys.exit(13)
 		else:
-      sys.exit(11)
+			sys.exit(11)
 
 	# Grab a single frame of video
 	frame, gsframe = video_capture.read_frame()
 
-	gsframe = clahe.apply(gsframe)	
+	gsframe = clahe.apply(gsframe)
 
 	# Create a histogram of the image with 8 values
 	hist = cv2.calcHist([gsframe], [0], None, [8], [0, 256])

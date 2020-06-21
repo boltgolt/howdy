@@ -7,21 +7,22 @@ import cv2
 import os
 import sys
 
-"""
-Class to provide boilerplate code to build a video recorder with the
-correct settings from the config file.
 
-The internal recorder can be accessed with 'video_capture.internal'
-"""
+# Class to provide boilerplate code to build a video recorder with the
+# correct settings from the config file.
+#
+# The internal recorder can be accessed with 'video_capture.internal'
+
+
 class VideoCapture:
 
-	"""
-	Creates a new VideoCapture instance depending on the settings in the
-	provided config file.
-
-	Config can either be a string to the path, or a pre-setup configparser.
-	"""
 	def __init__(self, config):
+		"""
+		Creates a new VideoCapture instance depending on the settings in the
+		provided config file.
+
+		Config can either be a string to the path, or a pre-setup configparser.
+		"""
 		if isinstance(config, str):
 			self.config = configparser.ConfigParser()
 			self.config.read(config)
@@ -30,41 +31,43 @@ class VideoCapture:
 
 		# Check device path
 		if not os.path.exists(config.get("video", "device_path")):
-			print("Camera path is not configured correctly, " +
-				  "please edit the 'device_path' config value.")
+			print("Camera path is not configured correctly, please edit the 'device_path' config value.")
 			sys.exit(1)
 
 		# Create reader
-		self.internal = None # The internal video recorder
-		self.fw	   = None # The frame width
-		self.fh	   = None # The frame height
+		# The internal video recorder
+		self.internal = None
+		# The frame width
+		self.fw = None
+		# The frame height
+		self.fh = None
 		self._create_reader()
 
 		# Request a frame to wake the camera up
 		self.internal.grab()
 
-	"""
-	Frees resources when destroyed
-	"""
 	def __del__(self):
+		"""
+		Frees resources when destroyed
+		"""
 		if self is not None:
 			self.internal.release()
 
-	"""
-	Reads a frame, returns the frame and an attempted grayscale conversion of
-	the frame in a tuple:
-
-	(frame, grayscale_frame)
-
-	If the grayscale conversion fails, both items in the tuple are identical.
-	"""
 	def read_frame(self):
+		"""
+		Reads a frame, returns the frame and an attempted grayscale conversion of
+		the frame in a tuple:
+
+		(frame, grayscale_frame)
+
+		If the grayscale conversion fails, both items in the tuple are identical.
+		"""
+
 		# Grab a single frame of video
 		# Don't remove ret, it doesn't work without it
 		ret, frame = self.internal.read()
 		if not ret:
-			print("Failed to read camera specified in your 'device_path', " +
-			      "aborting")
+			print("Failed to read camera specified in your 'device_path', aborting")
 			sys.exit(1)
 
 		try:
@@ -78,10 +81,11 @@ class VideoCapture:
 			raise
 		return frame, gsframe
 
-	"""
-	Sets up the video reader instance
-	"""
 	def _create_reader(self):
+		"""
+		Sets up the video reader instance
+		"""
+
 		if self.config.get("video", "recording_plugin") == "ffmpeg":
 			# Set the capture source for ffmpeg
 			from recorders.ffmpeg_reader import ffmpeg_reader
@@ -89,6 +93,7 @@ class VideoCapture:
 				self.config.get("video", "device_path"),
 				self.config.get("video", "device_format")
 			)
+
 		elif self.config.get("video", "recording_plugin") == "pyv4l2":
 			# Set the capture source for pyv4l2
 			from recorders.pyv4l2_reader import pyv4l2_reader
@@ -96,6 +101,7 @@ class VideoCapture:
 				self.config.get("video", "device_path"),
 				self.config.get("video", "device_format")
 			)
+
 		else:
 			# Start video capture on the IR camera through OpenCV
 			self.internal = cv2.VideoCapture(

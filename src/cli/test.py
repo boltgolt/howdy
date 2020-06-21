@@ -49,7 +49,9 @@ def print_text(line_number, text):
 	"""Print the status text by line number"""
 	cv2.putText(overlay, text, (10, height - 10 - (10 * line_number)), cv2.FONT_HERSHEY_SIMPLEX, .3, (0, 255, 0), 0, cv2.LINE_AA)
 
+
 use_cnn = config.getboolean('core', 'use_cnn', fallback=False)
+
 if use_cnn:
 	face_detector = dlib.cnn_face_detection_model_v1(
 		path + '/../dlib-data/mmod_human_face_detector.dat'
