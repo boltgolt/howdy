@@ -54,6 +54,13 @@ class VideoCapture:
 		if self is not None:
 			self.internal.release()
 
+	def release(self):
+		"""
+		Release cameras
+		"""
+		if self is not None:
+			self.internal.release()
+
 	def read_frame(self):
 		"""
 		Reads a frame, returns the frame and an attempted grayscale conversion of
