@@ -14,7 +14,7 @@ user = builtins.howdy_user
 # Check if the models file has been created yet
 if not os.path.exists(path + "/models"):
 	print("Face models have not been initialized yet, please run:")
-	print("\n\thowdy " + user + " add\n")
+	print("\n\tsudo howdy -U " + user + " add\n")
 	sys.exit(1)
 
 # Path to the models file
