@@ -103,6 +103,9 @@ ENV/
 # generated models
 /src/models
 
+# snapshots
+/src/snapshots
+
 # build files
 debian/howdy.substvars
 debian/files

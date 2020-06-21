@@ -16,6 +16,8 @@ import json
 import configparser
 import cv2
 import dlib
+import datetime
+import snapshot
 import numpy as np
 import _thread as thread
 from recorders.video_capture import VideoCapture
@@ -48,6 +50,18 @@ def init_detector(lock):
 	lock.release()
 
 
+def make_snapshot(type):
+	"""Generate snapshot after detection"""
+	snapshot.generate(snapframes, [
+		type + " LOGIN",
+		"Date: " + datetime.datetime.utcnow().strftime("%Y/%m/%d %H:%M:%S UTC"),
+		"Scan time: " + str(round(time.time() - timings["fr"], 2)) + "s",
+		"Frames: " + str(frames) + " (" + str(round(frames / (time.time() - timings["fr"]), 2)) + "FPS)",
+		"Hostname: " + os.uname().nodename,
+		"Best certainty value: " + str(round(lowest_certainty * 10, 1))
+	])
+
+
 # Make sure we were given an username to tast against
 if len(sys.argv) < 2:
 	sys.exit(12)
@@ -67,7 +81,11 @@ black_tries = 0
 dark_tries = 0
 # Total amount of frames captured
 frames = 0
-# face recognition/detection instances
+# Captured frames for snapshot capture
+snapframes = []
+# Tracks the lowest certainty value in the loop
+lowest_certainty = 10
+# Face recognition/detection instances
 face_detector = None
 pose_predictor = None
 face_encoder = None
@@ -95,6 +113,8 @@ timeout = config.getint("video", "timeout", fallback=5)
 dark_threshold = config.getfloat("video", "dark_threshold", fallback=50.0)
 video_certainty = config.getfloat("video", "certainty", fallback=3.5) / 10
 end_report = config.getboolean("debug", "end_report", fallback=False)
+capture_failed = config.getboolean("snapshots", "capture_failed", fallback=False)
+capture_successful = config.getboolean("snapshots", "capture_successful", fallback=False)
 
 # Save the time needed to start the script
 timings["in"] = time.time() - timings["st"]
@@ -150,7 +170,11 @@ while True:
 
 	# Stop if we've exceded the time limit
 	if time.time() - timings["fr"] > timeout:
-		if (dark_tries == valid_frames):
+		# Create a timeout snapshot if enabled
+		if capture_failed:
+			make_snapshot("FAILED")
+
+		if dark_tries == valid_frames:
 			print("All frames were too dark, please check dark_threshold in config")
 			print("Average darkness: " + str(dark_running_total / valid_frames) + ", Threshold: " + str(dark_threshold))
 			sys.exit(13)
@@ -159,8 +183,13 @@ while True:
 
 	# Grab a single frame of video
 	frame, gsframe = video_capture.read_frame()
-
 	gsframe = clahe.apply(gsframe)
+
+	# If snapshots have been turned on
+	if capture_failed or capture_successful:
+		# Start capturing frames for the snapshot
+		if len(snapframes) < 3:
+			snapframes.append(frame)
 
 	# Create a histogram of the image with 8 values
 	hist = cv2.calcHist([gsframe], [0], None, [8], [0, 256])
@@ -210,10 +239,14 @@ while True:
 		match_index = np.argmin(matches)
 		match = matches[match_index]
 
+		# Update certainty if we have a new low
+		if lowest_certainty > match:
+			lowest_certainty = match
+
 		# Check if a match that's confident enough
 		if 0 < match < video_certainty:
 			timings["tt"] = time.time() - timings["st"]
-			timings["fr"] = time.time() - timings["fr"]
+			timings["fl"] = time.time() - timings["fr"]
 
 			# If set to true in the config, print debug text
 			if end_report:
@@ -227,7 +260,7 @@ while True:
 				print("  Open cam + load libs: %dms" % (round(max(timings["ll"], timings["ic"]) * 1000, )))
 				print_timing("  Opening the camera", "ic")
 				print_timing("  Importing recognition libs", "ll")
-				print_timing("Searching for known face", "fr")
+				print_timing("Searching for known face", "fl")
 				print_timing("Total time", "tt")
 
 				print("\nResolution")
@@ -238,12 +271,16 @@ while True:
 				print("  Used: %dx%d" % (scale_height, scale_width))
 
 				# Show the total number of frames and calculate the FPS by deviding it by the total scan time
-				print("\nFrames searched: %d (%.2f fps)" % (frames, frames / timings["fr"]))
+				print("\nFrames searched: %d (%.2f fps)" % (frames, frames / timings["fl"]))
 				print("Black frames ignored: %d " % (black_tries, ))
 				print("Dark frames ignored: %d " % (dark_tries, ))
 				print("Certainty of winning frame: %.3f" % (match * 10, ))
 
 				print("Winning model: %d (\"%s\")" % (match_index, models[match_index]["label"]))
+
+			# Make snapshot if enabled
+			if capture_successful:
+				make_snapshot("SUCCESSFUL")
 
 			# End peacefully
 			sys.exit(0)
