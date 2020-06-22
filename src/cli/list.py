@@ -25,7 +25,7 @@ try:
 	encodings = json.load(open(enc_file))
 except FileNotFoundError:
 	print("No face model known for the user " + user + ", please run:")
-	print("\n\thowdy " + user + " add\n")
+	print("\n\tsudo howdy -U " + user + " add\n")
 	sys.exit(1)
 
 # Print a header
