@@ -1,3 +1,27 @@
+howdy (2.6.0) xenial; urgency=medium
+
+* Added new options to capture a snapshot of failed or even successful logins
+* Added command that creates a new snapshot and saves it
+* Added version command
+* Added question to automatically set certainty value on installation
+* Added automatic logging to system-wide auth.log
+* Added clearer feedback when login is rejected due to dark frames (thanks @andrewmv!)
+* Refactored video capture logic (thanks @AnthonyWharton!)
+* Reordered the editor priorities for the config command
+* Fixed gstreamer warnings showing up in console (thanks @ajnart!)
+* Fixed issue where add command would never end
+* Fixed test command overlay not being in color (thanks @PetePriority!)
+* Fixed typo preventing timeout config option from working (thanks @Ajayneethikannan!)
+* Fixed old numpy installation failure (thanks @rushabh-v!)
+* Fixed issue where no PAM response would be returned
+* Fixed CLAHE not being applied equally to all video commands (thanks @PetePriority!)
+* Fixed an incorrect suggested command (thanks @TheButlah!)
+* Fixed missing release method in video capture class
+* Removed deprecated dlib flags (thanks @rhysperry111!)
+* Removed streamer as a required dependency
+
+ -- boltgolt <boltgolt@gmail.com>  Mon, 22 Jun 2020 16:11:46 +0200
+
 howdy (2.5.1) xenial; urgency=medium
 
   * Removed dismiss_lockscreen as it could lock users out of their system (thanks @ujjwalbe, @ju916 and many others!)
