@@ -2,9 +2,9 @@
 
 # Import required modules
 import subprocess
-import sys
 import os
 import glob
+import syslog
 
 # pam-python is running python 2, so we use the old module here
 import ConfigParser
@@ -19,21 +19,23 @@ def doAuth(pamh):
 
 	# Abort is Howdy is disabled
 	if config.getboolean("core", "disabled"):
-		sys.exit(0)
+		return pamh.PAM_AUTHINFO_UNAVAIL
 
 	# Abort if we're in a remote SSH env
 	if config.getboolean("core", "ignore_ssh"):
 		if "SSH_CONNECTION" in os.environ or "SSH_CLIENT" in os.environ or "SSHD_OPTS" in os.environ:
-			sys.exit(0)
+			return pamh.PAM_AUTHINFO_UNAVAIL
 
 	# Abort if lid is closed
 	if config.getboolean("core", "ignore_closed_lid"):
 		if any("closed" in open(f).read() for f in glob.glob("/proc/acpi/button/lid/*/state")):
-			sys.exit(0)
+			return pamh.PAM_AUTHINFO_UNAVAIL
 
 	# Alert the user that we are doing face detection
 	if config.getboolean("core", "detection_notice"):
 		pamh.conversation(pamh.Message(pamh.PAM_TEXT_INFO, "Attempting face detection"))
+
+	syslog.syslog(syslog.LOG_AUTH, "[HOWDY] Attempting facial authentication for user " + pamh.get_user())
 
 	# Run compare as python3 subprocess to circumvent python version and import issues
 	status = subprocess.call(["/usr/bin/python3", os.path.dirname(os.path.abspath(__file__)) + "/compare.py", pamh.get_user()])
@@ -42,13 +44,25 @@ def doAuth(pamh):
 	if status == 10:
 		if not config.getboolean("core", "suppress_unknown"):
 			pamh.conversation(pamh.Message(pamh.PAM_ERROR_MSG, "No face model known"))
+
+		syslog.syslog(syslog.LOG_AUTH, "[HOWDY] Failure, no face model known")
 		return pamh.PAM_USER_UNKNOWN
+
 	# Status 11 means we exceded the maximum retry count
 	elif status == 11:
 		pamh.conversation(pamh.Message(pamh.PAM_ERROR_MSG, "Face detection timeout reached"))
+		syslog.syslog(syslog.LOG_AUTH, "[HOWDY] Failure, timeout reached")
 		return pamh.PAM_AUTH_ERR
+
 	# Status 12 means we aborted
 	elif status == 12:
+		syslog.syslog(syslog.LOG_AUTH, "[HOWDY] Failure, general abort")
+		return pamh.PAM_AUTH_ERR
+
+	# Status 13 means the image was too dark
+	elif status == 13:
+		syslog.syslog(syslog.LOG_AUTH, "[HOWDY] Failure, image too dark")
+		pamh.conversation(pamh.Message(pamh.PAM_ERROR_MSG, "Face detection image too dark"))
 		return pamh.PAM_AUTH_ERR
 	# Status 0 is a successful exit
 	elif status == 0:
@@ -56,10 +70,12 @@ def doAuth(pamh):
 		if not config.getboolean("core", "no_confirmation"):
 			pamh.conversation(pamh.Message(pamh.PAM_TEXT_INFO, "Identified face as " + pamh.get_user()))
 
+		syslog.syslog(syslog.LOG_AUTH, "[HOWDY] Login approved")
 		return pamh.PAM_SUCCESS
 
 	# Otherwise, we can't discribe what happend but it wasn't successful
 	pamh.conversation(pamh.Message(pamh.PAM_ERROR_MSG, "Unknown error: " + str(status)))
+	syslog.syslog(syslog.LOG_AUTH, "[HOWDY] Failure, unknown error" + str(status))
 	return pamh.PAM_SYSTEM_ERR
 
 
