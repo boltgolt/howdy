@@ -1,4 +1,4 @@
-# Create and save snapshots of auth attemtps
+# Create and save snapshots of auth attempts
 
 # Import modules
 import cv2
@@ -16,7 +16,7 @@ def generate(frames, text_lines):
 
 	# Get the path to the containing folder
 	abpath = os.path.dirname(os.path.abspath(__file__))
-	# Get frame dimentions
+	# Get frame dimensions
 	frame_height, frame_width, cc = frames[0].shape
 	# Spread the given frames out horizontally
 	snap = np.concatenate(frames, axis=1)
