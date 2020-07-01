@@ -113,7 +113,8 @@ class VideoCapture:
 		else:
 			# Start video capture on the IR camera through OpenCV
 			self.internal = cv2.VideoCapture(
-				self.config.get("video", "device_path")
+				self.config.get("video", "device_path"),
+				cv2.CAP_V4L
 			)
 
 		# Force MJPEG decoding if true
