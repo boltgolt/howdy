@@ -61,7 +61,7 @@ sudo dnf install howdy
 ### openSUSE
 _Maintainer: [@dmafanasyev](https://github.com/dmafanasyev)_
 
-Go to the [openSUSE wiki page](https://en.opensuse.org/SDB:Facial_authentication) for detailed installation instructions. 
+Go to the [openSUSE wiki page](https://en.opensuse.org/SDB:Facial_authentication) for detailed installation instructions.
 
 ## Setup
 
@@ -88,7 +88,9 @@ howdy [-U user] [-y] command [argument]
 | `disable` | Disable or enable howdy                       |
 | `list`    | List all saved face models for an user        |
 | `remove`  | Remove a specific model for an user           |
+| `snapshot`| Take a snapshot of your camera input          |
 | `test`    | Test the camera and recognition methods       |
+| `version` | Print the current version number              |
 
 ## Contributing [![](https://img.shields.io/travis/boltgolt/howdy/dev.svg?label=dev%20build)](https://github.com/boltgolt/howdy/tree/dev) [![](https://img.shields.io/github/issues-raw/boltgolt/howdy/enhancement.svg?label=feature+requests&colorB=4c1)](https://github.com/boltgolt/howdy/issues?q=is%3Aissue+is%3Aopen+label%3Aenhancement)
 
@@ -109,5 +111,3 @@ This package is in no way as secure as a password and will never be. Although it
 To minimize the chance of this program being compromised, it's recommended to leave Howdy in `/lib/security` and to keep it read-only.
 
 DO NOT USE HOWDY AS THE SOLE AUTHENTICATION METHOD FOR YOUR SYSTEM.
-
-
