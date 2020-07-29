@@ -31,8 +31,8 @@ def doAuth(pamh):
 		if any("closed" in open(f).read() for f in glob.glob("/proc/acpi/button/lid/*/state")):
 			return pamh.PAM_AUTHINFO_UNAVAIL
 
-        # Set up syslog
-        syslog.openlog("[HOWDY]", 0, syslog.LOG_AUTH)
+	# Set up syslog
+	syslog.openlog("[HOWDY]", 0, syslog.LOG_AUTH)
 
 	# Alert the user that we are doing face detection
 	if config.getboolean("core", "detection_notice"):
