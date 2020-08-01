@@ -48,26 +48,26 @@ def doAuth(pamh):
 		if not config.getboolean("core", "suppress_unknown"):
 			pamh.conversation(pamh.Message(pamh.PAM_ERROR_MSG, "No face model known"))
 
-		syslog.syslog(syslog.LOG_ERR, "Failure, no face model known")
+		syslog.syslog(syslog.LOG_NOTICE, "Failure, no face model known")
 		syslog.closelog()
 		return pamh.PAM_USER_UNKNOWN
 
 	# Status 11 means we exceded the maximum retry count
 	elif status == 11:
 		pamh.conversation(pamh.Message(pamh.PAM_ERROR_MSG, "Face detection timeout reached"))
-		syslog.syslog(syslog.LOG_WARNING, "Failure, timeout reached")
+		syslog.syslog(syslog.LOG_INFO, "Failure, timeout reached")
 		syslog.closelog()
 		return pamh.PAM_AUTH_ERR
 
 	# Status 12 means we aborted
 	elif status == 12:
-		syslog.syslog(syslog.LOG_ERR, "Failure, general abort")
+		syslog.syslog(syslog.LOG_INFO, "Failure, general abort")
 		syslog.closelog()
 		return pamh.PAM_AUTH_ERR
 
 	# Status 13 means the image was too dark
 	elif status == 13:
-		syslog.syslog(syslog.LOG_WARNING, "Failure, image too dark")
+		syslog.syslog(syslog.LOG_INFO, "Failure, image too dark")
 		syslog.closelog()
 		pamh.conversation(pamh.Message(pamh.PAM_ERROR_MSG, "Face detection image too dark"))
 		return pamh.PAM_AUTH_ERR
@@ -83,7 +83,7 @@ def doAuth(pamh):
 
 	# Otherwise, we can't discribe what happend but it wasn't successful
 	pamh.conversation(pamh.Message(pamh.PAM_ERROR_MSG, "Unknown error: " + str(status)))
-	syslog.syslog(syslog.LOG_ERR, "Failure, unknown error" + str(status))
+	syslog.syslog(syslog.LOG_INFO, "Failure, unknown error" + str(status))
 	syslog.closelog()
 	return pamh.PAM_SYSTEM_ERR
 
