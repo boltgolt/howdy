@@ -176,7 +176,7 @@ while True:
 
 		if dark_tries == valid_frames:
 			print("All frames were too dark, please check dark_threshold in config")
-			print("Average darkness: " + str(dark_running_total / valid_frames) + ", Threshold: " + str(dark_threshold))
+			print("Average darkness: " + str(dark_running_total / max(1, valid_frames)) + ", Threshold: " + str(dark_threshold))
 			sys.exit(13)
 		else:
 			sys.exit(11)
