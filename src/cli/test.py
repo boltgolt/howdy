@@ -182,7 +182,7 @@ try:
 		frame_time = time.time() - frame_tm
 
 		# Delay the frame if slowmode is on
-		if slow_mode:
+		if slow_mode and (frame_time > .5):
 			time.sleep(.5 - frame_time)
 
 		if exposure != -1:
