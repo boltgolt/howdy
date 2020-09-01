@@ -110,7 +110,7 @@ log("Upgrading pip to the latest version")
 handleStatus(sc(["pip3", "install", "--upgrade", "pip"]))
 
 
-log("Upgrading numpy to the lateset version")
+log("Upgrading numpy to the latest version")
 
 # Update numpy
 handleStatus(subprocess.call(["pip3", "install", "--upgrade", "numpy"]))
