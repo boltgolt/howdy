@@ -65,7 +65,7 @@ Go to the [openSUSE wiki page](https://en.opensuse.org/SDB:Facial_authentication
 
 ## Setup
 
-After installation, Howdy needs needs to learn what you look like so it can recognise you later. Run `sudo howdy add` to add a face model.
+After installation, Howdy needs to learn what you look like so it can recognise you later. Run `sudo howdy add` to add a face model.
 
 If nothing went wrong we should be able to run sudo by just showing your face. Open a new terminal and run `sudo -i` to see it in action. Please check [this wiki page](https://github.com/boltgolt/howdy/wiki/Common-issues) if you've experiencing problems or [search](https://github.com/boltgolt/howdy/issues) for similar issues.
 
