@@ -14,8 +14,8 @@ import sys
 import os
 import json
 import configparser
-import cv2
 import dlib
+import cv2
 import datetime
 import snapshot
 import numpy as np
@@ -176,7 +176,7 @@ while True:
 
 		if dark_tries == valid_frames:
 			print("All frames were too dark, please check dark_threshold in config")
-			print("Average darkness: " + str(dark_running_total / valid_frames) + ", Threshold: " + str(dark_threshold))
+			print("Average darkness: " + str(dark_running_total / max(1, valid_frames)) + ", Threshold: " + str(dark_threshold))
 			sys.exit(13)
 		else:
 			sys.exit(11)
@@ -291,5 +291,5 @@ while True:
 		# are captured and even after a delay it does not
 		# always work. Setting exposure at every frame is
 		# reliable though.
-		video_capture.intenal.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1.0)  # 1 = Manual
-		video_capture.intenal.set(cv2.CAP_PROP_EXPOSURE, float(exposure))
+		video_capture.internal.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1.0)  # 1 = Manual
+		video_capture.internal.set(cv2.CAP_PROP_EXPOSURE, float(exposure))

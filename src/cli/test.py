@@ -5,8 +5,8 @@ import configparser
 import os
 import sys
 import time
-import cv2
 import dlib
+import cv2
 from recorders.video_capture import VideoCapture
 
 # Get the absolute path to the current file
@@ -183,7 +183,7 @@ try:
 
 		# Delay the frame if slowmode is on
 		if slow_mode:
-			time.sleep(.5 - frame_time)
+			time.sleep(max([.5 - frame_time, 0.0]))
 
 		if exposure != -1:
 			# For a strange reason on some cameras (e.g. Lenoxo X1E)

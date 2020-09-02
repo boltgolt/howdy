@@ -14,7 +14,7 @@ _howdy() {
 	case "${prev}" in
 		# After the main command, show the commands
 		"howdy")
-			opts="add clear config disable list remove clear test"
+			opts="add clear config disable list remove clear snapshot test version"
 			COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
 			return 0
 			;;
