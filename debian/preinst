@@ -135,11 +135,11 @@ print("\nYou can always change this setting in the config.")
 prof = input("What profile would you like to use? [f/b/s]: ")
 
 if prof.lower().strip() == "f" or prof.lower().strip() == "fast":
-	cert = 1.5
+	cert = 4.2
 elif prof.lower().strip() == "b" or prof.lower().strip() == "balanced":
 	cert = 2.8
 elif prof.lower().strip() == "s" or prof.lower().strip() == "secure":
-	cert = 4
+	cert = 2
 
 # Write the result to disk so postinst can have a look at it
 with open("/tmp/howdy_picked_device", "w") as out_file:
