@@ -7,7 +7,6 @@ import sys
 import json
 import configparser
 import builtins
-import cv2
 import numpy as np
 from recorders.video_capture import VideoCapture
 
@@ -21,6 +20,9 @@ except ImportError as err:
 	print("\nCan't import the dlib module, check the output of")
 	print("pip3 show dlib")
 	sys.exit(1)
+
+# OpenCV needs to be imported after dlib
+import cv2
 
 # Get the absolute path to the current directory
 path = os.path.abspath(__file__ + "/..")

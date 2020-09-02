@@ -14,8 +14,8 @@ import sys
 import os
 import json
 import configparser
-import cv2
 import dlib
+import cv2
 import datetime
 import snapshot
 import numpy as np

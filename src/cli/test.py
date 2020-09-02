@@ -5,8 +5,8 @@ import configparser
 import os
 import sys
 import time
-import cv2
 import dlib
+import cv2
 from recorders.video_capture import VideoCapture
 
 # Get the absolute path to the current file
