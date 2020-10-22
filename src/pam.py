@@ -32,10 +32,10 @@ def doAuth(pamh):
 			return pamh.PAM_AUTHINFO_UNAVAIL
 
         # Abort if the video device does not exist
-        if not os.path.exists(config.get("video", "device_path")):
-                if config.getboolean("video", "warn_no_device"):
-                        print("Camera path is not configured correctly, please edit the 'device_path' config value.")
-                return pamh.PAM_AUTHINFO_UNAVAIL
+	if not os.path.exists(config.get("video", "device_path")):
+		if config.getboolean("video", "warn_no_device"):
+			print("Camera path is not configured correctly, please edit the 'device_path' config value.")
+		return pamh.PAM_AUTHINFO_UNAVAIL
 
 	# Set up syslog
 	syslog.openlog("[HOWDY]", 0, syslog.LOG_AUTH)
