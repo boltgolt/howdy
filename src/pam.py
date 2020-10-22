@@ -31,6 +31,12 @@ def doAuth(pamh):
 		if any("closed" in open(f).read() for f in glob.glob("/proc/acpi/button/lid/*/state")):
 			return pamh.PAM_AUTHINFO_UNAVAIL
 
+        # Abort if the video device does not exist
+        if not os.path.exists(config.get("video", "device_path")):
+                if config.getboolean("video", "warn_no_device"):
+                        print("Video device " + config.get("video", "device_path") + " not found")
+                return pamh.PAM_AUTHINFO_UNAVAIL
+
 	# Set up syslog
 	syslog.openlog("[HOWDY]", 0, syslog.LOG_AUTH)
 
