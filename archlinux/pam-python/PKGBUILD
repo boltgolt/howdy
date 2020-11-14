@@ -2,13 +2,14 @@
 # Maintainer: Kelley McChesney <kelley@kelleymcchesney.us>
 pkgname=pam-python
 pkgver=1.0.7
-pkgrel=1
+pkgrel=2
 pkgdesc="Python for PAM"
 arch=('x86_64')
 url="https://github.com/boltgolt/howdy"
 license=('MIT')
 depends=(
-  'python3'
+  'python2'
+  'pam'
 )
 makedepends=(
   'python-sphinx'
