@@ -5,7 +5,7 @@
 
 pkgname=howdy
 pkgver=2.6.0
-pkgrel=1
+pkgrel=2
 pkgdesc="Windows Hello for Linux"
 arch=('x86_64')
 url="https://github.com/boltgolt/howdy"

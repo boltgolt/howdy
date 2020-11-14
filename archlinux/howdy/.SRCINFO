@@ -1,11 +1,11 @@
 pkgbase = howdy
 	pkgdesc = Windows Hello for Linux
 	pkgver = 2.6.0
-	pkgrel = 1
+	pkgrel = 2
 	url = https://github.com/boltgolt/howdy
 	arch = x86_64
 	license = MIT
-	makedepends = python2-sphinx
+	makedepends = python-sphinx
 	makedepends = cmake
 	makedepends = pkgfile
 	depends = opencv
