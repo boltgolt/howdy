@@ -8,10 +8,10 @@ arch=('x86_64')
 url="https://github.com/boltgolt/howdy"
 license=('MIT')
 depends=(
-  'python2'
+  'python3'
 )
 makedepends=(
-  'python2-sphinx'
+  'python-sphinx'
   'cmake'
 )
 source=(
@@ -25,7 +25,6 @@ prepare() {
   sed -i'' 's|#!/usr/bin/python -W default|#!/usr/bin/python2 -W default|g' src/setup.py
   sed -i'' 's|#!/usr/bin/python -W default|#!/usr/bin/python2 -W default|g' src/test.py
   sed -i'' 's|LIBDIR ?= /lib/security|LIBDIR ?= /usr/lib/security|g' src/Makefile
-  sed -i'' 's|sphinx-build|sphinx-build2|g' doc/Makefile
 }
 
 build() {
