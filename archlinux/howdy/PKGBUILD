@@ -23,7 +23,7 @@ depends=(
 	'python-numpy'
 )
 makedepends=(
-	'python2-sphinx'
+	'python-sphinx'
 	'cmake'
 	'pkgfile'
 )
