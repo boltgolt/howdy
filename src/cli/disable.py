@@ -39,7 +39,7 @@ for line in fileinput.input([config_path], inplace=1):
 	print(line.replace("disabled = " + config.get("core", "disabled"), "disabled = " + out_value), end="")
 
 # Print what we just did
-if builtins.howdy_args.argument == "1":
+if out_value == "true":
 	print("Howdy has been disabled")
 else:
 	print("Howdy has been enabled")
