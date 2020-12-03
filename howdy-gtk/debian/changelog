@@ -1,0 +1,5 @@
+howdy-gtk (0.0.1) xenial; urgency=medium
+
+  * Initial testing release with sticky authentication ui
+
+ -- boltgolt <boltgolt@gmail.com>  Thu, 03 Dec 2020 00:08:49 +0200

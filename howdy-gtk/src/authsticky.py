@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # Shows a floating window when authenticating
 import cairo
 import gi
@@ -77,7 +79,7 @@ class StickyWindow(gtk.Window):
 
         dir = os.path.dirname(os.path.abspath(__file__))
 
-        image_surface = cairo.ImageSurface.create_from_png(dir + "/logo.png")
+        image_surface = cairo.ImageSurface.create_from_png("/usr/lib/howdy-gtk/logo.png")
         ratio = float(windowHeight - 20) / float(image_surface.get_height())
 
         ctx.translate(15, 10)

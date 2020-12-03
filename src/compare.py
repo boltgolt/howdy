@@ -115,7 +115,7 @@ pose_predictor = None
 face_encoder = None
 
 # Start the auth ui
-gtk_proc = subprocess.Popen(["python3", "-u", "../howdy-gtk/authsticky.py"], stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+gtk_proc = subprocess.Popen(["howdy-gtk-auth"], stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 # Write to the stdin to redraw ui
 send_to_ui("M", "Starting up...")
 
@@ -202,7 +202,7 @@ while True:
 	frames += 1
 
 	# Form a string to let the user know we're real busy
-	ui_subtext = "Scanned " + str(valid_frames) + " frames"
+	ui_subtext = "Scanned " + str(valid_frames - dark_tries) + " frames"
 	if (dark_tries > 1):
 		ui_subtext += " (skipped " + str(dark_tries) + " dark frames)"
 	# Show it in the ui as subtext
