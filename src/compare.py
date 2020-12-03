@@ -28,7 +28,11 @@ def exit(code):
 	"""Exit while closeing howdy-gtk properly"""
 	global gtk_proc
 
-	gtk_proc.terminate()
+	# Exit the auth ui process if there is one
+	if 'gtk_proc' in globals():
+		gtk_proc.terminate()
+
+	# Exit compare
 	sys.exit(code)
 
 
@@ -75,15 +79,17 @@ def send_to_ui(type, message):
 	"""Send message to the auth ui"""
 	global gtk_proc
 
-	# Format message so the ui can parse it
-	message = type + "=" + message + " \n"
+	# Only execute of the proccess started
+	if 'gtk_proc' in globals():
+		# Format message so the ui can parse it
+		message = type + "=" + message + " \n"
 
-	# Try to send the message to the auth ui, but it's okay if that fails
-	try:
-		gtk_proc.stdin.write(bytearray(message.encode("ascii")))
-		gtk_proc.stdin.flush()
-	except IOError as err:
-		pass
+		# Try to send the message to the auth ui, but it's okay if that fails
+		try:
+			gtk_proc.stdin.write(bytearray(message.encode("ascii")))
+			gtk_proc.stdin.flush()
+		except IOError as err:
+			pass
 
 
 # Make sure we were given an username to tast against
@@ -115,7 +121,11 @@ pose_predictor = None
 face_encoder = None
 
 # Start the auth ui
-gtk_proc = subprocess.Popen(["howdy-gtk-auth"], stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+try:
+	gtk_proc = subprocess.Popen(["python3", "-u", "../howdy-gtk/src/authsticky.py"], stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+except FileNotFoundError as err:
+	pass
+
 # Write to the stdin to redraw ui
 send_to_ui("M", "Starting up...")
 
