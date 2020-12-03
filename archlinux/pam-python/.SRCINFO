@@ -7,6 +7,7 @@ pkgbase = pam-python
 	license = MIT
 	makedepends = python-sphinx
 	makedepends = cmake
+	depends = pam
 	depends = python2
 	source = https://downloads.sourceforge.net/project/pam-python/pam-python-1.0.7-1/pam-python-1.0.7.tar.gz
 	sha256sums = 96ce72fe355b03b87c0eb540ecef06f33738f98f56581e81eb5bffbad1a47e07

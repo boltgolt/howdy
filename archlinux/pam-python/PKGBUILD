@@ -8,6 +8,7 @@ arch=('x86_64')
 url="https://github.com/boltgolt/howdy"
 license=('MIT')
 depends=(
+  'pam'
   'python2'
 )
 makedepends=(
