@@ -8,6 +8,7 @@ arch=('x86_64')
 url="https://github.com/boltgolt/howdy"
 license=('MIT')
 depends=(
+  'pam'
   'python2'
 )
 makedepends=(
@@ -25,7 +26,7 @@ prepare() {
   sed -i'' 's|#!/usr/bin/python -W default|#!/usr/bin/python2 -W default|g' src/setup.py
   sed -i'' 's|#!/usr/bin/python -W default|#!/usr/bin/python2 -W default|g' src/test.py
   sed -i'' 's|LIBDIR ?= /lib/security|LIBDIR ?= /usr/lib/security|g' src/Makefile
-  sed -i'' 's|sphinx-build|sphinx-build|g' doc/Makefile
+  sed -n '/^License/,/^--$/p' README.txt | grep -v -e '^License' -e '^-\+' > $srcdir/LICENSE
 }
 
 build() {
@@ -38,4 +39,5 @@ package() {
   # Installing pam-python
   cd "$srcdir/pam-python-$pkgver"
   PREFIX=/usr make DESTDIR="$pkgdir/" install
+  install -Dm644 "$srcdir/LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
 }
