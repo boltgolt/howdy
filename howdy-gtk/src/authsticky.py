@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # Shows a floating window when authenticating
 import cairo
 import gi
@@ -71,8 +69,6 @@ class StickyWindow(gtk.Window):
 		# Show window and force a resize again
 		self.show_all()
 		self.resize(windowWidth, windowHeight)
-
-		print("init")
 
 		# Add a timeout to catch input passed from compare.py
 		gobject.timeout_add(100, self.catch_stdin)

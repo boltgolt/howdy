@@ -122,7 +122,7 @@ face_encoder = None
 
 # Start the auth ui
 try:
-	gtk_proc = subprocess.Popen(["python3", "-u", "../howdy-gtk/src/authsticky.py"], stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+	gtk_proc = subprocess.Popen(["howdy-gtk", "--start-auth-ui"], stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 except FileNotFoundError as err:
 	pass
 
