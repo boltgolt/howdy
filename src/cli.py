@@ -36,15 +36,15 @@ parser = argparse.ArgumentParser(
 # Add an argument for the command
 parser.add_argument(
 	"command",
-	help="The command option to execute, can be one of the following: add, clear, config, disable, list, remove, snapshot, test or version.",
+	help="The command option to execute, can be one of the following: add, clear, config, disable, list, remove, snapshot, set, test or version.",
 	metavar="command",
-	choices=["add", "clear", "config", "disable", "list", "remove", "snapshot", "test", "version"])
+	choices=["add", "clear", "config", "disable", "list", "remove", "set", "snapshot", "test", "version"])
 
 # Add an argument for the extra arguments of diable and remove
 parser.add_argument(
-	"argument",
-	help="Either 0 (enable) or 1 (disable) for the disable command, or the model ID for the remove command.",
-	nargs="?")
+	"arguments",
+	help="Optional arguments for the add, disable, remove and set commands.",
+	nargs="*")
 
 # Add the user flag
 parser.add_argument(
@@ -109,6 +109,8 @@ elif args.command == "list":
 	import cli.list
 elif args.command == "remove":
 	import cli.remove
+elif args.command == "set":
+	import cli.set
 elif args.command == "snapshot":
 	import cli.snap
 elif args.command == "test":

@@ -76,8 +76,12 @@ if not builtins.howdy_args.plain:
 # Set the default label
 label = "Initial model"
 
+# Get the label from the cli arguments if provided
+if builtins.howdy_args.arguments:
+	label =  builtins.howdy_args.arguments[0]
+
 # If models already exist, set that default label
-if encodings:
+elif encodings:
 	label = "Model #" + str(len(encodings) + 1)
 
 # Keep de default name if we can't ask questions

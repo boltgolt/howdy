@@ -15,18 +15,21 @@ config = configparser.ConfigParser()
 config.read(config_path)
 
 # Check if enough arguments have been passed
-if builtins.howdy_args.argument is None:
+if not builtins.howdy_args.arguments:
 	print("Please add a 0 (enable) or a 1 (disable) as an argument")
 	sys.exit(1)
 
+# Get the cli argument
+argument = builtins.howdy_args.arguments[0]
+
 # Translate the argument to the right string
-if builtins.howdy_args.argument == "1" or builtins.howdy_args.argument.lower() == "true":
+if argument == "1" or argument.lower() == "true":
 	out_value = "true"
-elif builtins.howdy_args.argument == "0" or builtins.howdy_args.argument.lower() == "false":
+elif argument == "0" or argument.lower() == "false":
 	out_value = "false"
 else:
 	# Of it's not a 0 or a 1, it's invalid
-	print("Please only use false (enable) or true (disable) as an argument")
+	print("Please only use 0 (enable) or 1 (disable) as an argument")
 	sys.exit(1)
 
 # Don't do anything when the state is already the requested one
