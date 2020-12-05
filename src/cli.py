@@ -58,6 +58,12 @@ parser.add_argument(
 	help="Skip all questions.",
 	action="store_true")
 
+# Add the --plain flag
+parser.add_argument(
+	"--plain",
+	help="Print machine-friendly output.",
+	action="store_true")
+
 # Overwrite the default help message so we can use a uppercase S
 parser.add_argument(
 	"-h", "--help",

@@ -13,6 +13,8 @@ user = builtins.howdy_user
 # Check if enough arguments have been passed
 if builtins.howdy_args.argument is None:
 	print("Please add the ID of the model you want to remove as an argument")
+	print("For example:")
+	print("\n\thowdy remove 0\n")
 	print("You can find the IDs by running:")
 	print("\n\thowdy list\n")
 	sys.exit(1)
@@ -48,7 +50,7 @@ for enc in encodings:
 
 			# Abort if the answer isn't yes
 			if (ans.lower() != "y"):
-				print('\nInerpeting as a "NO"')
+				print('\nInterpreting as a "NO"')
 				sys.exit()
 
 			# Add a padding empty  line
@@ -61,7 +63,7 @@ for enc in encodings:
 # Abort if no matching id was found
 if not found:
 	print("No model with ID " + builtins.howdy_args.argument + " exists for " + user)
-	sys.exit()
+	sys.exit(1)
 
 # Remove the entire file if this encoding is the only one
 if len(encodings) == 1:

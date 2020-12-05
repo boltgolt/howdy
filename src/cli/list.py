@@ -28,20 +28,31 @@ except FileNotFoundError:
 	print("\n\tsudo howdy -U " + user + " add\n")
 	sys.exit(1)
 
-# Print a header
-print("Known face models for " + user + ":")
-print("\n\t\033[1;29mID  Date                 Label\033[0m")
+# Print a header if we're not in plain mode
+if not builtins.howdy_args.plain:
+	print("Known face models for " + user + ":")
+	print("\n\033[1;29mID  Date                 Label\033[0m")
 
 # Loop through all encodings and print info about them
 for enc in encodings:
-	# Start with a tab and print the id
-	print("\t" + str(enc["id"]), end="")
-	# Print padding spaces after the id
-	print((4 - len(str(enc["id"]))) * " ", end="")
+	# Start with the id
+	print(str(enc["id"]), end="")
+
+	# Add comma for machine reading
+	if builtins.howdy_args.plain:
+		print(",", end="")
+	# Print padding spaces after the id for a nice layout
+	else:
+		print((4 - len(str(enc["id"]))) * " ", end="")
+
 	# Format the time as ISO in the local timezone
 	print(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(enc["time"])), end="")
+
+	# Seperate with commas again for machines, spaces otherwise
+	print("," if builtins.howdy_args.plain else "  ", end="")
+
 	# End with the label
-	print("  " + enc["label"])
+	print(enc["label"])
 
 # Add a closing enter
 print()

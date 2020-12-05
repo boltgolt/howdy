@@ -69,7 +69,9 @@ if len(encodings) > 3:
 	print("NOTICE: Each additional model slows down the face recognition engine slightly")
 	print("Press Ctrl+C to cancel\n")
 
-print("Adding face model for the user " + user)
+# Make clear what we are doing if not human
+if not builtins.howdy_args.plain:
+	print("Adding face model for the user " + user)
 
 # Set the default label
 label = "Initial model"
@@ -83,11 +85,16 @@ if builtins.howdy_args.y:
 	print('Using default label "%s" because of -y flag' % (label, ))
 else:
 	# Ask the user for a custom label
-	label_in = input("Enter a label for this new model [" + label + "] (max 24 characters): ")
+	label_in = input("Enter a label for this new model [" + label + "]: ")
 
 	# Set the custom label (if any) and limit it to 24 characters
 	if label_in != "":
 		label = label_in[:24]
+
+# Remove illegal characters
+if "," in label:
+	print("NOTICE: Removing illegal character \",\" from model name")
+	label = label.replace(",", "")
 
 # Prepare the metadata for insertion
 insert_model = {
