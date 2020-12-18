@@ -76,7 +76,6 @@ class StickyWindow(gtk.Window):
 		# Start GTK main loop
 		gtk.main()
 
-
 	def draw(self, widget, ctx):
 		"""Draw the UI"""
 		# Change cursor to the kill icon
@@ -123,7 +122,6 @@ class StickyWindow(gtk.Window):
 			ctx.select_font_face("Arial", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
 			ctx.show_text(subtext)
 
-
 	def catch_stdin(self):
 		"""Catch input from stdin and redraw"""
 		global message, subtext
@@ -146,10 +144,10 @@ class StickyWindow(gtk.Window):
 		# Fire this function again in 10ms, as we're waiting on IO in readline anyway
 		gobject.timeout_add(10, self.catch_stdin)
 
-
 	def exit(self, widget, context):
 		"""Cleanly exit"""
 		gtk.main_quit()
+
 
 # Make sure we quit on a SIGINT
 signal.signal(signal.SIGINT, signal.SIG_DFL)

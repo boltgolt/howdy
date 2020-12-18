@@ -61,7 +61,7 @@ for enc in encodings:
 # Abort if no matching id was found
 if not found:
 	print("No model with ID " + builtins.howdy_args.argument + " exists for " + user)
-	sys.exit()
+	sys.exit(1)
 
 # Remove the entire file if this encoding is the only one
 if len(encodings) == 1:
