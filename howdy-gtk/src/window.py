@@ -5,6 +5,7 @@ import signal
 import sys
 import os
 import elevate
+import subprocess
 
 # Make sure we have the libs we need
 gi.require_version("Gtk", "3.0")
@@ -80,6 +81,16 @@ class MainWindow(gtk.Window):
 			self.listmodel.append(lines[i].split(","))
 
 		self.treeview.set_model(self.listmodel)
+
+	def on_about_link(self, label, uri):
+		"""Open links on about page as a non-root user"""
+		try:
+			user = os.getlogin()
+		except Exception:
+			user = os.environ.get("SUDO_USER")
+
+		status, output = subprocess.getstatusoutput(["sudo -u " + user + " timeout 10 xdg-open " + uri])
+		return True
 
 	def exit(self, widget, context):
 		"""Cleanly exit"""

@@ -276,6 +276,7 @@
                       <attribute name="foreground" value="#2929ababe2e2"/>
                       <attribute name="underline-color" value="#2929ababe2e2"/>
                     </attributes>
+                    <signal name="activate-link" handler="on_about_link" swapped="no"/>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -295,6 +296,7 @@
                       <attribute name="foreground" value="#2929ababe2e2"/>
                       <attribute name="underline-color" value="#2929ababe2e2"/>
                     </attributes>
+                    <signal name="activate-link" handler="on_about_link" swapped="no"/>
                   </object>
                   <packing>
                     <property name="expand">False</property>
