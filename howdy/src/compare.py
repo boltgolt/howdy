@@ -25,7 +25,7 @@ import _thread as thread
 
 from i18n import _
 from recorders.video_capture import VideoCapture
-
+from evdev import UInput, ecodes as e
 
 def exit(code=None):
 	"""Exit while closeing howdy-gtk properly"""
@@ -373,6 +373,21 @@ while True:
 					"pose_predictor": pose_predictor,
 					"clahe": clahe
 				})
+
+			# Press enter key
+			if config.getboolean("experimental", "confirm"):
+				pipe_fd = int(os.getenv("PIPE_FD"))
+				pipe = os.fdopen(pipe_fd, 'w')
+				pipe.write('\255')
+
+				enter_cap = {
+						e.EV_KEY: [e.KEY_ENTER]
+						}
+				device = UInput(enter_cap)
+				device.write(e.EV_KEY, e.KEY_ENTER, 1)
+				device.syn()
+				device.write(e.EV_KEY, e.KEY_ENTER, 0)
+				device.syn()
 
 			# End peacefully
 			exit(0)
