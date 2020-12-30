@@ -78,6 +78,13 @@ def doAuth(pamh):
 		syslog.closelog()
 		return pamh.PAM_AUTH_ERR
 
+	# Status 14 means a rubberstamp could not be given
+	elif status == 14:
+		pamh.conversation(pamh.Message(pamh.PAM_ERROR_MSG, "Rubberstamp denied"))
+		syslog.syslog(syslog.LOG_INFO, "Failure, rubberstamp did not succeed")
+		syslog.closelog()
+		return pamh.PAM_AUTH_ERR
+
 	# Status 1 is probably a python crash
 	elif status == 1:
 		pamh.conversation(pamh.Message(pamh.PAM_ERROR_MSG, "Howdy encountered error, check stderr"))

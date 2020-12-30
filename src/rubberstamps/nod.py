@@ -1,15 +1,13 @@
-import cv2
 import time
 
 from rubberstamps import RubberStamp
 
-min_distance = 10
-min_directions = 3
-failsafe = True
-timeout = 5
-
 
 class nod(RubberStamp):
+	def declare_config(self):
+		self.options["min_distance"] = 10
+		self.options["min_directions"] = 3
+
 	def run(self):
 		last_reldist = -1
 		last_nosepoint = {"x": -1, "y": -1}
@@ -18,8 +16,8 @@ class nod(RubberStamp):
 		starttime = time.time()
 
 		while True:
-			if time.time() > starttime + timeout:
-				return not failsafe
+			if time.time() > starttime + self.options["timeout"]:
+				return not self.options["failsafe"]
 
 			ret, frame = self.video_capture.read_frame()
 
@@ -42,23 +40,18 @@ class nod(RubberStamp):
 					last_nosepoint[axis] = nosepoint
 					last_reldist = reldist
 
+				mindist = self.options["min_distance"]
 				movement = (nosepoint - last_nosepoint[axis]) * 100 / avg_reldist
 
-				if movement < -min_distance or movement > min_distance:
+				if movement < -mindist or movement > mindist:
 					if len(recorded_nods[axis]) == 0:
 						recorded_nods[axis].append(movement < 0)
 
 					elif recorded_nods[axis][-1] != (movement < 0):
 						recorded_nods[axis].append(movement < 0)
 
-				if len(recorded_nods[axis]) >= min_directions:
+				if len(recorded_nods[axis]) >= self.options["min_directions"]:
 					return axis == "y"
 
 				last_reldist = reldist
 				last_nosepoint[axis] = nosepoint
-
-			frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
-
-			cv2.imshow("Howdy Test", frame)
-			if cv2.waitKey(1) != -1:
-				raise KeyboardInterrupt()
