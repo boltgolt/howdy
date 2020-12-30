@@ -282,6 +282,14 @@ while True:
 			if capture_successful:
 				make_snapshot("SUCCESSFUL")
 
+			import rubberstamps
+			rubberstamps.execute(config, {
+				"video_capture": video_capture,
+				"face_detector": face_detector,
+				"pose_predictor": pose_predictor,
+				"clahe": clahe
+			})
+
 			# End peacefully
 			sys.exit(0)
 
