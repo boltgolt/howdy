@@ -32,7 +32,10 @@ class VideoCapture:
 
 		# Check device path
 		if not os.path.exists(self.config.get("video", "device_path")):
-			print("Camera path is not configured correctly, please edit the 'device_path' config value.")
+			if self.config.getboolean("video", "warn_no_device"):
+				print("Howdy could not find a camera device at the path specified in the config file.")
+				print("It is very likely that the path is not configured correctly, please edit the 'device_path' config value by running:")
+				print("\n\tsudo howdy config\n")
 			sys.exit(1)
 
 		# Create reader
@@ -52,7 +55,10 @@ class VideoCapture:
 		Frees resources when destroyed
 		"""
 		if self is not None:
-			self.internal.release()
+			try:
+				self.internal.release()
+			except AttributeError as err:
+				pass
 
 	def release(self):
 		"""
