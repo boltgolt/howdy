@@ -77,6 +77,17 @@ def doAuth(pamh):
 		syslog.closelog()
 		pamh.conversation(pamh.Message(pamh.PAM_ERROR_MSG, "Face detection image too dark"))
 		return pamh.PAM_AUTH_ERR
+
+	# Status 1 is probably a python crash
+	elif status == 1:
+		# Show the success message if it isn't suppressed
+		if not config.getboolean("core", "no_confirmation"):
+			pamh.conversation(pamh.Message(pamh.PAM_TEXT_INFO, "Identified face as " + pamh.get_user()))
+
+		syslog.syslog(syslog.LOG_INFO, "Login approved")
+		syslog.closelog()
+		return pamh.PAM_SUCCESS
+
 	# Status 0 is a successful exit
 	elif status == 0:
 		# Show the success message if it isn't suppressed
