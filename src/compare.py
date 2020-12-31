@@ -20,7 +20,9 @@ import datetime
 import snapshot
 import numpy as np
 import _thread as thread
+
 from recorders.video_capture import VideoCapture
+from i18n import _
 
 
 def init_detector(lock):
@@ -29,7 +31,7 @@ def init_detector(lock):
 
 	# Test if at lest 1 of the data files is there and abort if it's not
 	if not os.path.isfile(PATH + "/dlib-data/shape_predictor_5_face_landmarks.dat"):
-		print("Data files have not been downloaded, please run the following commands:")
+		print(_("Data files have not been downloaded, please run the following commands:"))
 		print("\n\tcd " + PATH + "/dlib-data")
 		print("\tsudo ./install.sh\n")
 		lock.release()
@@ -53,12 +55,12 @@ def init_detector(lock):
 def make_snapshot(type):
 	"""Generate snapshot after detection"""
 	snapshot.generate(snapframes, [
-		type + " LOGIN",
-		"Date: " + datetime.datetime.utcnow().strftime("%Y/%m/%d %H:%M:%S UTC"),
-		"Scan time: " + str(round(time.time() - timings["fr"], 2)) + "s",
-		"Frames: " + str(frames) + " (" + str(round(frames / (time.time() - timings["fr"]), 2)) + "FPS)",
-		"Hostname: " + os.uname().nodename,
-		"Best certainty value: " + str(round(lowest_certainty * 10, 1))
+		type + _(" LOGIN"),
+		_("Date: ") + datetime.datetime.utcnow().strftime("%Y/%m/%d %H:%M:%S UTC"),
+		_("Scan time: ") + str(round(time.time() - timings["fr"], 2)) + "s",
+		_("Frames: ") + str(frames) + " (" + str(round(frames / (time.time() - timings["fr"]), 2)) + "FPS)",
+		_("Hostname: ") + os.uname().nodename,
+		_("Best certainty value: ") + str(round(lowest_certainty * 10, 1))
 	])
 
 
@@ -172,11 +174,11 @@ while True:
 	if time.time() - timings["fr"] > timeout:
 		# Create a timeout snapshot if enabled
 		if capture_failed:
-			make_snapshot("FAILED")
+			make_snapshot(_("FAILED"))
 
 		if dark_tries == valid_frames:
-			print("All frames were too dark, please check dark_threshold in config")
-			print("Average darkness: " + str(dark_running_total / max(1, valid_frames)) + ", Threshold: " + str(dark_threshold))
+			print(_("All frames were too dark, please check dark_threshold in config"))
+			print(_("Average darkness: {avg}, Threshold: {threshold}").format(avg=str(dark_running_total / max(1, valid_frames)), threshold=str(dark_threshold)))
 			sys.exit(13)
 		else:
 			sys.exit(11)
@@ -255,32 +257,32 @@ while True:
 					print("  %s: %dms" % (label, round(timings[k] * 1000)))
 
 				# Print a nice timing report
-				print("Time spent")
-				print_timing("Starting up", "in")
-				print("  Open cam + load libs: %dms" % (round(max(timings["ll"], timings["ic"]) * 1000, )))
-				print_timing("  Opening the camera", "ic")
-				print_timing("  Importing recognition libs", "ll")
-				print_timing("Searching for known face", "fl")
-				print_timing("Total time", "tt")
+				print(_("Time spent"))
+				print_timing(_("Starting up"), "in")
+				print(_("  Open cam + load libs: %dms") % (round(max(timings["ll"], timings["ic"]) * 1000, )))
+				print_timing(_("  Opening the camera"), "ic")
+				print_timing(_("  Importing recognition libs"), "ll")
+				print_timing(_("Searching for known face"), "fl")
+				print_timing(_("Total time"), "tt")
 
-				print("\nResolution")
+				print(_("\nResolution"))
 				width = video_capture.fw or 1
-				print("  Native: %dx%d" % (height, width))
+				print(_("  Native: %dx%d") % (height, width))
 				# Save the new size for diagnostics
 				scale_height, scale_width = frame.shape[:2]
-				print("  Used: %dx%d" % (scale_height, scale_width))
+				print(_("  Used: %dx%d") % (scale_height, scale_width))
 
 				# Show the total number of frames and calculate the FPS by deviding it by the total scan time
-				print("\nFrames searched: %d (%.2f fps)" % (frames, frames / timings["fl"]))
-				print("Black frames ignored: %d " % (black_tries, ))
-				print("Dark frames ignored: %d " % (dark_tries, ))
-				print("Certainty of winning frame: %.3f" % (match * 10, ))
+				print(_("\nFrames searched: %d (%.2f fps)") % (frames, frames / timings["fl"]))
+				print(_("Black frames ignored: %d ") % (black_tries, ))
+				print(_("Dark frames ignored: %d ") % (dark_tries, ))
+				print(_("Certainty of winning frame: %.3f") % (match * 10, ))
 
-				print("Winning model: %d (\"%s\")" % (match_index, models[match_index]["label"]))
+				print(_("Winning model: %d (\"%s\")") % (match_index, models[match_index]["label"]))
 
 			# Make snapshot if enabled
 			if capture_successful:
-				make_snapshot("SUCCESSFUL")
+				make_snapshot(_("SUCCESSFUL"))
 
 			# Run rubberstamps if enabled
 			if config.getboolean("rubberstamps", "enabled", fallback=False):

@@ -7,6 +7,7 @@ import cv2
 import os
 import sys
 
+from i18n import _
 
 # Class to provide boilerplate code to build a video recorder with the
 # correct settings from the config file.
@@ -33,8 +34,8 @@ class VideoCapture:
 		# Check device path
 		if not os.path.exists(self.config.get("video", "device_path")):
 			if self.config.getboolean("video", "warn_no_device"):
-				print("Howdy could not find a camera device at the path specified in the config file.")
-				print("It is very likely that the path is not configured correctly, please edit the 'device_path' config value by running:")
+				print(_("Howdy could not find a camera device at the path specified in the config file."))
+				print(_("It is very likely that the path is not configured correctly, please edit the 'device_path' config value by running:"))
 				print("\n\tsudo howdy config\n")
 			sys.exit(1)
 
@@ -81,7 +82,7 @@ class VideoCapture:
 		# Don't remove ret, it doesn't work without it
 		ret, frame = self.internal.read()
 		if not ret:
-			print("Failed to read camera specified in your 'device_path', aborting")
+			print(_("Failed to read camera specified in the 'device_path' config option, aborting"))
 			sys.exit(1)
 
 		try:

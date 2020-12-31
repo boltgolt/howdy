@@ -4,14 +4,16 @@
 import numpy
 import sys
 import re
+
 from subprocess import Popen, PIPE
 from cv2 import CAP_PROP_FRAME_WIDTH
 from cv2 import CAP_PROP_FRAME_HEIGHT
+from i18n import _
 
 try:
 	import ffmpeg
 except ImportError:
-	print("Missing ffmpeg module, please run:")
+	print(_("Missing ffmpeg module, please run:"))
 	print(" pip3 install ffmpeg-python\n")
 	sys.exit(12)
 

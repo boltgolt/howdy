@@ -4,8 +4,10 @@
 import os
 import subprocess
 
+from i18n import _
+
 # Let the user know what we're doing
-print("Opening config.ini in the default editor")
+print(_("Opening config.ini in the default editor"))
 
 # Default to the nano editor
 editor = "/bin/nano"

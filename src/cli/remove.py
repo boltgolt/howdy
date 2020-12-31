@@ -6,22 +6,24 @@ import os
 import json
 import builtins
 
+from i18n import _
+
 # Get the absolute path and the username
 path = os.path.dirname(os.path.realpath(__file__)) + "/.."
 user = builtins.howdy_user
 
 # Check if enough arguments have been passed
 if not builtins.howdy_args.arguments:
-	print("Please add the ID of the model you want to remove as an argument")
-	print("For example:")
+	print(_("Please add the ID of the model you want to remove as an argument"))
+	print(_("For example:"))
 	print("\n\thowdy remove 0\n")
-	print("You can find the IDs by running:")
+	print(_("You can find the IDs by running:"))
 	print("\n\thowdy list\n")
 	sys.exit(1)
 
 # Check if the models file has been created yet
 if not os.path.exists(path + "/models"):
-	print("Face models have not been initialized yet, please run:")
+	print(_("Face models have not been initialized yet, please run:"))
 	print("\n\thowdy add\n")
 	sys.exit(1)
 
@@ -32,7 +34,7 @@ enc_file = path + "/models/" + user + ".dat"
 try:
 	encodings = json.load(open(enc_file))
 except FileNotFoundError:
-	print("No face model known for the user " + user + ", please run:")
+	print(_("No face model known for the user " + user + ", please run:"))
 	print("\n\thowdy add\n")
 	sys.exit(1)
 
@@ -48,12 +50,12 @@ for enc in encodings:
 		# Only ask the user if there's no -y flag
 		if not builtins.howdy_args.y:
 			# Double check with the user
-			print('This will remove the model called "' + enc["label"] + '" for ' + user)
-			ans = input("Do you want to continue [y/N]: ")
+			print(_('This will remove the model called "{label}" for {user}').format(label=enc["label"], user=user))
+			ans = input(_("Do you want to continue [y/N]: "))
 
 			# Abort if the answer isn't yes
 			if (ans.lower() != "y"):
-				print('\nInterpreting as a "NO", aborting')
+				print(_('\nInterpreting as a "NO", aborting'))
 				sys.exit(1)
 
 			# Add a padding empty  line
@@ -65,13 +67,13 @@ for enc in encodings:
 
 # Abort if no matching id was found
 if not found:
-	print("No model with ID " + id + " exists for " + user)
+	print(_("No model with ID {id} exists for {user}").format(id=id, user=user))
 	sys.exit(1)
 
 # Remove the entire file if this encoding is the only one
 if len(encodings) == 1:
 	os.remove(path + "/models/" + user + ".dat")
-	print("Removed last model, howdy disabled for user")
+	print(_("Removed last model, howdy disabled for user"))
 else:
 	# A place holder to contain the encodings that will remain
 	new_encodings = []
@@ -85,4 +87,4 @@ else:
 	with open(enc_file, "w") as datafile:
 		json.dump(new_encodings, datafile)
 
-	print("Removed model " + id)
+	print(_("Removed model {}").format(id))

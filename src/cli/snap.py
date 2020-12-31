@@ -7,6 +7,8 @@ import datetime
 import snapshot
 from recorders.video_capture import VideoCapture
 
+from i18n import _
+
 # Get the absolute path to the current directory
 path = os.path.abspath(__file__ + "/..")
 
@@ -40,12 +42,12 @@ while True:
 
 # Generate a snapshot image from the frames
 file = snapshot.generate(frames, [
-	"GENERATED SNAPSHOT",
-	"Date: " + datetime.datetime.utcnow().strftime("%Y/%m/%d %H:%M:%S UTC"),
-	"Dark threshold config: " + str(config.getfloat("video", "dark_threshold", fallback=50.0)),
-	"Certainty config: " + str(config.getfloat("video", "certainty", fallback=3.5))
+	_("GENERATED SNAPSHOT"),
+	_("Date: ") + datetime.datetime.utcnow().strftime("%Y/%m/%d %H:%M:%S UTC"),
+	_("Dark threshold config: ") + str(config.getfloat("video", "dark_threshold", fallback=50.0)),
+	_("Certainty config: ") + str(config.getfloat("video", "certainty", fallback=3.5))
 ])
 
 # Show the file location in console
-print("Generated snapshot saved as")
+print(_("Generated snapshot saved as"))
 print(file)

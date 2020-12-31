@@ -7,13 +7,15 @@ import json
 import time
 import builtins
 
+from i18n import _
+
 # Get the absolute path and the username
 path = os.path.dirname(os.path.realpath(__file__)) + "/.."
 user = builtins.howdy_user
 
 # Check if the models file has been created yet
 if not os.path.exists(path + "/models"):
-	print("Face models have not been initialized yet, please run:")
+	print(_("Face models have not been initialized yet, please run:"))
 	print("\n\tsudo howdy -U " + user + " add\n")
 	sys.exit(1)
 
@@ -24,14 +26,14 @@ enc_file = path + "/models/" + user + ".dat"
 try:
 	encodings = json.load(open(enc_file))
 except FileNotFoundError:
-	print("No face model known for the user " + user + ", please run:")
+	print(_("No face model known for the user {}, please run:").format(user))
 	print("\n\tsudo howdy -U " + user + " add\n")
 	sys.exit(1)
 
 # Print a header if we're not in plain mode
 if not builtins.howdy_args.plain:
-	print("Known face models for " + user + ":")
-	print("\n\033[1;29mID  Date                 Label\033[0m")
+	print(_("Known face models for {}:").format(user))
+	print("\n\033[1;29m" + _("ID  Date                 Label\033[0m"))
 
 # Loop through all encodings and print info about them
 for enc in encodings:

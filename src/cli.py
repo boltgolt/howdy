@@ -8,6 +8,8 @@ import getpass
 import argparse
 import builtins
 
+from i18n import _
+
 # Try to get the original username (not "root") from shell
 try:
 	user = os.getlogin()
@@ -20,48 +22,48 @@ if user == "root" or user is None:
 
 	# If even that fails, error out
 	if env_user == "":
-		print("Could not determine user, please use the --user flag")
+		print(_("Could not determine user, please use the --user flag"))
 		sys.exit(1)
 	else:
 		user = env_user
 
 # Basic command setup
 parser = argparse.ArgumentParser(
-	description="Command line interface for Howdy face authentication.",
+	description=_("Command line interface for Howdy face authentication."),
 	formatter_class=argparse.RawDescriptionHelpFormatter,
 	add_help=False,
 	prog="howdy",
-	epilog="For support please visit\nhttps://github.com/boltgolt/howdy")
+	epilog=_("For support please visit\nhttps://github.com/boltgolt/howdy"))
 
 # Add an argument for the command
 parser.add_argument(
-	"command",
-	help="The command option to execute, can be one of the following: add, clear, config, disable, list, remove, snapshot, set, test or version.",
+	_("command"),
+	help=_("The command option to execute, can be one of the following: add, clear, config, disable, list, remove, snapshot, set, test or version."),
 	metavar="command",
 	choices=["add", "clear", "config", "disable", "list", "remove", "set", "snapshot", "test", "version"])
 
 # Add an argument for the extra arguments of diable and remove
 parser.add_argument(
-	"arguments",
-	help="Optional arguments for the add, disable, remove and set commands.",
+	_("arguments"),
+	help=_("Optional arguments for the add, disable, remove and set commands."),
 	nargs="*")
 
 # Add the user flag
 parser.add_argument(
 	"-U", "--user",
 	default=user,
-	help="Set the user account to use.")
+	help=_("Set the user account to use."))
 
 # Add the -y flag
 parser.add_argument(
 	"-y",
-	help="Skip all questions.",
+	help=_("Skip all questions."),
 	action="store_true")
 
 # Add the --plain flag
 parser.add_argument(
 	"--plain",
-	help="Print machine-friendly output.",
+	help=_("Print machine-friendly output."),
 	action="store_true")
 
 # Overwrite the default help message so we can use a uppercase S
@@ -69,11 +71,11 @@ parser.add_argument(
 	"-h", "--help",
 	action="help",
 	default=argparse.SUPPRESS,
-	help="Show this help message and exit.")
+	help=_("Show this help message and exit."))
 
 # If we only have 1 argument we print the help text
 if len(sys.argv) < 2:
-	print("current active user: " + user + "\n")
+	print(_("current active user: ") + user + "\n")
 	parser.print_help()
 	sys.exit(0)
 
@@ -87,13 +89,13 @@ builtins.howdy_user = args.user
 # Check if we have rootish rights
 # This is this far down the file so running the command for help is always possible
 if os.geteuid() != 0:
-	print("Please run this command as root:\n")
+	print(_("Please run this command as root:\n"))
 	print("\tsudo howdy " + " ".join(sys.argv[1:]))
 	sys.exit(1)
 
 # Beond this point the user can't change anymore, if we still have root as user we need to abort
 if args.user == "root":
-	print("Can't run howdy commands as root, please run this command with the --user flag")
+	print(_("Can't run howdy commands as root, please run this command with the --user flag"))
 	sys.exit(1)
 
 # Execute the right command

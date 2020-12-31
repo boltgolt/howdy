@@ -9,6 +9,8 @@ import dlib
 import cv2
 from recorders.video_capture import VideoCapture
 
+from i18n import _
+
 # Get the absolute path to the current file
 path = os.path.dirname(os.path.abspath(__file__))
 
@@ -17,8 +19,7 @@ config = configparser.ConfigParser()
 config.read(path + "/../config.ini")
 
 if config.get("video", "recording_plugin") != "opencv":
-	print("Howdy has been configured to use a recorder which doesn't support the test command yet")
-	print("Aborting")
+	print(_("Howdy has been configured to use a recorder which doesn't support the test command yet, aborting"))
 	sys.exit(12)
 
 video_capture = VideoCapture(config)
@@ -28,12 +29,12 @@ exposure = config.getint("video", "exposure", fallback=-1)
 dark_threshold = config.getfloat("video", "dark_threshold")
 
 # Let the user know what's up
-print("""
+print(_("""
 Opening a window with a test feed
 
 Press ctrl+C in this terminal to quit
 Click on the image to enable or disable slow mode
-""")
+"""))
 
 
 def mouse(event, x, y, flags, param):
@@ -97,7 +98,7 @@ try:
 			sec_frames = 0
 
 		# Grab a single frame of video
-		_, frame = video_capture.read_frame()
+		ret, frame = video_capture.read_frame()
 
 		frame = clahe.apply(frame)
 		# Make a frame to put overlays in
@@ -127,22 +128,22 @@ try:
 			cv2.rectangle(overlay, p1, p2, (0, 200, 0), thickness=cv2.FILLED)
 
 		# Print the statis in the bottom left
-		print_text(0, "RESOLUTION: %dx%d" % (height, width))
-		print_text(1, "FPS: %d" % (fps, ))
-		print_text(2, "FRAMES: %d" % (total_frames, ))
-		print_text(3, "RECOGNITION: %dms" % (round(rec_tm * 1000), ))
+		print_text(0, _("RESOLUTION: %dx%d") % (height, width))
+		print_text(1, _("FPS: %d") % (fps, ))
+		print_text(2, _("FRAMES: %d") % (total_frames, ))
+		print_text(3, _("RECOGNITION: %dms") % (round(rec_tm * 1000), ))
 
 		# Show that slow mode is on, if it's on
 		if slow_mode:
-			cv2.putText(overlay, "SLOW MODE", (width - 66, height - 10), cv2.FONT_HERSHEY_SIMPLEX, .3, (0, 0, 255), 0, cv2.LINE_AA)
+			cv2.putText(overlay, _("SLOW MODE"), (width - 66, height - 10), cv2.FONT_HERSHEY_SIMPLEX, .3, (0, 0, 255), 0, cv2.LINE_AA)
 
 		# Ignore dark frames
 		if hist_perc[0] > dark_threshold:
 			# Show that this is an ignored frame in the top right
-			cv2.putText(overlay, "DARK FRAME", (width - 68, 16), cv2.FONT_HERSHEY_SIMPLEX, .3, (0, 0, 255), 0, cv2.LINE_AA)
+			cv2.putText(overlay, _("DARK FRAME"), (width - 68, 16), cv2.FONT_HERSHEY_SIMPLEX, .3, (0, 0, 255), 0, cv2.LINE_AA)
 		else:
 			# SHow that this is an active frame
-			cv2.putText(overlay, "SCAN FRAME", (width - 68, 16), cv2.FONT_HERSHEY_SIMPLEX, .3, (0, 255, 0), 0, cv2.LINE_AA)
+			cv2.putText(overlay, _("SCAN FRAME"), (width - 68, 16), cv2.FONT_HERSHEY_SIMPLEX, .3, (0, 255, 0), 0, cv2.LINE_AA)
 
 			rec_tm = time.time()
 			# Get the locations of all faces and their locations
@@ -197,7 +198,7 @@ try:
 # On ctrl+C
 except KeyboardInterrupt:
 	# Let the user know we're stopping
-	print("\nClosing window")
+	print(_("\nClosing window"))
 
 	# Release handle to the webcam
 	cv2.destroyAllWindows()

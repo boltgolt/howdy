@@ -6,13 +6,15 @@ import os
 import builtins
 import fileinput
 
+from i18n import _
+
 # Get the absolute filepath
 config_path = os.path.dirname(os.path.abspath(__file__)) + "/../config.ini"
 
 # Check if enough arguments have been passed
 if len(builtins.howdy_args.arguments) < 2:
-	print("Please add a setting you would like to change and the value to set it to")
-	print("For example:")
+	print(_("Please add a setting you would like to change and the value to set it to"))
+	print(_("For example:"))
 	print("\n\thowdy set certainty 3\n")
 	sys.exit(1)
 
@@ -31,11 +33,11 @@ for line in fileinput.input([config_path]):
 
 # If we don't have the line it is not in the config file
 if not found_line:
-	print('Could not find a "' + set_name + '" config option to set')
+	print(_('Could not find a "{}" config option to set').format(set_name))
 	sys.exit(1)
 
 # Go through the file again and update the correct line
 for line in fileinput.input([config_path], inplace=1):
 	print(line.replace(found_line, set_name + " = " + set_value + "\n"), end="")
 
-print("Config option updated")
+print(_("Config option updated"))

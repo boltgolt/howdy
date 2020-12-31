@@ -8,7 +8,9 @@ import json
 import configparser
 import builtins
 import numpy as np
+
 from recorders.video_capture import VideoCapture
+from i18n import _
 
 # Try to import dlib and give a nice error if we can't
 # Add should be the first point where import issues show up
@@ -17,7 +19,7 @@ try:
 except ImportError as err:
 	print(err)
 
-	print("\nCan't import the dlib module, check the output of")
+	print(_("\nCan't import the dlib module, check the output of"))
 	print("pip3 show dlib")
 	sys.exit(1)
 
@@ -29,7 +31,7 @@ path = os.path.abspath(__file__ + "/..")
 
 # Test if at lest 1 of the data files is there and abort if it's not
 if not os.path.isfile(path + "/../dlib-data/shape_predictor_5_face_landmarks.dat"):
-	print("Data files have not been downloaded, please run the following commands:")
+	print(_("Data files have not been downloaded, please run the following commands:"))
 	print("\n\tcd " + os.path.realpath(path + "/../dlib-data"))
 	print("\tsudo ./install.sh\n")
 	sys.exit(1)
@@ -55,7 +57,7 @@ encodings = []
 
 # Make the ./models folder if it doesn't already exist
 if not os.path.exists(path + "/../models"):
-	print("No face model folder found, creating one")
+	print(_("No face model folder found, creating one"))
 	os.makedirs(path + "/../models")
 
 # To try read a premade encodings file if it exists
@@ -66,30 +68,30 @@ except FileNotFoundError:
 
 # Print a warning if too many encodings are being added
 if len(encodings) > 3:
-	print("NOTICE: Each additional model slows down the face recognition engine slightly")
-	print("Press Ctrl+C to cancel\n")
+	print(_("NOTICE: Each additional model slows down the face recognition engine slightly"))
+	print(_("Press Ctrl+C to cancel\n"))
 
 # Make clear what we are doing if not human
 if not builtins.howdy_args.plain:
-	print("Adding face model for the user " + user)
+	print(_("Adding face model for the user " + user))
 
 # Set the default label
 label = "Initial model"
 
 # Get the label from the cli arguments if provided
 if builtins.howdy_args.arguments:
-	label =  builtins.howdy_args.arguments[0]
+	label = builtins.howdy_args.arguments[0]
 
 # If models already exist, set that default label
 elif encodings:
-	label = "Model #" + str(len(encodings) + 1)
+	label = _("Model #") + str(len(encodings) + 1)
 
 # Keep de default name if we can't ask questions
 if builtins.howdy_args.y:
-	print('Using default label "%s" because of -y flag' % (label, ))
+	print(_('Using default label "%s" because of -y flag') % (label, ))
 else:
 	# Ask the user for a custom label
-	label_in = input("Enter a label for this new model [" + label + "]: ")
+	label_in = input(_("Enter a label for this new model [{}]: ").format(label))
 
 	# Set the custom label (if any) and limit it to 24 characters
 	if label_in != "":
@@ -97,7 +99,7 @@ else:
 
 # Remove illegal characters
 if "," in label:
-	print("NOTICE: Removing illegal character \",\" from model name")
+	print(_("NOTICE: Removing illegal character \",\" from model name"))
 	label = label.replace(",", "")
 
 # Prepare the metadata for insertion
@@ -111,7 +113,7 @@ insert_model = {
 # Set up video_capture
 video_capture = VideoCapture(config)
 
-print("\nPlease look straight into the camera")
+print(_("\nPlease look straight into the camera"))
 
 # Give the user time to read
 time.sleep(2)
@@ -176,17 +178,17 @@ video_capture.release()
 # If we've found no faces, try to determine why
 if face_locations is None or not face_locations:
 	if valid_frames == 0:
-		print("Camera saw only black frames - is IR emitter working?")
+		print(_("Camera saw only black frames - is IR emitter working?"))
 	elif valid_frames == dark_tries:
-		print("All frames were too dark, please check dark_threshold in config")
-		print("Average darkness: " + str(dark_running_total / valid_frames) + ", Threshold: " + str(dark_threshold))
+		print(_("All frames were too dark, please check dark_threshold in config"))
+		print(_("Average darkness: {avg}, Threshold: {threshold}").format(avg=str(dark_running_total / valid_frames), threshold=str(dark_threshold)))
 	else:
-		print("No face detected, aborting")
+		print(_("No face detected, aborting"))
 	sys.exit(1)
 
 # If more than 1 faces are detected we can't know wich one belongs to the user
 elif len(face_locations) > 1:
-	print("Multiple faces detected, aborting")
+	print(_("Multiple faces detected, aborting"))
 	sys.exit(1)
 
 face_location = face_locations[0]
@@ -207,6 +209,5 @@ with open(enc_file, "w") as datafile:
 	json.dump(encodings, datafile)
 
 # Give let the user know how it went
-print("""Scan complete
-
-Added a new model to """ + user)
+print(_("""\nScan complete
+Added a new model to """) + user)

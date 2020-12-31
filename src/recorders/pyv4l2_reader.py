@@ -1,16 +1,18 @@
 # Class that simulates the functionality of opencv so howdy can use v4l2 devices seamlessly
 
 # Import required modules. lib4l-dev package is also required.
-from recorders import v4l2
 import fcntl
 import numpy
 import sys
+
+from recorders import v4l2
 from cv2 import cvtColor, COLOR_GRAY2BGR, CAP_PROP_FRAME_WIDTH, CAP_PROP_FRAME_HEIGHT
+from i18n import _
 
 try:
 	from pyv4l2.frame import Frame
 except ImportError:
-	print("Missing pyv4l2 module, please run:")
+	print(_("Missing pyv4l2 module, please run:"))
 	print(" pip3 install pyv4l2\n")
 	sys.exit(13)
 
