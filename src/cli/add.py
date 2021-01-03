@@ -73,7 +73,7 @@ if len(encodings) > 3:
 
 # Make clear what we are doing if not human
 if not builtins.howdy_args.plain:
-	print(_("Adding face model for the user " + user))
+	print(_("Adding face model for the user ") + user)
 
 # Set the default label
 label = "Initial model"

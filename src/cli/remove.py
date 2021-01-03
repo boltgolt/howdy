@@ -34,7 +34,7 @@ enc_file = path + "/models/" + user + ".dat"
 try:
 	encodings = json.load(open(enc_file))
 except FileNotFoundError:
-	print(_("No face model known for the user " + user + ", please run:"))
+	print(_("No face model known for the user {}, please run:").format(user))
 	print("\n\thowdy add\n")
 	sys.exit(1)
 

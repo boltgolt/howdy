@@ -33,6 +33,7 @@ parser = argparse.ArgumentParser(
 	formatter_class=argparse.RawDescriptionHelpFormatter,
 	add_help=False,
 	prog="howdy",
+	usage="howdy [-U USER] [--plain] [-h] [-y] {command} [{arguments}...]".format(command=_("command"), arguments=_("arguments")),
 	epilog=_("For support please visit\nhttps://github.com/boltgolt/howdy"))
 
 # Add an argument for the command
