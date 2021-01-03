@@ -58,6 +58,7 @@
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
                     <property name="image_position">bottom</property>
+                    <signal name="clicked" handler="on_user_add" swapped="no"/>
                   </object>
                   <packing>
                     <property name="expand">False</property>

@@ -50,6 +50,7 @@ class StickyWindow(gtk.Window):
 		self.connect("draw", self.draw)
 		# Listen for a force close or click event and exit
 		self.connect("destroy", self.exit)
+		self.connect("delete_event", self.exit)
 		self.connect("button-press-event", self.exit)
 
 		# Create a GDK drawing, restricts the window size

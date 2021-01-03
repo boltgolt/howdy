@@ -7,6 +7,8 @@ import os
 import elevate
 import subprocess
 
+from i18n import _
+
 # Make sure we have the libs we need
 gi.require_version("Gtk", "3.0")
 gi.require_version("Gdk", "3.0")
@@ -23,6 +25,7 @@ class MainWindow(gtk.Window):
 		gtk.Window.__init__(self)
 
 		self.connect("destroy", self.exit)
+		self.connect("delete_event", self.exit)
 
 		self.builder = gtk.Builder()
 		self.builder.add_from_file("./ui.glade")
@@ -34,9 +37,10 @@ class MainWindow(gtk.Window):
 
 		# Create a treeview that will list the model data
 		self.treeview = gtk.TreeView()
+		self.treeview.set_vexpand(True)
 
 		# Set the coloums
-		for i, column in enumerate(["ID", "Created", "Label"]):
+		for i, column in enumerate([_("ID"), _("Created"), _("Label")]):
 			cell = gtk.CellRendererText()
 			col = gtk.TreeViewColumn(column, cell, text=i)
 
@@ -48,8 +52,11 @@ class MainWindow(gtk.Window):
 		filelist = os.listdir("/lib/security/howdy/models")
 		self.active_user = ""
 
+		self.userlist.items = 0
+
 		for file in filelist:
 			self.userlist.append_text(file[:-4])
+			self.userlist.items += 1
 
 			if not self.active_user:
 				self.active_user = file[:-4]
@@ -66,19 +73,22 @@ class MainWindow(gtk.Window):
 		"""(Re)load the model list"""
 
 		# Execute the list commond to get the models
-		# output = subprocess.check_output(["howdy", "list", "--plain", "-U", self.active_user])
+		# status, output = subprocess.getstatusoutput(["howdy list --plain -U " + self.active_user])
+		status = 0
 		output = "1,2020-12-05 14:10:22,sd\n2,2020-12-05 14:22:41,\n3,2020-12-05 14:57:37,Model #3" + self.active_user
-
-		# Split the output per line
-		# lines = output.decode("utf-8").split("\n")
-		lines = output.split("\n")
 
 		# Create a datamodel
 		self.listmodel = gtk.ListStore(str, str, str)
 
-		# Add the models to the datamodel
-		for i in range(len(lines)):
-			self.listmodel.append(lines[i].split(","))
+		# If there was no error
+		if status == 0:
+			# Split the output per line
+			# lines = output.decode("utf-8").split("\n")
+			lines = output.split("\n")
+
+			# Add the models to the datamodel
+			for i in range(len(lines)):
+				self.listmodel.append(lines[i].split(","))
 
 		self.treeview.set_model(self.listmodel)
 
@@ -95,7 +105,7 @@ class MainWindow(gtk.Window):
 	def exit(self, widget, context):
 		"""Cleanly exit"""
 		gtk.main_quit()
-		sys.exit()
+		sys.exit(0)
 
 
 # Make sure we quit on a SIGINT
@@ -104,7 +114,9 @@ signal.signal(signal.SIGINT, signal.SIG_DFL)
 # Make sure we run as sudo
 elevate.elevate()
 
+# Class is split so it isn't too long, import split functions
 import window_tab_models
+MainWindow.on_user_add = window_tab_models.on_user_add
 MainWindow.on_user_change = window_tab_models.on_user_change
 MainWindow.on_model_add = window_tab_models.on_model_add
 MainWindow.on_model_delete = window_tab_models.on_model_delete
