@@ -115,11 +115,11 @@ signal.signal(signal.SIGINT, signal.SIG_DFL)
 elevate.elevate()
 
 # Class is split so it isn't too long, import split functions
-import window_tab_models
-MainWindow.on_user_add = window_tab_models.on_user_add
-MainWindow.on_user_change = window_tab_models.on_user_change
-MainWindow.on_model_add = window_tab_models.on_model_add
-MainWindow.on_model_delete = window_tab_models.on_model_delete
+import tab_models
+MainWindow.on_user_add = tab_models.on_user_add
+MainWindow.on_user_change = tab_models.on_user_change
+MainWindow.on_model_add = tab_models.on_model_add
+MainWindow.on_model_delete = tab_models.on_model_delete
 
 # Open the GTK window
 window = MainWindow()
