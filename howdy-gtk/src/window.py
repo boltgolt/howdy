@@ -28,7 +28,7 @@ class MainWindow(gtk.Window):
 		self.connect("delete_event", self.exit)
 
 		self.builder = gtk.Builder()
-		self.builder.add_from_file("./ui.glade")
+		self.builder.add_from_file("./main.glade")
 		self.builder.connect_signals(self)
 
 		self.window = self.builder.get_object("mainwindow")
@@ -41,9 +41,7 @@ class MainWindow(gtk.Window):
 
 		# Set the coloums
 		for i, column in enumerate([_("ID"), _("Created"), _("Label")]):
-			cell = gtk.CellRendererText()
-			col = gtk.TreeViewColumn(column, cell, text=i)
-
+			col = gtk.TreeViewColumn(column, gtk.CellRendererText(), text=i)
 			self.treeview.append_column(col)
 
 		# Add the treeview
@@ -113,6 +111,13 @@ signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 # Make sure we run as sudo
 elevate.elevate()
+
+# If no models have been created yet, start the onboarding
+if os.path.exists("/lib/security/howdy/models"):
+	import onboarding
+	onboarding.OnboardingWindow()
+
+	sys.exit(0)
 
 # Class is split so it isn't too long, import split functions
 import tab_models

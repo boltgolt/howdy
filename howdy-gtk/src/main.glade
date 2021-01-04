@@ -2,6 +2,21 @@
 <!-- Generated with glade 3.18.3 -->
 <interface domain="howdy">
   <requires lib="gtk+" version="3.10"/>
+  <object class="GtkImage" id="iconadd">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-add</property>
+  </object>
+  <object class="GtkImage" id="iconadduser">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-add</property>
+  </object>
+  <object class="GtkImage" id="icondelete">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-delete</property>
+  </object>
   <object class="GtkWindow" id="mainwindow">
     <property name="can_focus">False</property>
     <property name="margin_top">5</property>
@@ -57,7 +72,9 @@
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
-                    <property name="image_position">bottom</property>
+                    <property name="image">iconadduser</property>
+                    <property name="relief">none</property>
+                    <property name="always_show_image">True</property>
                     <signal name="clicked" handler="on_user_add" swapped="no"/>
                   </object>
                   <packing>
@@ -113,11 +130,11 @@
                 </child>
                 <child>
                   <object class="GtkButton" id="addbutton">
-                    <property name="label">gtk-add</property>
+                    <property name="label">Add</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
-                    <property name="use_stock">True</property>
+                    <property name="image">iconadd</property>
                     <property name="xalign">0.5899999737739563</property>
                     <property name="always_show_image">True</property>
                     <signal name="clicked" handler="on_model_add" swapped="no"/>
@@ -131,12 +148,12 @@
                 </child>
                 <child>
                   <object class="GtkButton" id="deletebutton">
-                    <property name="label">gtk-delete</property>
+                    <property name="label">Delete</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
                     <property name="margin_right">5</property>
-                    <property name="use_stock">True</property>
+                    <property name="image">icondelete</property>
                     <property name="always_show_image">True</property>
                     <signal name="clicked" handler="on_model_delete" swapped="no"/>
                   </object>
