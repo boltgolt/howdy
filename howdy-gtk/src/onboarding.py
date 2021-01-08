@@ -15,7 +15,6 @@ from gi.repository import Pango as pango
 class OnboardingWindow(gtk.Window):
 	def __init__(self):
 		"""Initialize the sticky window"""
-		print("create")
 		# Make the class a GTK window
 		gtk.Window.__init__(self)
 
@@ -34,7 +33,8 @@ class OnboardingWindow(gtk.Window):
 			self.builder.get_object("slide1"),
 			self.builder.get_object("slide2"),
 			self.builder.get_object("slide3"),
-			self.builder.get_object("slide4")
+			self.builder.get_object("slide4"),
+			self.builder.get_object("slide5")
 		]
 
 		self.window.show_all()
@@ -49,7 +49,6 @@ class OnboardingWindow(gtk.Window):
 		self.nextbutton.set_sensitive(False)
 
 		self.slides[self.window.current_slide].hide()
-		# self.window.current_slide += 1
 		self.slides[self.window.current_slide + 1].show()
 		self.window.current_slide += 1
 
@@ -61,6 +60,8 @@ class OnboardingWindow(gtk.Window):
 			self.execute_slide3()
 		elif self.window.current_slide == 4:
 			self.execute_slide4()
+		elif self.window.current_slide == 5:
+			self.execute_slide5()
 
 	def execute_slide1(self):
 		self.downloadoutputlabel = self.builder.get_object("downloadoutputlabel")
@@ -79,8 +80,10 @@ class OnboardingWindow(gtk.Window):
 
 	def read_download_line(self):
 		line = self.proc.stdout.readline()
-		print(line)
 		self.download_lines.append(line.decode("utf-8"))
+
+		print("install.sh output:")
+		print(line.decode("utf-8"))
 
 		if len(self.download_lines) > 10:
 			self.download_lines.pop(0)
@@ -205,8 +208,8 @@ class OnboardingWindow(gtk.Window):
 	def on_scanbutton_click(self, button):
 		status = self.proc.wait(2)
 
-		if status != 0:
-			self.show_error(_("Error setting camera path"), _("Please set the camera path manually"))
+		# if status != 0:
+		# 	self.show_error(_("Error setting camera path"), _("Please set the camera path manually"))
 
 		self.dialog = gtk.MessageDialog(parent=self, flags=gtk.DialogFlags.MODAL)
 		self.dialog.set_title(_("Creating Model"))
@@ -218,6 +221,8 @@ class OnboardingWindow(gtk.Window):
 
 	def run_add(self):
 		status, output = subprocess.getstatusoutput(["howdy add -y"])
+
+		print("howdy add output:")
 		print(output)
 
 		self.dialog.destroy()
@@ -228,12 +233,39 @@ class OnboardingWindow(gtk.Window):
 		gobject.timeout_add(10, self.go_next_slide)
 
 	def execute_slide4(self):
+		self.enable_next()
+
+	def execute_slide5(self):
+		radio_buttons = self.builder.get_object("radiobalanced").get_group()
+		radio_selected = False
+		radio_certanty = 5.0
+
+		for button in radio_buttons:
+			if button.get_active():
+				radio_selected = gtk.Buildable.get_name(button)
+
+		if not radio_selected:
+			self.show_error(_("Error reading radio buttons"))
+		elif radio_selected == "radiofast":
+			radio_certanty = 4.2
+		elif radio_selected == "radiobalanced":
+			radio_certanty = 3.5
+		elif radio_selected == "radiosecure":
+			radio_certanty = 2.2
+
+		self.proc = subprocess.Popen("howdy set certainty " + str(radio_certanty), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+
 		self.nextbutton.hide()
 		self.builder.get_object("cancelbutton").hide()
 
 		finishbutton = self.builder.get_object("finishbutton")
 		finishbutton.show()
 		self.window.set_focus(finishbutton)
+
+		status = self.proc.wait(2)
+
+		if status != 0:
+			self.show_error(_("Error setting certainty"), _("Certainty is set to the default value, Howdy setup is complete"))
 
 	def enable_next(self):
 		self.nextbutton.set_sensitive(True)

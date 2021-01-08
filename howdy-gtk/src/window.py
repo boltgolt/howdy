@@ -112,8 +112,8 @@ signal.signal(signal.SIGINT, signal.SIG_DFL)
 # Make sure we run as sudo
 elevate.elevate()
 
-# If no models have been created yet, start the onboarding
-if os.path.exists("/lib/security/howdy/models"):
+# If no models have been created yet or when it is forced, start the onboarding
+if "--force-onboarding" in sys.argv or not os.path.exists("/lib/security/howdy/models"):
 	import onboarding
 	onboarding.OnboardingWindow()
 
