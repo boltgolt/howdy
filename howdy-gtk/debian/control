@@ -1,0 +1,13 @@
+Source: howdy-gtk
+Section: misc
+Priority: optional
+Standards-Version: 3.9.7
+Build-Depends: python, dh-python, devscripts, dh-make, debhelper, fakeroot
+Maintainer: boltgolt <boltgolt@gmail.com>
+Vcs-Git: https://github.com/boltgolt/howdy
+
+Package: howdy-gtk
+Homepage: https://github.com/boltgolt/howdy
+Architecture: all
+Depends: ${misc:Depends}, curl|wget, python3, python3-pip, python3-dev, python-gtk2, python-gtk2-dev, cmake
+Description: Optional UI package for Howdy, written in Gtk

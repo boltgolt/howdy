@@ -17,12 +17,25 @@ import configparser
 import dlib
 import cv2
 import datetime
+import subprocess
 import snapshot
 import numpy as np
 import _thread as thread
 
 from recorders.video_capture import VideoCapture
 from i18n import _
+
+
+def exit(code):
+	"""Exit while closeing howdy-gtk properly"""
+	global gtk_proc
+
+	# Exit the auth ui process if there is one
+	if "gtk_proc" in globals():
+		gtk_proc.terminate()
+
+	# Exit compare
+	sys.exit(code)
 
 
 def init_detector(lock):
@@ -35,7 +48,7 @@ def init_detector(lock):
 		print("\n\tcd " + PATH + "/dlib-data")
 		print("\tsudo ./install.sh\n")
 		lock.release()
-		sys.exit(1)
+		exit(1)
 
 	# Use the CNN detector if enabled
 	if use_cnn:
@@ -64,9 +77,26 @@ def make_snapshot(type):
 	])
 
 
+def send_to_ui(type, message):
+	"""Send message to the auth ui"""
+	global gtk_proc
+
+	# Only execute of the proccess started
+	if 'gtk_proc' in globals():
+		# Format message so the ui can parse it
+		message = type + "=" + message + " \n"
+
+		# Try to send the message to the auth ui, but it's okay if that fails
+		try:
+			gtk_proc.stdin.write(bytearray(message.encode("ascii")))
+			gtk_proc.stdin.flush()
+		except IOError as err:
+			pass
+
+
 # Make sure we were given an username to tast against
 if len(sys.argv) < 2:
-	sys.exit(12)
+	exit(12)
 
 # Get the absolute path to the current directory
 PATH = os.path.abspath(__file__ + "/..")
@@ -92,6 +122,15 @@ face_detector = None
 pose_predictor = None
 face_encoder = None
 
+# Start the auth ui
+try:
+	gtk_proc = subprocess.Popen(["howdy-gtk", "--start-auth-ui"], stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+except FileNotFoundError as err:
+	pass
+
+# Write to the stdin to redraw ui
+send_to_ui("M", "Starting up...")
+
 # Try to load the face model from the models folder
 try:
 	models = json.load(open(PATH + "/models/" + user + ".dat"))
@@ -99,11 +138,11 @@ try:
 	for model in models:
 		encodings += model["data"]
 except FileNotFoundError:
-	sys.exit(10)
+	exit(10)
 
 # Check if the file contains a model
 if len(models) < 1:
-	sys.exit(10)
+	exit(10)
 
 # Read config from disk
 config = configparser.ConfigParser()
@@ -158,17 +197,28 @@ timeout = config.getint("video", "timeout")
 dark_threshold = config.getfloat("video", "dark_threshold")
 end_report = config.getboolean("debug", "end_report")
 
+# Initiate histogram equalization
+clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+
+# Let the ui know that we're ready
+send_to_ui("M", "Identifying you...")
+
 # Start the read loop
 frames = 0
 valid_frames = 0
 timings["fr"] = time.time()
 dark_running_total = 0
 
-clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
-
 while True:
 	# Increment the frame count every loop
 	frames += 1
+
+	# Form a string to let the user know we're real busy
+	ui_subtext = "Scanned " + str(valid_frames - dark_tries) + " frames"
+	if (dark_tries > 1):
+		ui_subtext += " (skipped " + str(dark_tries) + " dark frames)"
+	# Show it in the ui as subtext
+	send_to_ui("S", ui_subtext)
 
 	# Stop if we've exceded the time limit
 	if time.time() - timings["fr"] > timeout:
@@ -179,9 +229,9 @@ while True:
 		if dark_tries == valid_frames:
 			print(_("All frames were too dark, please check dark_threshold in config"))
 			print(_("Average darkness: {avg}, Threshold: {threshold}").format(avg=str(dark_running_total / max(1, valid_frames)), threshold=str(dark_threshold)))
-			sys.exit(13)
+			exit(13)
 		else:
-			sys.exit(11)
+			exit(11)
 
 	# Grab a single frame of video
 	frame, gsframe = video_capture.read_frame()
@@ -295,7 +345,7 @@ while True:
 				})
 
 			# End peacefully
-			sys.exit(0)
+			exit(0)
 
 	if exposure != -1:
 		# For a strange reason on some cameras (e.g. Lenoxo X1E)

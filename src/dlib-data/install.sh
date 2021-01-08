@@ -21,5 +21,6 @@ else
 fi
 
 # Uncompress the data files and delete the original archive
+echo " "
 echo "Unpacking..."
 bzip2 -d -f *.bz2
