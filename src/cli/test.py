@@ -54,7 +54,7 @@ use_cnn = config.getboolean('core', 'use_cnn', fallback=False)
 
 if use_cnn:
 	face_detector = dlib.cnn_face_detection_model_v1(
-		path + '/../dlib-data/mmod_human_face_detector.dat'
+		path + "/../dlib-data/mmod_human_face_detector.dat"
 	)
 else:
 	face_detector = dlib.get_frontal_face_detector()

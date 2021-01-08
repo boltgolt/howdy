@@ -29,7 +29,7 @@ def exit(code):
 	global gtk_proc
 
 	# Exit the auth ui process if there is one
-	if 'gtk_proc' in globals():
+	if "gtk_proc" in globals():
 		gtk_proc.terminate()
 
 	# Exit compare
