@@ -1,3 +1,15 @@
+howdy (2.6.1) xenial; urgency=medium
+
+  * Fixed accidentally using emergency priority for log messages (thanks @kageurufu and many others!)
+  * Fixed certainty prompt selected the exact opposite value
+  * Fixed sleeping for negative time in test slow mode (thanks @willwill2will54!)
+  * Fixed opencv error when imported after dlib (thanks @cnyk!)
+  * Fixed typo causing manual exposure failure (thanks @h45h74x!)
+  * Fixed missing command autocomplete options on tab
+  * Fixed not knowing how to spell the word latest (thanks @divykj!)
+
+ -- boltgolt <boltgolt@gmail.com>  Wed, 02 Sep 2020 15:05:59 +0200
+
 howdy (2.6.0) xenial; urgency=medium
 
   * Added new options to capture a snapshot of failed or even successful logins
