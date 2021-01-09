@@ -18,11 +18,11 @@ if not os.path.exists("/lib/security/howdy/cli"):
 
 # Remove files and symlinks
 try:
-	os.unlink('/usr/local/bin/howdy')
+	os.unlink("/usr/local/bin/howdy")
 except Exception:
 	print("Can't remove executable")
 try:
-	os.unlink('/usr/share/bash-completion/completions/howdy')
+	os.unlink("/usr/share/bash-completion/completions/howdy")
 except Exception:
 	print("Can't remove autocompletion script")
 
@@ -36,10 +36,10 @@ except Exception:
 
 # Remove full installation folder, just to be sure
 try:
-	rmtree('/lib/security/howdy')
+	rmtree("/lib/security/howdy")
 except Exception:
 	# This error is normal
 	pass
 
 # Remove dlib
-subprocess.call(['pip3', 'uninstall', 'dlib', '-y', '--no-cache-dir'])
+subprocess.call(["pip3", "uninstall", "dlib", "-y", "--no-cache-dir"])

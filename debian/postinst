@@ -2,15 +2,6 @@
 # Installation script to install howdy
 # Executed after primary apt install
 
-
-def col(id):
-	"""Add color escape sequences"""
-	if id == 1: return "\033[32m"
-	if id == 2: return "\033[33m"
-	if id == 3: return "\033[31m"
-	return "\033[0m"
-
-
 # Import required modules
 import fileinput
 import subprocess
@@ -36,6 +27,14 @@ def handleStatus(status):
 	if (status != 0):
 		print(col(3) + "Error while running last command" + col(0))
 		sys.exit(1)
+
+
+def col(id):
+	"""Add color escape sequences"""
+	if id == 1: return "\033[32m"
+	if id == 2: return "\033[33m"
+	if id == 3: return "\033[31m"
+	return "\033[0m"
 
 
 # Create shorthand for subprocess creation
@@ -74,7 +73,14 @@ if not os.path.exists("/tmp/howdy_picked_device"):
 					# Remove unsafe automatic dismissal of lock screen
 					if key == "dismiss_lockscreen":
 						if value == "true":
-							print("DEPRECATION: Config falue dismiss_lockscreen is no longer supported because of login loop issues.")
+							print("DEPRECATION: Config value dismiss_lockscreen is no longer supported because of login loop issues.")
+						continue
+
+					# MIGRATION 2.6.1 -> 3.0.0
+					# Fix capture being enabled by default
+					if key == "capture_failed" or key == "capture_successful":
+						if value == "true":
+							print("NOTICE: Howdy login image captures have been disabled by default, change the config to enable them again")
 						continue
 
 					try:
@@ -95,20 +101,10 @@ if not os.path.exists("/tmp/howdy_picked_device"):
 
 	sys.exit(0)
 
-# Open the temporary file containing the device ID
-in_file = open("/tmp/howdy_picked_device", "r")
-# Load it in, it should be a string
-picked = in_file.read()
-in_file.close()
-
-# Remove the temporary file
-os.unlink("/tmp/howdy_picked_device")
-
 log("Upgrading pip to the latest version")
 
 # Update pip
 handleStatus(sc(["pip3", "install", "--upgrade", "pip"]))
-
 
 log("Upgrading numpy to the latest version")
 
@@ -196,15 +192,9 @@ handleStatus(subprocess.call(["pip3", "install", "--no-cache-dir", "opencv-pytho
 
 log("Configuring howdy")
 
-campath = picked.split(";")[0]
-cert = picked.split(";")[1]
-
 # Manually change the camera id to the one picked
 for line in fileinput.input(["/lib/security/howdy/config.ini"], inplace=1):
-	line = line.replace("device_path = none", "device_path = " + campath)
 	line = line.replace("use_cnn = false", "use_cnn = " + str(cuda_used).lower())
-	line = line.replace("certainty = 3.5", "certainty = " + cert)
-
 	print(line, end="")
 
 print("Camera ID saved")
