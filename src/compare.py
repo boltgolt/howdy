@@ -17,6 +17,7 @@ import configparser
 import dlib
 import cv2
 import datetime
+import atexit
 import subprocess
 import snapshot
 import numpy as np
@@ -26,7 +27,7 @@ from recorders.video_capture import VideoCapture
 from i18n import _
 
 
-def exit(code):
+def exit(code=None):
 	"""Exit while closeing howdy-gtk properly"""
 	global gtk_proc
 
@@ -35,7 +36,8 @@ def exit(code):
 		gtk_proc.terminate()
 
 	# Exit compare
-	sys.exit(code)
+	if code is not None:
+		sys.exit(code)
 
 
 def init_detector(lock):
@@ -82,15 +84,15 @@ def send_to_ui(type, message):
 	global gtk_proc
 
 	# Only execute of the proccess started
-	if 'gtk_proc' in globals():
+	if "gtk_proc" in globals():
 		# Format message so the ui can parse it
 		message = type + "=" + message + " \n"
 
 		# Try to send the message to the auth ui, but it's okay if that fails
 		try:
-			gtk_proc.stdin.write(bytearray(message.encode("ascii")))
+			gtk_proc.stdin.write(bytearray(message.encode("utf-8")))
 			gtk_proc.stdin.flush()
-		except IOError as err:
+		except IOError:
 			pass
 
 
@@ -122,10 +124,11 @@ face_detector = None
 pose_predictor = None
 face_encoder = None
 
-# Start the auth ui
+# Start the auth ui, register it to be always be closed on exit
 try:
 	gtk_proc = subprocess.Popen(["howdy-gtk", "--start-auth-ui"], stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-except FileNotFoundError as err:
+	atexit.register(exit)
+except FileNotFoundError:
 	pass
 
 # Write to the stdin to redraw ui
@@ -337,7 +340,13 @@ while True:
 			# Run rubberstamps if enabled
 			if config.getboolean("rubberstamps", "enabled", fallback=False):
 				import rubberstamps
-				rubberstamps.execute(config, {
+
+				send_to_ui("S", "")
+
+				if "gtk_proc" not in vars():
+					gtk_proc = None
+
+				rubberstamps.execute(config, gtk_proc, {
 					"video_capture": video_capture,
 					"face_detector": face_detector,
 					"pose_predictor": pose_predictor,

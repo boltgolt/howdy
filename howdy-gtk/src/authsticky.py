@@ -134,10 +134,10 @@ class StickyWindow(gtk.Window):
 		if comm:
 			# Parse a message
 			if comm[0] == "M":
-				message = comm[2:]
+				message = comm[2:].strip()
 			# Parse subtext
 			if comm[0] == "S":
-				subtext = comm[2:]
+				subtext = comm[2:].strip()
 
 			# Redraw the ui
 			self.queue_draw()

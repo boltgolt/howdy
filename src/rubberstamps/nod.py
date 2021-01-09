@@ -9,6 +9,8 @@ class nod(RubberStamp):
 		self.options["min_directions"] = 3
 
 	def run(self):
+		self.set_ui_text("Authorised, nod to confirm", self.UI_TEXT)
+
 		last_reldist = -1
 		last_nosepoint = {"x": -1, "y": -1}
 		recorded_nods = {"x": [], "y": []}

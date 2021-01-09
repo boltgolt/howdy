@@ -6,14 +6,36 @@ from importlib.machinery import SourceFileLoader
 
 
 class RubberStamp:
+	UI_TEXT = "ui_text"
+	UI_SUBTEXT = "ui_subtext"
+
 	def create_shorthands(self):
 		self.video_capture = self.opencv["video_capture"]
 		self.face_detector = self.opencv["face_detector"]
 		self.pose_predictor = self.opencv["pose_predictor"]
 		self.clahe = self.opencv["clahe"]
 
+	def set_ui_text(self, text, type=None):
+		typedec = "M"
 
-def execute(config, opencv):
+		if type == self.UI_SUBTEXT:
+			typedec = "S"
+
+		return self.send_ui_raw(typedec + "=" + text)
+
+	def send_ui_raw(self, command):
+		if self.config.getboolean("debug", "verbose_stamps", fallback=False):
+			print("Sending command to howdy-gtk:")
+			print(" " + command)
+
+		command += " \n"
+
+		if self.gtk_proc:
+			self.gtk_proc.stdin.write(bytearray(command.encode("utf-8")))
+			self.gtk_proc.stdin.flush()
+
+
+def execute(config, gtk_proc, opencv):
 	verbose = config.getboolean("debug", "verbose_stamps", fallback=False)
 	dir_path = os.path.dirname(os.path.realpath(__file__))
 	installed_stamps = []
@@ -56,8 +78,8 @@ def execute(config, opencv):
 
 		instance = constructor()
 		instance.config = config
+		instance.gtk_proc = gtk_proc
 		instance.opencv = opencv
-		print(regex_result.group(3))
 
 		instance.options = {
 			"timeout": int(re.sub("[a-zA-Z]", "", regex_result.group(2))),
