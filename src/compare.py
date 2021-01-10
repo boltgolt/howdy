@@ -14,10 +14,13 @@ import sys
 import os
 import json
 import configparser
-import cv2
 import dlib
+import cv2
+import datetime
+import snapshot
 import numpy as np
 import _thread as thread
+from recorders.video_capture import VideoCapture
 
 
 def init_detector(lock):
@@ -47,10 +50,16 @@ def init_detector(lock):
 	lock.release()
 
 
-def stop(status):
-	"""Stop the execution and close video stream"""
-	video_capture.release()
-	sys.exit(status)
+def make_snapshot(type):
+	"""Generate snapshot after detection"""
+	snapshot.generate(snapframes, [
+		type + " LOGIN",
+		"Date: " + datetime.datetime.utcnow().strftime("%Y/%m/%d %H:%M:%S UTC"),
+		"Scan time: " + str(round(time.time() - timings["fr"], 2)) + "s",
+		"Frames: " + str(frames) + " (" + str(round(frames / (time.time() - timings["fr"]), 2)) + "FPS)",
+		"Hostname: " + os.uname().nodename,
+		"Best certainty value: " + str(round(lowest_certainty * 10, 1))
+	])
 
 
 # Make sure we were given an username to tast against
@@ -66,11 +75,17 @@ user = sys.argv[1]
 models = []
 # Encoded face models
 encodings = []
+# Amount of ignored 100% black frames
+black_tries = 0
 # Amount of ingnored dark frames
 dark_tries = 0
 # Total amount of frames captured
 frames = 0
-# face recognition/detection instances
+# Captured frames for snapshot capture
+snapframes = []
+# Tracks the lowest certainty value in the loop
+lowest_certainty = 10
+# Face recognition/detection instances
 face_detector = None
 pose_predictor = None
 face_encoder = None
@@ -94,10 +109,12 @@ config.read(PATH + "/config.ini")
 
 # Get all config values needed
 use_cnn = config.getboolean("core", "use_cnn", fallback=False)
-timeout = config.getint("video", "timout", fallback=5)
+timeout = config.getint("video", "timeout", fallback=5)
 dark_threshold = config.getfloat("video", "dark_threshold", fallback=50.0)
 video_certainty = config.getfloat("video", "certainty", fallback=3.5) / 10
 end_report = config.getboolean("debug", "end_report", fallback=False)
+capture_failed = config.getboolean("snapshots", "capture_failed", fallback=False)
+capture_successful = config.getboolean("snapshots", "capture_successful", fallback=False)
 
 # Save the time needed to start the script
 timings["in"] = time.time() - timings["st"]
@@ -113,36 +130,7 @@ thread.start_new_thread(init_detector, (lock, ))
 # Start video capture on the IR camera
 timings["ic"] = time.time()
 
-# Check if the user explicitly set ffmpeg as recorder
-if config.get("video", "recording_plugin") == "ffmpeg":
-	# Set the capture source for ffmpeg
-	from recorders.ffmpeg_reader import ffmpeg_reader
-	video_capture = ffmpeg_reader(config.get("video", "device_path"), config.get("video", "device_format"))
-elif config.get("video", "recording_plugin") == "pyv4l2":
-	# Set the capture source for pyv4l2
-	from recorders.pyv4l2_reader import pyv4l2_reader
-	video_capture = pyv4l2_reader(config.get("video", "device_path"), config.get("video", "device_format"))
-else:
-	# Start video capture on the IR camera through OpenCV
-	video_capture = cv2.VideoCapture(config.get("video", "device_path"))
-
-# Force MJPEG decoding if true
-if config.getboolean("video", "force_mjpeg", fallback=False):
-	# Set a magic number, will enable MJPEG but is badly documented
-	# 1196444237 is "GPJM" in ASCII
-	video_capture.set(cv2.CAP_PROP_FOURCC, 1196444237)
-
-# Set the frame width and height if requested
-fw = config.getint("video", "frame_width", fallback=-1)
-fh = config.getint("video", "frame_height", fallback=-1)
-if fw != -1:
-	video_capture.set(cv2.CAP_PROP_FRAME_WIDTH, fw)
-if fh != -1:
-	video_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, fh)
-
-# Capture a single frame so the camera becomes active
-# This will let the camera adjust its light levels while we're importing for faster scanning
-video_capture.grab()
+video_capture = VideoCapture(config)
 
 # Read exposure from config to use in the main loop
 exposure = config.getint("video", "exposure", fallback=-1)
@@ -158,7 +146,7 @@ del lock
 # Fetch the max frame height
 max_height = config.getfloat("video", "max_height", fallback=0.0)
 # Get the height of the image
-height = video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT) or 1
+height = video_capture.internal.get(cv2.CAP_PROP_FRAME_HEIGHT) or 1
 
 # Calculate the amount the image has to shrink
 scaling_factor = (max_height / height) or 1
@@ -170,7 +158,11 @@ end_report = config.getboolean("debug", "end_report")
 
 # Start the read loop
 frames = 0
+valid_frames = 0
 timings["fr"] = time.time()
+dark_running_total = 0
+
+clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
 
 while True:
 	# Increment the frame count every loop
@@ -178,33 +170,46 @@ while True:
 
 	# Stop if we've exceded the time limit
 	if time.time() - timings["fr"] > timeout:
-		stop(11)
+		# Create a timeout snapshot if enabled
+		if capture_failed:
+			make_snapshot("FAILED")
+
+		if dark_tries == valid_frames:
+			print("All frames were too dark, please check dark_threshold in config")
+			print("Average darkness: " + str(dark_running_total / max(1, valid_frames)) + ", Threshold: " + str(dark_threshold))
+			sys.exit(13)
+		else:
+			sys.exit(11)
 
 	# Grab a single frame of video
-	ret, frame = video_capture.read()
+	frame, gsframe = video_capture.read_frame()
+	gsframe = clahe.apply(gsframe)
 
-	if frames == 1 and ret is False:
-		print("Could not read from camera")
-		exit(12)
-
-	try:
-		# Convert from color to grayscale
-		# First processing of frame, so frame errors show up here
-		gsframe = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-	except RuntimeError:
-		gsframe = frame
-	except cv2.error:
-		print("\nUnknown camera, please check your 'device_path' config value.\n")
-		raise
+	# If snapshots have been turned on
+	if capture_failed or capture_successful:
+		# Start capturing frames for the snapshot
+		if len(snapframes) < 3:
+			snapframes.append(frame)
 
 	# Create a histogram of the image with 8 values
 	hist = cv2.calcHist([gsframe], [0], None, [8], [0, 256])
 	# All values combined for percentage calculation
 	hist_total = np.sum(hist)
 
-	# If the image is fully black or the frame exceeds threshold,
+	# Calculate frame darkness
+	darkness = (hist[0] / hist_total * 100)
+
+	# If the image is fully black due to a bad camera read,
 	# skip to the next frame
-	if hist_total == 0 or (hist[0] / hist_total * 100 > dark_threshold):
+	if (hist_total == 0) or (darkness == 100):
+		black_tries += 1
+		continue
+
+	dark_running_total += darkness
+	valid_frames += 1
+	# If the image exceeds darkness threshold due to subject distance,
+	# skip to the next frame
+	if (darkness > dark_threshold):
 		dark_tries += 1
 		continue
 
@@ -234,10 +239,14 @@ while True:
 		match_index = np.argmin(matches)
 		match = matches[match_index]
 
+		# Update certainty if we have a new low
+		if lowest_certainty > match:
+			lowest_certainty = match
+
 		# Check if a match that's confident enough
 		if 0 < match < video_certainty:
 			timings["tt"] = time.time() - timings["st"]
-			timings["fr"] = time.time() - timings["fr"]
+			timings["fl"] = time.time() - timings["fr"]
 
 			# If set to true in the config, print debug text
 			if end_report:
@@ -251,25 +260,30 @@ while True:
 				print("  Open cam + load libs: %dms" % (round(max(timings["ll"], timings["ic"]) * 1000, )))
 				print_timing("  Opening the camera", "ic")
 				print_timing("  Importing recognition libs", "ll")
-				print_timing("Searching for known face", "fr")
+				print_timing("Searching for known face", "fl")
 				print_timing("Total time", "tt")
 
 				print("\nResolution")
-				width = video_capture.get(cv2.CAP_PROP_FRAME_WIDTH) or 1
+				width = video_capture.fw or 1
 				print("  Native: %dx%d" % (height, width))
 				# Save the new size for diagnostics
 				scale_height, scale_width = frame.shape[:2]
 				print("  Used: %dx%d" % (scale_height, scale_width))
 
 				# Show the total number of frames and calculate the FPS by deviding it by the total scan time
-				print("\nFrames searched: %d (%.2f fps)" % (frames, frames / timings["fr"]))
+				print("\nFrames searched: %d (%.2f fps)" % (frames, frames / timings["fl"]))
+				print("Black frames ignored: %d " % (black_tries, ))
 				print("Dark frames ignored: %d " % (dark_tries, ))
 				print("Certainty of winning frame: %.3f" % (match * 10, ))
 
 				print("Winning model: %d (\"%s\")" % (match_index, models[match_index]["label"]))
 
+			# Make snapshot if enabled
+			if capture_successful:
+				make_snapshot("SUCCESSFUL")
+
 			# End peacefully
-			stop(0)
+			sys.exit(0)
 
 	if exposure != -1:
 		# For a strange reason on some cameras (e.g. Lenoxo X1E)
@@ -277,5 +291,5 @@ while True:
 		# are captured and even after a delay it does not
 		# always work. Setting exposure at every frame is
 		# reliable though.
-		video_capture.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1.0)  # 1 = Manual
-		video_capture.set(cv2.CAP_PROP_EXPOSURE, float(exposure))
+		video_capture.internal.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1.0)  # 1 = Manual
+		video_capture.internal.set(cv2.CAP_PROP_EXPOSURE, float(exposure))

@@ -11,10 +11,10 @@ print("Opening config.ini in the default editor")
 editor = "/bin/nano"
 
 # Use the user preferred editor if available
-if os.path.isfile("/etc/alternatives/editor"):
-	editor = "/etc/alternatives/editor"
-elif "EDITOR" in os.environ:
+if "EDITOR" in os.environ:
 	editor = os.environ["EDITOR"]
+elif os.path.isfile("/etc/alternatives/editor"):
+	editor = "/etc/alternatives/editor"
 
 # Open the editor as a subprocess and fork it
 subprocess.call([editor, os.path.dirname(os.path.realpath(__file__)) + "/../config.ini"])

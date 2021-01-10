@@ -7,6 +7,7 @@ def col(id):
 	if id == 1: return "\033[32m"
 	if id == 2: return "\033[33m"
 	if id == 3: return "\033[31m"
+	if id == 4: return "\033[1m"
 	return "\033[0m"
 
 
@@ -38,7 +39,6 @@ if "install" not in sys.argv:
 # The default picked video device id
 picked = "none"
 
-print(col(1) + "Starting IR camera check...\n" + col(0))
 
 # If prompting has been disabled, skip camera check
 if "HOWDY_NO_PROMPT" in os.environ:
@@ -46,62 +46,104 @@ if "HOWDY_NO_PROMPT" in os.environ:
 
 	# Write the default device to disk and exit
 	with open("/tmp/howdy_picked_device", "w") as out_file:
-		out_file.write("none")
+		out_file.write("none;3.5")
 
 	sys.exit(0)
 
-# Get all devices
-devices = os.listdir("/dev/v4l/by-path")
+fscheck = subprocess.call(["which", "streamer"], stdout=subprocess.PIPE)
 
-# Loop though all devices
-for dev in devices:
-	time.sleep(.5)
+if fscheck == 1:
+	print(col(2) + "\nWARNING: Could not automatically find the right webcam, manual configuration after installation required\n" + col(0))
+else:
+	print(col(1) + "Starting IR camera check...\n" + col(0))
 
-	# The full path to the device is the default name
-	device_name = "/dev/v4l/by-path/" + dev
-	# Get the udevadm details to try to get a better name
-	udevadm = subprocess.check_output(["udevadm info -r --query=all -n " + device_name], shell=True).decode("utf-8")
+	# Get all devices
+	devices = os.listdir("/dev/v4l/by-path")
 
-	# Loop though udevadm to search for a better name
-	for line in udevadm.split("\n"):
-		# Match it and encase it in quotes
-		re_name = re.search('product.*=(.*)$', line, re.IGNORECASE)
-		if re_name:
-			device_name = '"' + re_name.group(1) + '"'
+	# Loop though all devices
+	for dev in devices:
+		time.sleep(.5)
 
-	# Show what device we're using
-	print("Trying " + device_name)
+		# The full path to the device is the default name
+		device_name = "/dev/v4l/by-path/" + dev
+		# Get the udevadm details to try to get a better name
+		udevadm = subprocess.check_output(["udevadm info -r --query=all -n " + device_name], shell=True).decode("utf-8")
 
-	# Let fswebcam keep the camera open in the background
-	sub = subprocess.Popen(["streamer -t 1:0:0 -c /dev/v4l/by-path/" + dev + " -b 16 -f rgb24 -o /dev/null 1>/dev/null 2>/dev/null"], shell=True, preexec_fn=os.setsid)
+		# Loop though udevadm to search for a better name
+		for line in udevadm.split("\n"):
+			# Match it and encase it in quotes
+			re_name = re.search('product.*=(.*)$', line, re.IGNORECASE)
+			if re_name:
+				device_name = '"' + re_name.group(1) + '"'
 
-	try:
-		# Ask the user if this is the right one
-		print(col(2) + "One of your cameras should now be on." + col(0))
-		ans = input("Did your IR emitters turn on? [y/N]: ")
-	except KeyboardInterrupt:
-		# Kill fswebcam if the user aborts
+		# Show what device we're using
+		print("Trying " + device_name)
+
+		# Let fswebcam keep the camera open in the background
+		sub = subprocess.Popen(
+			["streamer -t 1:0:0 -c /dev/v4l/by-path/" + dev + " -b 16 -f rgb24 -o /dev/null 1>/dev/null 2>/dev/null"],
+			shell=True,
+			preexec_fn=os.setsid,
+			stdout=subprocess.PIPE,
+			stdin=subprocess.PIPE)
+
+		try:
+			# Ask the user if this is the right one
+			print(col(2) + "One of your cameras should now be on." + col(0))
+			ans = input("Did your IR emitters turn on? [y/N]: ")
+		except KeyboardInterrupt:
+			# Kill fswebcam if the user aborts
+			os.killpg(os.getpgid(sub.pid), signal.SIGTERM)
+			raise
+
+		# The user has answered, kill fswebcam
 		os.killpg(os.getpgid(sub.pid), signal.SIGTERM)
-		raise
 
-	# The user has answered, kill fswebcam
-	os.killpg(os.getpgid(sub.pid), signal.SIGTERM)
+		# Set this camera as picked if the answer was yes, go to the next one if no
+		if ans.lower().strip() == "y" or ans.lower().strip() == "yes":
+			picked = dev
+			break
+		else:
+			print("Interpreting as a " + col(3) + "\"NO\"\n" + col(0))
 
-	# Set this camera as picked if the answer was yes, go to the next one if no
-	if ans.lower().strip() == "y" or ans.lower().strip() == "yes":
-		picked = dev
-		break
-	else:
-		print("Interpreting as a " + col(3) + "\"NO\"\n" + col(0))
+	# Abort if no camera was picked
+	if picked == "none":
+		print(col(3) + "No suitable IR camera found, aborting install." + col(0))
+		sys.exit(23)
 
-# Abort if no camera was picked
-if picked == "none":
-	print(col(3) + "No suitable IR camera found, aborting install." + col(0))
-	sys.exit(23)
+cert = 3.5
+
+# Give time to read
+time.sleep(.5)
+
+print(col(1) + "\nStarting certainty auto config..." + col(0))
+
+# Give more time to read
+time.sleep(.5)
+
+print("\n\nAfter detection, Howdy knows how certain it is that the match is correct.")
+print("How certain Howdy needs to be before authenticating you can be customized.")
+
+print(col(4) + "\nF: Fast." + col(0))
+print("Allows more fuzzy matches, but speeds up the scanning process greatly.")
+print(col(4) + "\nB: Balanced." + col(0))
+print("Still relatively quick detection, but might not log you in when further away.")
+print(col(4) + "\nS: Secure." + col(0))
+print("The safest option, but will take much longer to authenticate you.")
+
+print("\nYou can always change this setting in the config.")
+prof = input("What profile would you like to use? [f/b/s]: ")
+
+if prof.lower().strip() == "f" or prof.lower().strip() == "fast":
+	cert = 4.2
+elif prof.lower().strip() == "b" or prof.lower().strip() == "balanced":
+	cert = 2.8
+elif prof.lower().strip() == "s" or prof.lower().strip() == "secure":
+	cert = 2
 
 # Write the result to disk so postinst can have a look at it
 with open("/tmp/howdy_picked_device", "w") as out_file:
-	out_file.write("/dev/v4l/by-path/" + picked)
+	out_file.write("/dev/v4l/by-path/" + picked + ";" + str(cert))
 
 # Add a line break
 print("")

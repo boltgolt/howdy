@@ -5,8 +5,9 @@ import configparser
 import os
 import sys
 import time
-import cv2
 import dlib
+import cv2
+from recorders.video_capture import VideoCapture
 
 # Get the absolute path to the current file
 path = os.path.dirname(os.path.abspath(__file__))
@@ -20,22 +21,7 @@ if config.get("video", "recording_plugin") != "opencv":
 	print("Aborting")
 	sys.exit(12)
 
-# Start capturing from the configured webcam
-video_capture = cv2.VideoCapture(config.get("video", "device_path"))
-
-# Force MJPEG decoding if true
-if config.getboolean("video", "force_mjpeg", fallback=False):
-	# Set a magic number, will enable MJPEG but is badly documented
-	video_capture.set(cv2.CAP_PROP_FOURCC, 1196444237)
-
-# Set the frame width and height if requested
-fw = config.getint("video", "frame_width", fallback=-1)
-fh = config.getint("video", "frame_height", fallback=-1)
-if fw != -1:
-	video_capture.set(cv2.CAP_PROP_FRAME_WIDTH, fw)
-
-if fh != -1:
-	video_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, fh)
+video_capture = VideoCapture(config)
 
 # Read exposure and dark_thresholds from config to use in the main loop
 exposure = config.getint("video", "exposure", fallback=-1)
@@ -63,7 +49,9 @@ def print_text(line_number, text):
 	"""Print the status text by line number"""
 	cv2.putText(overlay, text, (10, height - 10 - (10 * line_number)), cv2.FONT_HERSHEY_SIMPLEX, .3, (0, 255, 0), 0, cv2.LINE_AA)
 
+
 use_cnn = config.getboolean('core', 'use_cnn', fallback=False)
+
 if use_cnn:
 	face_detector = dlib.cnn_face_detection_model_v1(
 		path + '/../dlib-data/mmod_human_face_detector.dat'
@@ -109,21 +97,12 @@ try:
 			sec_frames = 0
 
 		# Grab a single frame of video
-		ret, frame = video_capture.read()
-
-		try:
-			# Convert from color to grayscale
-			# First processing of frame, so frame errors show up here
-			frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-		except RuntimeError:
-			pass
-		except cv2.error:
-			print("\nUnknown camera, please check your 'device_path' config value.\n")
-			raise
+		_, frame = video_capture.read_frame()
 
 		frame = clahe.apply(frame)
 		# Make a frame to put overlays in
 		overlay = frame.copy()
+		overlay = cv2.cvtColor(overlay, cv2.COLOR_GRAY2BGR)
 
 		# Fetch the frame height and width
 		height, width = frame.shape[:2]
@@ -190,6 +169,7 @@ try:
 
 		# Add the overlay to the frame with some transparency
 		alpha = 0.65
+		frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
 		cv2.addWeighted(overlay, alpha, frame, 1 - alpha, 0, frame)
 
 		# Show the image in a window
@@ -203,7 +183,7 @@ try:
 
 		# Delay the frame if slowmode is on
 		if slow_mode:
-			time.sleep(.5 - frame_time)
+			time.sleep(max([.5 - frame_time, 0.0]))
 
 		if exposure != -1:
 			# For a strange reason on some cameras (e.g. Lenoxo X1E)
@@ -211,8 +191,8 @@ try:
 			# are captured and even after a delay it does not
 			# always work. Setting exposure at every frame is
 			# reliable though.
-			video_capture.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1.0)  # 1 = Manual
-			video_capture.set(cv2.CAP_PROP_EXPOSURE, float(exposure))
+			video_capture.intenal.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1.0)  # 1 = Manual
+			video_capture.intenal.set(cv2.CAP_PROP_EXPOSURE, float(exposure))
 
 # On ctrl+C
 except KeyboardInterrupt:
@@ -220,5 +200,4 @@ except KeyboardInterrupt:
 	print("\nClosing window")
 
 	# Release handle to the webcam
-	video_capture.release()
 	cv2.destroyAllWindows()

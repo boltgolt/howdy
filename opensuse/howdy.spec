@@ -23,7 +23,7 @@ Source:			https://github.com/boltgolt/%{name}/archive/v%{version}.tar.gz
 
 BuildRequires: wget
 Requires:	python3-opencv
-Requires:	ffmpeg-4
+Requires:	ffmpeg
 Requires:	libv4l2-0
 Requires:	pam-python
 Requires:	python3-dlib
@@ -34,7 +34,7 @@ Requires:	python3-dlib
 Windows Hello™ style authentication for Linux. Use your built-in IR emitters and camera in combination with face recognition to prove who you are.
 
 %prep
-%setup -q -n v%{version}
+%setup -q -n howdy-%{version}
 
 %build
 ## nothing to build

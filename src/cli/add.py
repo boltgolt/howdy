@@ -7,8 +7,8 @@ import sys
 import json
 import configparser
 import builtins
-import cv2
 import numpy as np
+from recorders.video_capture import VideoCapture
 
 # Try to import dlib and give a nice error if we can't
 # Add should be the first point where import issues show up
@@ -20,6 +20,9 @@ except ImportError as err:
 	print("\nCan't import the dlib module, check the output of")
 	print("pip3 show dlib")
 	sys.exit(1)
+
+# OpenCV needs to be imported after dlib
+import cv2
 
 # Get the absolute path to the current directory
 path = os.path.abspath(__file__ + "/..")
@@ -34,10 +37,6 @@ if not os.path.isfile(path + "/../dlib-data/shape_predictor_5_face_landmarks.dat
 # Read config from disk
 config = configparser.ConfigParser()
 config.read(path + "/../config.ini")
-
-if not os.path.exists(config.get("video", "device_path")):
-	print("Camera path is not configured correctly, please edit the 'device_path' config value.")
-	sys.exit(1)
 
 use_cnn = config.getboolean("core", "use_cnn", fallback=False)
 if use_cnn:
@@ -98,35 +97,8 @@ insert_model = {
 	"data": []
 }
 
-# Check if the user explicitly set ffmpeg as recorder
-if config.get("video", "recording_plugin") == "ffmpeg":
-	# Set the capture source for ffmpeg
-	from recorders.ffmpeg_reader import ffmpeg_reader
-	video_capture = ffmpeg_reader(config.get("video", "device_path"), config.get("video", "device_format"))
-elif config.get("video", "recording_plugin") == "pyv4l2":
-	# Set the capture source for pyv4l2
-	from recorders.pyv4l2_reader import pyv4l2_reader
-	video_capture = pyv4l2_reader(config.get("video", "device_path"), config.get("video", "device_format"))
-else:
-	# Start video capture on the IR camera through OpenCV
-	video_capture = cv2.VideoCapture(config.get("video", "device_path"))
-
-# Force MJPEG decoding if true
-if config.getboolean("video", "force_mjpeg", fallback=False):
-	# Set a magic number, will enable MJPEG but is badly documentated
-	video_capture.set(cv2.CAP_PROP_FOURCC, 1196444237)
-
-# Set the frame width and height if requested
-fw = config.getint("video", "frame_width", fallback=-1)
-fh = config.getint("video", "frame_height", fallback=-1)
-if fw != -1:
-	video_capture.set(cv2.CAP_PROP_FRAME_WIDTH, fw)
-
-if fh != -1:
-	video_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, fh)
-
-# Request a frame to wake the camera up
-video_capture.grab()
+# Set up video_capture
+video_capture = VideoCapture(config)
 
 print("\nPlease look straight into the camera")
 
@@ -135,28 +107,51 @@ time.sleep(2)
 
 # Will contain found face encodings
 enc = []
-# Count the amount or read frames
+# Count the number of read frames
 frames = 0
+# Count the number of illuminated read frames
+valid_frames = 0
+# Count the number of illuminated frames that
+# were rejected for being too dark
+dark_tries = 0
+# Track the running darkness total
+dark_running_total = 0
+face_locations = None
+
 dark_threshold = config.getfloat("video", "dark_threshold")
+
+clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
 
 # Loop through frames till we hit a timeout
 while frames < 60:
+	frames += 1
 	# Grab a single frame of video
-	# Don't remove ret, it doesn't work without it
-	ret, frame = video_capture.read()
+	frame, gsframe = video_capture.read_frame()
 	gsframe = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+	gsframe = clahe.apply(gsframe)
 
 	# Create a histogram of the image with 8 values
 	hist = cv2.calcHist([gsframe], [0], None, [8], [0, 256])
 	# All values combined for percentage calculation
 	hist_total = np.sum(hist)
 
-	# If the image is fully black or the frame exceeds threshold,
+	# Calculate frame darkness
+	darkness = (hist[0] / hist_total * 100)
+
+	# If the image is fully black due to a bad camera read,
 	# skip to the next frame
-	if hist_total == 0 or (hist[0] / hist_total * 100 > dark_threshold):
+	if (hist_total == 0) or (darkness == 100):
 		continue
 
-	frames += 1
+	# Include this frame in calculating our average session brightness
+	dark_running_total += darkness
+	valid_frames += 1
+
+	# If the image exceeds darkness threshold due to subject distance,
+	# skip to the next frame
+	if (darkness > dark_threshold):
+		dark_tries += 1
+		continue
 
 	# Get all faces from that frame as encodings
 	face_locations = face_detector(gsframe, 1)
@@ -167,12 +162,20 @@ while frames < 60:
 
 video_capture.release()
 
-# If more than 1 faces are detected we can't know wich one belongs to the user
-if len(face_locations) > 1:
-	print("Multiple faces detected, aborting")
+# If we've found no faces, try to determine why
+if face_locations is None or not face_locations:
+	if valid_frames == 0:
+		print("Camera saw only black frames - is IR emitter working?")
+	elif valid_frames == dark_tries:
+		print("All frames were too dark, please check dark_threshold in config")
+		print("Average darkness: " + str(dark_running_total / valid_frames) + ", Threshold: " + str(dark_threshold))
+	else:
+		print("No face detected, aborting")
 	sys.exit(1)
-elif not face_locations:
-	print("No face detected, aborting")
+
+# If more than 1 faces are detected we can't know wich one belongs to the user
+elif len(face_locations) > 1:
+	print("Multiple faces detected, aborting")
 	sys.exit(1)
 
 face_location = face_locations[0]
