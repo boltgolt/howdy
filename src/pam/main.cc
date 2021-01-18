@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <glob.h>
 #include <poll.h>
+#include <pthread.h>
 #include <spawn.h>
 #include <sys/poll.h>
 #include <sys/signalfd.h>
@@ -21,6 +22,7 @@
 #include <iostream>
 #include <iterator>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <system_error>
 #include <thread>
@@ -35,28 +37,31 @@
 
 using namespace std;
 
+enum class Type { Howdy, Pam };
+
 int on_howdy_auth(int code, function<int(int, const char *)> conv_function) {
-
-  switch (code) {
-  case 10:
-    conv_function(PAM_ERROR_MSG, "There is no face model known");
-    syslog(LOG_NOTICE, "Failure, no face model known");
-    break;
-  case 11:
-    syslog(LOG_INFO, "Failure, timeout reached");
-    break;
-  case 12:
-    syslog(LOG_INFO, "Failure, general abort");
-    break;
-  case 13:
-    syslog(LOG_INFO, "Failure, image too dark");
-    break;
-  default:
-    conv_function(PAM_ERROR_MSG,
-                  string("Unknown error:" + to_string(code)).c_str());
-    syslog(LOG_INFO, "Failure, unknown error %d", code);
+  if (WIFEXITED(code)) {
+    code = WEXITSTATUS(code);
+    switch (code) {
+    case 10:
+      conv_function(PAM_ERROR_MSG, "There is no face model known");
+      syslog(LOG_NOTICE, "Failure, no face model known");
+      break;
+    case 11:
+      syslog(LOG_INFO, "Failure, timeout reached");
+      break;
+    case 12:
+      syslog(LOG_INFO, "Failure, general abort");
+      break;
+    case 13:
+      syslog(LOG_INFO, "Failure, image too dark");
+      break;
+    default:
+      conv_function(PAM_ERROR_MSG,
+                    string("Unknown error:" + to_string(code)).c_str());
+      syslog(LOG_INFO, "Failure, unknown error %d", code);
+    }
   }
-
   return PAM_AUTH_ERR;
 }
 
@@ -74,10 +79,10 @@ int send_message(function<int(int, const struct pam_message **,
   return conv(1, &msgp, &resp_, nullptr);
 }
 
-PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags, int argc,
-                                   const char **argv) {
+int identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
+             bool auth_tok) {
   INIReader reader("/lib/security/howdy/config.ini");
-  openlog("[PAM_HOWDY]", 0, LOG_AUTHPRIV);
+  openlog("pam_howdy.so", 0, LOG_AUTHPRIV);
 
   struct pam_conv *conv = nullptr;
   int pam_res = PAM_IGNORE;
@@ -89,7 +94,7 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags, int argc,
   }
 
   auto conv_function =
-      bind(send_message, (*conv->conv), placeholders::_1, placeholders::_2);
+      bind(send_message, conv->conv, placeholders::_1, placeholders::_2);
 
   if (reader.ParseError() < 0) {
     syslog(LOG_ERR, "Failed to parse the configuration");
@@ -146,57 +151,115 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags, int argc,
     syslog(LOG_ERR, "Failed to get username");
     return pam_res;
   }
-  string user(user_ptr);
-
   posix_spawn_file_actions_t file_actions;
   posix_spawn_file_actions_init(&file_actions);
   posix_spawn_file_actions_addclose(&file_actions, STDOUT_FILENO);
   posix_spawn_file_actions_addclose(&file_actions, STDERR_FILENO);
-  vector<const char *> args{"python", "/lib/security/howdy/compare.py",
-                            user.c_str(), nullptr};
+  const char *const args[] = {"python", "/lib/security/howdy/compare.py",
+                              user_ptr, nullptr};
   pid_t child_pid;
   if (posix_spawnp(&child_pid, "python", &file_actions, nullptr,
-                   (char *const *)args.data(), nullptr) < 0) {
+                   (char *const *)args, nullptr) < 0) {
     syslog(LOG_ERR, "Can't spawn the howdy process: %s", strerror(errno));
     return PAM_SYSTEM_ERR;
   }
 
+  std::mutex m;
+  std::condition_variable cv;
+  Type t;
   packaged_task<int()> child_task([&] {
     int status;
     wait(&status);
+    {
+      unique_lock<mutex> lk(m);
+      t = Type::Howdy;
+    }
+    cv.notify_all();
     return status;
   });
   auto child_future = child_task.get_future();
   thread child_thread(move(child_task));
 
-  auto pass_future = async(launch::async, [&] {
+  packaged_task<int()> pass_task([&] {
     char *auth_tok_ptr = nullptr;
     int pam_res = pam_get_authtok(pamh, PAM_AUTHTOK,
                                   (const char **)&auth_tok_ptr, nullptr);
-    return make_pair(auth_tok_ptr, pam_res);
-  });
-
-  auto pass = pass_future.get();
-
-  if (child_future.wait_for(1.5s) == future_status::timeout) {
-    kill(child_pid, SIGTERM);
-  }
-  child_thread.join();
-  int howdy_status = child_future.get();
-
-  if (howdy_status == 0) {
-    if (!reader.GetBoolean("section", "no_confirmation", true)) {
-      string identify_msg("Identified face as " + user);
-      conv_function(PAM_TEXT_INFO, identify_msg.c_str());
+    {
+      unique_lock<mutex> lk(m);
+      t = Type::Pam;
     }
-
-    syslog(LOG_INFO, "Login approved");
-    return PAM_SUCCESS;
-  } else if ((get<int>(pass) == PAM_SUCCESS && get<char *>(pass) != nullptr &&
-              !string(get<char *>(pass)).empty()) ||
-             WIFSIGNALED(howdy_status)) {
-    return PAM_IGNORE;
-  } else {
-    return on_howdy_auth(howdy_status, conv_function);
+    cv.notify_all();
+    return pam_res;
+  });
+  auto pass_future = pass_task.get_future();
+  thread pass_thread;
+  if (auth_tok) {
+    pass_thread = thread(move(pass_task));
   }
+
+  {
+    unique_lock<mutex> lk(m);
+    cv.wait(lk);
+  }
+
+  if (t == Type::Howdy) {
+    if (auth_tok) {
+      auto native_hd = pass_thread.native_handle();
+      pthread_cancel(native_hd);
+      pass_thread.join();
+    }
+    child_thread.join();
+    int howdy_status = child_future.get();
+
+    if (howdy_status == 0) {
+      if (!reader.GetBoolean("section", "no_confirmation", true)) {
+        string identify_msg("Identified face as " + string(user_ptr));
+        conv_function(PAM_TEXT_INFO, identify_msg.c_str());
+      }
+      syslog(LOG_INFO, "Login approved");
+      return PAM_SUCCESS;
+    } else {
+      return on_howdy_auth(howdy_status, conv_function);
+    }
+  } else {
+    kill(child_pid, SIGTERM);
+    child_thread.join();
+    pass_thread.join();
+    auto pam_res = pass_future.get();
+
+    if (pam_res != PAM_SUCCESS)
+      return pam_res;
+
+    return PAM_IGNORE;
+  }
+}
+
+PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags, int argc,
+                                   const char **argv) {
+  return identify(pamh, flags, argc, argv, true);
+}
+
+PAM_EXTERN int pam_sm_open_session(pam_handle_t *pamh, int flags, int argc,
+                                   const char **argv) {
+  return identify(pamh, flags, argc, argv, false);
+}
+
+PAM_EXTERN int pam_sm_acct_mgmt(pam_handle_t *pamh, int flags, int argc,
+                                const char **argv) {
+  return PAM_IGNORE;
+}
+
+PAM_EXTERN int pam_sm_close_session(pam_handle_t *pamh, int flags, int argc,
+                                    const char **argv) {
+  return PAM_IGNORE;
+}
+
+PAM_EXTERN int pam_sm_chauthtok(pam_handle_t *pamh, int flags, int argc,
+                                const char **argv) {
+  return PAM_IGNORE;
+}
+
+PAM_EXTERN int pam_sm_setcred(pam_handle_t *pamh, int flags, int argc,
+                              const char **argv) {
+  return PAM_IGNORE;
 }
