@@ -9,7 +9,7 @@ url="https://github.com/boltgolt/howdy"
 license=('MIT')
 depends=(
   'pam'
-  'python2'
+  'python'
 )
 makedepends=(
   'python-sphinx'
