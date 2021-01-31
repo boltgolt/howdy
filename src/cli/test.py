@@ -80,7 +80,7 @@ rec_tm = 0
 
 # Wrap everything in an keyboard interupt handler
 try:
-	while True:
+	while cv2.getWindowProperty("Howdy Test", cv2.WND_PROP_VISIBLE) > 0:
 		frame_tm = time.time()
 
 		# Increment the frames
