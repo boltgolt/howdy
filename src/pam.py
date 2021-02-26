@@ -60,7 +60,8 @@ def doAuth(pamh):
 
 	# Status 11 means we exceded the maximum retry count
 	elif status == 11:
-		pamh.conversation(pamh.Message(pamh.PAM_ERROR_MSG, "Face detection timeout reached"))
+		if config.getboolean("core", "timeout_notice"):
+			pamh.conversation(pamh.Message(pamh.PAM_ERROR_MSG, "Face detection timeout reached"))
 		syslog.syslog(syslog.LOG_INFO, "Failure, timeout reached")
 		syslog.closelog()
 		return pamh.PAM_AUTH_ERR
