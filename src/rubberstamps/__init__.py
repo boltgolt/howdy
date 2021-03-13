@@ -2,18 +2,14 @@ import sys
 import os
 import re
 
+from i18n import _
+
 from importlib.machinery import SourceFileLoader
 
 
 class RubberStamp:
 	UI_TEXT = "ui_text"
 	UI_SUBTEXT = "ui_subtext"
-
-	def create_shorthands(self):
-		self.video_capture = self.opencv["video_capture"]
-		self.face_detector = self.opencv["face_detector"]
-		self.pose_predictor = self.opencv["pose_predictor"]
-		self.clahe = self.opencv["clahe"]
 
 	def set_ui_text(self, text, type=None):
 		typedec = "M"
@@ -25,13 +21,16 @@ class RubberStamp:
 
 	def send_ui_raw(self, command):
 		if self.config.getboolean("debug", "verbose_stamps", fallback=False):
-			print("Sending command to howdy-gtk:")
-			print(" " + command)
+			print("Sending command to howdy-gtk: " + command)
 
 		command += " \n"
 
 		if self.gtk_proc:
 			self.gtk_proc.stdin.write(bytearray(command.encode("utf-8")))
+			self.gtk_proc.stdin.flush()
+
+			# Write a padding line to force the command through any buffers
+			self.gtk_proc.stdin.write(bytearray("P=_PADDING \n".encode("utf-8")))
 			self.gtk_proc.stdin.flush()
 
 
@@ -49,8 +48,7 @@ def execute(config, gtk_proc, opencv):
 
 		installed_stamps.append(filename.split(".")[0])
 
-	if verbose:
-		print("Installed rubberstamps: " + " ".join(installed_stamps))
+	if verbose: print("Installed rubberstamps: " + ", ".join(installed_stamps))
 
 	raw_rules = config.get("rubberstamps", "stamp_rules")
 	rules = raw_rules.split("\n")
@@ -61,32 +59,50 @@ def execute(config, gtk_proc, opencv):
 		if len(rule) <= 1:
 			continue
 
-		regex_result = re.search("^(\w+)\s+(\w+)\s+([a-z]+)(.*)?$", rule, re.IGNORECASE)
+		regex_result = re.search("^(\w+)\s+([\w\.]+)\s+([a-z]+)(.*)?$", rule, re.IGNORECASE)
 
 		if not regex_result:
-			print("Error parsing rubberstamp rule: " + rule)
+			print(_("Error parsing rubberstamp rule: {}").format(rule))
 			continue
 
 		type = regex_result.group(1)
 
 		if type not in installed_stamps:
-			print("Stamp not installed: " + type)
+			print(_("Stamp not installed: {}").format(type))
 			continue
 
 		module = SourceFileLoader(type, dir_path + "/" + type + ".py").load_module()
-		constructor = getattr(module, type)
+
+		try:
+			constructor = getattr(module, type)
+		except AttributeError:
+			print(_("Stamp error: Class {} not found").format(type))
+			continue
 
 		instance = constructor()
+		instance.verbose = verbose
 		instance.config = config
 		instance.gtk_proc = gtk_proc
 		instance.opencv = opencv
 
+		instance.video_capture = opencv["video_capture"]
+		instance.face_detector = opencv["face_detector"]
+		instance.pose_predictor = opencv["pose_predictor"]
+		instance.clahe = opencv["clahe"]
+
 		instance.options = {
-			"timeout": int(re.sub("[a-zA-Z]", "", regex_result.group(2))),
+			"timeout": float(re.sub("[a-zA-Z]", "", regex_result.group(2))),
 			"failsafe": regex_result.group(3) != "faildeadly"
 		}
 
-		instance.declare_config()
+		try:
+			instance.declare_config()
+		except Exception:
+			print(_("Internal error in rubberstamp configuration declaration:"))
+
+			import traceback
+			traceback.print_exc()
+			continue
 
 		raw_options = regex_result.group(4).split()
 
@@ -99,6 +115,8 @@ def execute(config, gtk_proc, opencv):
 
 			if isinstance(instance.options[key], int):
 				value = int(value)
+			elif isinstance(instance.options[key], float):
+				value = float(value)
 
 			instance.options[key] = value
 
@@ -107,18 +125,25 @@ def execute(config, gtk_proc, opencv):
 			print(instance.options)
 			print("Executing stamp")
 
-		instance.create_shorthands()
-		result = instance.run()
+		result = False
 
-		if verbose:
-			print("Stamp \"" + type + "\" returned: " + str(result))
+		try:
+			result = instance.run()
+		except Exception:
+			print(_("Internal error in rubberstamp:"))
 
-		if not result:
+			import traceback
+			traceback.print_exc()
+			continue
+
+		if verbose: print("Stamp \"" + type + "\" returned: " + str(result))
+
+		if result is False:
+			if verbose: print("Authentication aborted by rubber stamp")
 			sys.exit(14)
 
 	# This is outside the for loop, so we've run all the rules
-	if verbose:
-		print("All rubberstamps processed, authentication successful")
+	if verbose: print("All rubberstamps processed, authentication successful")
 
 	# Exit with no errors
 	sys.exit(0)

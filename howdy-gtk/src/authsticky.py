@@ -5,6 +5,8 @@ import signal
 import sys
 import os
 
+from i18n import _
+
 # Make sure we have the libs we need
 gi.require_version("Gtk", "3.0")
 gi.require_version("Gdk", "3.0")
@@ -18,19 +20,28 @@ from gi.repository import GObject as gobject
 windowWidth = 400
 windowHeight = 100
 
-# Set default messages to show in the popup
-message = "Starting up...  "
-subtext = ""
-
 
 class StickyWindow(gtk.Window):
+	# Set default messages to show in the popup
+	message = _("Loading...  ")
+	subtext = ""
+
 	def __init__(self):
 		"""Initialize the sticky window"""
 		# Make the class a GTK window
 		gtk.Window.__init__(self)
 
+		# Get the absolute or relative path to the logo file
+		logo_path = "/usr/lib/howdy-gtk/logo.png"
+		if not os.access(logo_path, os.R_OK):
+			logo_path = "./logo.png"
+
+		# Create image and calculate scale size based on image size
+		self.logo_surface = cairo.ImageSurface.create_from_png(logo_path)
+		self.logo_ratio = float(windowHeight - 20) / float(self.logo_surface.get_height())
+
 		# Set the title of the window
-		self.set_title("Howdy Authentication UI")
+		self.set_title(_("Howdy Authentication"))
 
 		# Set a bunch of options to make the window stick and be on top of everything
 		self.stick()
@@ -52,6 +63,7 @@ class StickyWindow(gtk.Window):
 		self.connect("destroy", self.exit)
 		self.connect("delete_event", self.exit)
 		self.connect("button-press-event", self.exit)
+		self.connect("button-release-event", self.exit)
 
 		# Create a GDK drawing, restricts the window size
 		darea = gtk.DrawingArea()
@@ -61,8 +73,7 @@ class StickyWindow(gtk.Window):
 		# Get the default screen
 		screen = gdk.Screen.get_default()
 		visual = screen.get_rgba_visual()
-		if visual and screen.is_composited():
-			self.set_visual(visual)
+		self.set_visual(visual)
 
 		# Move the window to the center top of the default window, where a webcam usually is
 		self.move((screen.get_width() / 2) - (windowWidth / 2), 0)
@@ -88,45 +99,34 @@ class StickyWindow(gtk.Window):
 		ctx.paint()
 		ctx.set_operator(cairo.OPERATOR_OVER)
 
-		# Get absolute or relative logo path
-		path = "/usr/lib/howdy-gtk/logo.png"
-		if not os.access(path, os.R_OK):
-			path = "./logo.png"
-
-		# Create image and calculate scale size based on image size
-		image_surface = cairo.ImageSurface.create_from_png(path)
-		ratio = float(windowHeight - 20) / float(image_surface.get_height())
-
 		# Position and draw the logo
 		ctx.translate(15, 10)
-		ctx.scale(ratio, ratio)
-		ctx.set_source_surface(image_surface)
+		ctx.scale(self.logo_ratio, self.logo_ratio)
+		ctx.set_source_surface(self.logo_surface)
 		ctx.paint()
 
 		# Calculate main message positioning, as the text is heigher if there's a subtext
-		if subtext:
+		if self.subtext:
 			ctx.move_to(380, 145)
 		else:
-			ctx.move_to(380, 170)
+			ctx.move_to(380, 175)
 
 		# Draw the main message
 		ctx.set_source_rgba(255, 255, 255, .9)
 		ctx.set_font_size(80)
 		ctx.select_font_face("Arial", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
-		ctx.show_text(message)
+		ctx.show_text(self.message)
 
 		# Draw the subtext if there is one
-		if subtext:
+		if self.subtext:
 			ctx.move_to(380, 210)
 			ctx.set_source_rgba(230, 230, 230, .8)
 			ctx.set_font_size(40)
 			ctx.select_font_face("Arial", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
-			ctx.show_text(subtext)
+			ctx.show_text(self.subtext)
 
 	def catch_stdin(self):
 		"""Catch input from stdin and redraw"""
-		global message, subtext
-
 		# Wait for a line on stdin
 		comm = sys.stdin.readline()[:-1]
 
@@ -134,13 +134,14 @@ class StickyWindow(gtk.Window):
 		if comm:
 			# Parse a message
 			if comm[0] == "M":
-				message = comm[2:].strip()
+				self.message = comm[2:].strip()
 			# Parse subtext
 			if comm[0] == "S":
-				subtext = comm[2:].strip()
+				# self.subtext += " "
+				self.subtext = comm[2:].strip()
 
-			# Redraw the ui
-			self.queue_draw()
+		# Redraw the ui
+		self.queue_draw()
 
 		# Fire this function again in 10ms, as we're waiting on IO in readline anyway
 		gobject.timeout_add(10, self.catch_stdin)
@@ -148,6 +149,7 @@ class StickyWindow(gtk.Window):
 	def exit(self, widget, context):
 		"""Cleanly exit"""
 		gtk.main_quit()
+		return True
 
 
 # Make sure we quit on a SIGINT

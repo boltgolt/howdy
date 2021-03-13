@@ -1,15 +1,17 @@
 import time
 
+from i18n import _
 from rubberstamps import RubberStamp
 
 
 class nod(RubberStamp):
 	def declare_config(self):
-		self.options["min_distance"] = 10
-		self.options["min_directions"] = 3
+		self.options["min_distance"] = 6
+		self.options["min_directions"] = 2
 
 	def run(self):
-		self.set_ui_text("Authorised, nod to confirm", self.UI_TEXT)
+		self.set_ui_text(_("Nod to confirm"), self.UI_TEXT)
+		self.set_ui_text(_("Shake your head to abort"), self.UI_SUBTEXT)
 
 		last_reldist = -1
 		last_nosepoint = {"x": -1, "y": -1}
@@ -53,6 +55,14 @@ class nod(RubberStamp):
 						recorded_nods[axis].append(movement < 0)
 
 				if len(recorded_nods[axis]) >= self.options["min_directions"]:
+					if (axis == "y"):
+						self.set_ui_text(_("Confirmed authentication"), self.UI_TEXT)
+					else:
+						self.set_ui_text(_("Aborted authentication"), self.UI_TEXT)
+
+					self.set_ui_text("", self.UI_SUBTEXT)
+
+					time.sleep(0.8)
 					return axis == "y"
 
 				last_reldist = reldist

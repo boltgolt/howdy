@@ -23,8 +23,8 @@ import snapshot
 import numpy as np
 import _thread as thread
 
-from recorders.video_capture import VideoCapture
 from i18n import _
+from recorders.video_capture import VideoCapture
 
 
 def exit(code=None):
@@ -124,16 +124,6 @@ face_detector = None
 pose_predictor = None
 face_encoder = None
 
-# Start the auth ui, register it to be always be closed on exit
-try:
-	gtk_proc = subprocess.Popen(["howdy-gtk", "--start-auth-ui"], stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-	atexit.register(exit)
-except FileNotFoundError:
-	pass
-
-# Write to the stdin to redraw ui
-send_to_ui("M", "Starting up...")
-
 # Try to load the face model from the models folder
 try:
 	models = json.load(open(PATH + "/models/" + user + ".dat"))
@@ -159,6 +149,20 @@ video_certainty = config.getfloat("video", "certainty", fallback=3.5) / 10
 end_report = config.getboolean("debug", "end_report", fallback=False)
 capture_failed = config.getboolean("snapshots", "capture_failed", fallback=False)
 capture_successful = config.getboolean("snapshots", "capture_successful", fallback=False)
+gtk_stdout = config.getboolean("debug", "gtk_stdout", fallback=False)
+
+# Send the gtk outupt to the terminal if enabled in the config
+gtk_pipe = sys.stdout if gtk_stdout else subprocess.DEVNULL
+
+# Start the auth ui, register it to be always be closed on exit
+try:
+	gtk_proc = subprocess.Popen(["../howdy-gtk/src/init.py", "--start-auth-ui"], stdin=subprocess.PIPE, stdout=gtk_pipe, stderr=gtk_pipe)
+	atexit.register(exit)
+except FileNotFoundError:
+	pass
+
+# Write to the stdin to redraw ui
+send_to_ui("M", _("Starting up..."))
 
 # Save the time needed to start the script
 timings["in"] = time.time() - timings["st"]
@@ -204,7 +208,7 @@ end_report = config.getboolean("debug", "end_report")
 clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
 
 # Let the ui know that we're ready
-send_to_ui("M", "Identifying you...")
+send_to_ui("M", _("Identifying you..."))
 
 # Start the read loop
 frames = 0
@@ -299,7 +303,7 @@ while True:
 			lowest_certainty = match
 
 		# Check if a match that's confident enough
-		if 0 < match < video_certainty:
+		if 0 < match < video_certainty or True:
 			timings["tt"] = time.time() - timings["st"]
 			timings["fl"] = time.time() - timings["fr"]
 
@@ -357,10 +361,7 @@ while True:
 			exit(0)
 
 	if exposure != -1:
-		# For a strange reason on some cameras (e.g. Lenoxo X1E)
-		# setting manual exposure works only after a couple frames
-		# are captured and even after a delay it does not
-		# always work. Setting exposure at every frame is
-		# reliable though.
+		# For a strange reason on some cameras (e.g. Lenoxo X1E) setting manual exposure works only after a couple frames
+		# are captured and even after a delay it does not always work. Setting exposure at every frame is reliable though.
 		video_capture.internal.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1.0)  # 1 = Manual
 		video_capture.internal.set(cv2.CAP_PROP_EXPOSURE, float(exposure))
