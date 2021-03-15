@@ -1,4 +1,4 @@
-project('pam_howdy', 'cpp', version: '0.1.0')
+project('pam_howdy', 'cpp', version: '0.1.0', default_options: ['cpp_std=c++11'])
 
 inih = subproject('inih')
 inih_cpp = inih.get_variable('INIReader_dep')
