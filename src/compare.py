@@ -303,7 +303,7 @@ while True:
 			lowest_certainty = match
 
 		# Check if a match that's confident enough
-		if 0 < match < video_certainty or True:
+		if 0 < match < video_certainty:
 			timings["tt"] = time.time() - timings["st"]
 			timings["fl"] = time.time() - timings["fr"]
 
