@@ -39,29 +39,45 @@ using namespace std;
 
 enum class Type { Howdy, Pam };
 
+/**
+ * Inspect the status code returned by the compare process
+ * @param  code          The status code
+ * @param  conv_function The PAM conversation function
+ * @return               A PAM return code
+ */
 int on_howdy_auth(int code, function<int(int, const char *)> conv_function) {
-  if (WIFEXITED(code)) {
+  // If the process has exited
+  if (!WIFEXITED(code)) {
+    // Get the status code returned
     code = WEXITSTATUS(code);
+    
     switch (code) {
-    case 10:
-      conv_function(PAM_ERROR_MSG, "There is no face model known");
-      syslog(LOG_NOTICE, "Failure, no face model known");
-      break;
-    case 11:
-      syslog(LOG_INFO, "Failure, timeout reached");
-      break;
-    case 12:
-      syslog(LOG_INFO, "Failure, general abort");
-      break;
-    case 13:
-      syslog(LOG_INFO, "Failure, image too dark");
-      break;
-    default:
-      conv_function(PAM_ERROR_MSG,
-                    string("Unknown error:" + to_string(code)).c_str());
-      syslog(LOG_INFO, "Failure, unknown error %d", code);
+      // Status 10 means we couldn't find any face models
+      case 10:
+        conv_function(PAM_ERROR_MSG, "There is no face model known");
+        syslog(LOG_NOTICE, "Failure, no face model known");
+        break;
+      // Status 11 means we exceded the maximum retry count
+      case 11:
+        syslog(LOG_INFO, "Failure, timeout reached");
+        break;
+      // Status 12 means we aborted
+      case 12:
+        syslog(LOG_INFO, "Failure, general abort");
+        break;
+      // Status 13 means the image was too dark
+      case 13:
+        conv_function(PAM_ERROR_MSG, "Face detection image too dark");
+        syslog(LOG_INFO, "Failure, image too dark");
+        break;
+      // Otherwise, we can't discribe what happend but it wasn't successful
+      default:
+        conv_function(PAM_ERROR_MSG, string("Unknown error:" + to_string(code)).c_str());
+        syslog(LOG_INFO, "Failure, unknown error %d", code);
     }
   }
+
+  // As this function is only called for error status codes, signal an error to PAM
   return PAM_AUTH_ERR;
 }
 
@@ -155,10 +171,11 @@ int identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
   posix_spawn_file_actions_init(&file_actions);
   posix_spawn_file_actions_addclose(&file_actions, STDOUT_FILENO);
   posix_spawn_file_actions_addclose(&file_actions, STDERR_FILENO);
-  const char *const args[] = {"python", "/lib/security/howdy/compare.py",
+  const char *const args[] = {"/usr/bin/python3", "/lib/security/howdy/compare.py",
                               user_ptr, nullptr};
   pid_t child_pid;
-  if (posix_spawnp(&child_pid, "python", &file_actions, nullptr,
+
+  if (posix_spawnp(&child_pid, "/usr/bin/python3", &file_actions, nullptr,
                    (char *const *)args, nullptr) < 0) {
     syslog(LOG_ERR, "Can't spawn the howdy process: %s", strerror(errno));
     return PAM_SYSTEM_ERR;
@@ -234,32 +251,26 @@ int identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
   }
 }
 
-PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags, int argc,
-                                   const char **argv) {
+// Called by PAM when a user needs to be authenticated, for example by running the sudo command
+PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags, int argc, const char **argv) {
   return identify(pamh, flags, argc, argv, true);
 }
 
-PAM_EXTERN int pam_sm_open_session(pam_handle_t *pamh, int flags, int argc,
-                                   const char **argv) {
+// Called by PAM when a session is started, such as by the su command
+PAM_EXTERN int pam_sm_open_session(pam_handle_t *pamh, int flags, int argc, const char **argv) {
   return identify(pamh, flags, argc, argv, false);
 }
 
-PAM_EXTERN int pam_sm_acct_mgmt(pam_handle_t *pamh, int flags, int argc,
-                                const char **argv) {
+// The functions below are required by PAM, but not needed in this module
+PAM_EXTERN int pam_sm_acct_mgmt(pam_handle_t *pamh, int flags, int argc, const char **argv) {
   return PAM_IGNORE;
 }
-
-PAM_EXTERN int pam_sm_close_session(pam_handle_t *pamh, int flags, int argc,
-                                    const char **argv) {
+PAM_EXTERN int pam_sm_close_session(pam_handle_t *pamh, int flags, int argc, const char **argv) {
   return PAM_IGNORE;
 }
-
-PAM_EXTERN int pam_sm_chauthtok(pam_handle_t *pamh, int flags, int argc,
-                                const char **argv) {
+PAM_EXTERN int pam_sm_chauthtok(pam_handle_t *pamh, int flags, int argc, const char **argv) {
   return PAM_IGNORE;
 }
-
-PAM_EXTERN int pam_sm_setcred(pam_handle_t *pamh, int flags, int argc,
-                              const char **argv) {
+PAM_EXTERN int pam_sm_setcred(pam_handle_t *pamh, int flags, int argc, const char **argv) {
   return PAM_IGNORE;
 }
