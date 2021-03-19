@@ -50,7 +50,7 @@ int on_howdy_auth(int code, function<int(int, const char *)> conv_function) {
   if (!WIFEXITED(code)) {
     // Get the status code returned
     code = WEXITSTATUS(code);
-    
+
     switch (code) {
       // Status 10 means we couldn't find any face models
       case 10:
@@ -81,59 +81,78 @@ int on_howdy_auth(int code, function<int(int, const char *)> conv_function) {
   return PAM_AUTH_ERR;
 }
 
-int send_message(function<int(int, const struct pam_message **,
-                              struct pam_response **, void *)>
-                     conv,
-                 int type, const char *message) {
+/**
+ * Format and send a message to PAM
+ * @param  conv    PAM conversation function
+ * @param  type    Type of PAM message
+ * @param  message String to show the user
+ * @return         Returns the conversation function return code
+ */
+int send_message(function<int(int, const struct pam_message **, struct pam_response **, void *)> conv, int type, const char *message) {
+  // Formet the message as PAM expects it
   // No need to free this, it's allocated on the stack
   const struct pam_message msg = {.msg_style = type, .msg = message};
   const struct pam_message *msgp = &msg;
 
+  // Create a variable for the response to be stored in
   struct pam_response res_ = {};
   struct pam_response *resp_ = &res_;
 
+  // Call the conversation function with the constructed arguments
   return conv(1, &msgp, &resp_, nullptr);
 }
 
-int identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
-             bool auth_tok) {
+/**
+ * The main function, runs the identification and authentication
+ * @param  pamh     The handle to interface directly with PAM
+ * @param  flags    Flags passed on to us by PAM, XORed
+ * @param  argc     Amount of rules in the PAM config (disregared)
+ * @param  argv     Options defined in the PAM config
+ * @param  auth_tok True if we should ask for a password too
+ * @return          Returns a PAM return code
+ */
+int identify(pam_handle_t *pamh, int flags, int argc, const char **argv, bool auth_tok) {
+  // Open and read the config file
   INIReader reader("/lib/security/howdy/config.ini");
-  openlog("pam_howdy.so", 0, LOG_AUTHPRIV);
+  // Open the system log so we can write to it
+  openlog("pam_howdy", 0, LOG_AUTHPRIV);
 
+  // Will contain PAM conversation function
   struct pam_conv *conv = nullptr;
+  // Will contain the responses from PAM functions
   int pam_res = PAM_IGNORE;
 
-  if ((pam_res = pam_get_item(pamh, PAM_CONV, (const void **)&conv)) !=
-      PAM_SUCCESS) {
+  // Try to get the conversation function and error out if we can't
+  if ((pam_res = pam_get_item(pamh, PAM_CONV, (const void **) &conv)) != PAM_SUCCESS) {
     syslog(LOG_ERR, "Failed to acquire conversation");
     return pam_res;
   }
 
-  auto conv_function =
-      bind(send_message, conv->conv, placeholders::_1, placeholders::_2);
+  // Wrap the PAM conversation function in our own, easier function
+  auto conv_function = bind(send_message, conv->conv, placeholders::_1, placeholders::_2);
 
+  // Error out if we could not ready the config file
   if (reader.ParseError() < 0) {
     syslog(LOG_ERR, "Failed to parse the configuration");
     return PAM_SYSTEM_ERR;
   }
 
+  // Stop executing if Howdy has been disabled in the config
   if (reader.GetBoolean("core", "disabled", false)) {
     return PAM_AUTHINFO_UNAVAIL;
   }
 
+  // Stop if we're in a remote shell and configured to exit
   if (reader.GetBoolean("core", "ignore_ssh", true)) {
-    if (getenv("SSH_CONNECTION") != nullptr ||
-        getenv("SSH_CLIENT") != nullptr || getenv("SSHD_OPTS") != nullptr) {
+    if (getenv("SSH_CONNECTION") != nullptr || getenv("SSH_CLIENT") != nullptr || getenv("SSHD_OPTS") != nullptr) {
       return PAM_AUTHINFO_UNAVAIL;
     }
   }
 
+  // If enabled, send a notice to the user that facial login is being attempted
   if (reader.GetBoolean("core", "detection_notice", false)) {
-    if ((pam_res = conv_function(PAM_TEXT_INFO,
-                                 "Attempting facial authentication")) !=
-        PAM_SUCCESS) {
+    if ((pam_res = conv_function(PAM_TEXT_INFO, "Attempting facial authentication")) != PAM_SUCCESS) {
       syslog(LOG_ERR, "Failed to send detection notice");
-      return pam_res;
     }
   }
 
@@ -199,8 +218,7 @@ int identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
 
   packaged_task<int()> pass_task([&] {
     char *auth_tok_ptr = nullptr;
-    int pam_res = pam_get_authtok(pamh, PAM_AUTHTOK,
-                                  (const char **)&auth_tok_ptr, nullptr);
+    int pam_res = pam_get_authtok(pamh, PAM_AUTHTOK, (const char **) &auth_tok_ptr, nullptr);
     {
       unique_lock<mutex> lk(m);
       t = Type::Pam;
