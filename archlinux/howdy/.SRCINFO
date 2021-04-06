@@ -13,6 +13,7 @@ pkgbase = howdy
 	depends = python3
 	depends = python-dlib
 	depends = python-numpy
+	depends = python-opencv
 	backup = usr/lib/security/howdy/config.ini
 	source = howdy-2.6.1.tar.gz::https://github.com/boltgolt/howdy/archive/v2.6.1.tar.gz
 	source = https://github.com/davisking/dlib-models/raw/master/dlib_face_recognition_resnet_model_v1.dat.bz2
