@@ -52,32 +52,34 @@ int on_howdy_auth(int code, function<int(int, const char *)> conv_function) {
     code = WEXITSTATUS(code);
 
     switch (code) {
-      // Status 10 means we couldn't find any face models
-      case 10:
-        conv_function(PAM_ERROR_MSG, "There is no face model known");
-        syslog(LOG_NOTICE, "Failure, no face model known");
-        break;
-      // Status 11 means we exceded the maximum retry count
-      case 11:
-        syslog(LOG_INFO, "Failure, timeout reached");
-        break;
-      // Status 12 means we aborted
-      case 12:
-        syslog(LOG_INFO, "Failure, general abort");
-        break;
-      // Status 13 means the image was too dark
-      case 13:
-        conv_function(PAM_ERROR_MSG, "Face detection image too dark");
-        syslog(LOG_INFO, "Failure, image too dark");
-        break;
-      // Otherwise, we can't discribe what happend but it wasn't successful
-      default:
-        conv_function(PAM_ERROR_MSG, string("Unknown error:" + to_string(code)).c_str());
-        syslog(LOG_INFO, "Failure, unknown error %d", code);
+    // Status 10 means we couldn't find any face models
+    case 10:
+      conv_function(PAM_ERROR_MSG, "There is no face model known");
+      syslog(LOG_NOTICE, "Failure, no face model known");
+      break;
+    // Status 11 means we exceded the maximum retry count
+    case 11:
+      syslog(LOG_INFO, "Failure, timeout reached");
+      break;
+    // Status 12 means we aborted
+    case 12:
+      syslog(LOG_INFO, "Failure, general abort");
+      break;
+    // Status 13 means the image was too dark
+    case 13:
+      conv_function(PAM_ERROR_MSG, "Face detection image too dark");
+      syslog(LOG_INFO, "Failure, image too dark");
+      break;
+    // Otherwise, we can't discribe what happend but it wasn't successful
+    default:
+      conv_function(PAM_ERROR_MSG,
+                    string("Unknown error:" + to_string(code)).c_str());
+      syslog(LOG_INFO, "Failure, unknown error %d", code);
     }
   }
 
-  // As this function is only called for error status codes, signal an error to PAM
+  // As this function is only called for error status codes, signal an error to
+  // PAM
   return PAM_AUTH_ERR;
 }
 
@@ -88,7 +90,10 @@ int on_howdy_auth(int code, function<int(int, const char *)> conv_function) {
  * @param  message String to show the user
  * @return         Returns the conversation function return code
  */
-int send_message(function<int(int, const struct pam_message **, struct pam_response **, void *)> conv, int type, const char *message) {
+int send_message(function<int(int, const struct pam_message **,
+                              struct pam_response **, void *)>
+                     conv,
+                 int type, const char *message) {
   // Formet the message as PAM expects it
   // No need to free this, it's allocated on the stack
   const struct pam_message msg = {.msg_style = type, .msg = message};
@@ -111,7 +116,8 @@ int send_message(function<int(int, const struct pam_message **, struct pam_respo
  * @param  auth_tok True if we should ask for a password too
  * @return          Returns a PAM return code
  */
-int identify(pam_handle_t *pamh, int flags, int argc, const char **argv, bool auth_tok) {
+int identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
+             bool auth_tok) {
   // Open and read the config file
   INIReader reader("/lib/security/howdy/config.ini");
   // Open the system log so we can write to it
@@ -123,13 +129,15 @@ int identify(pam_handle_t *pamh, int flags, int argc, const char **argv, bool au
   int pam_res = PAM_IGNORE;
 
   // Try to get the conversation function and error out if we can't
-  if ((pam_res = pam_get_item(pamh, PAM_CONV, (const void **) &conv)) != PAM_SUCCESS) {
+  if ((pam_res = pam_get_item(pamh, PAM_CONV, (const void **)&conv)) !=
+      PAM_SUCCESS) {
     syslog(LOG_ERR, "Failed to acquire conversation");
     return pam_res;
   }
 
   // Wrap the PAM conversation function in our own, easier function
-  auto conv_function = bind(send_message, conv->conv, placeholders::_1, placeholders::_2);
+  auto conv_function =
+      bind(send_message, conv->conv, placeholders::_1, placeholders::_2);
 
   // Error out if we could not ready the config file
   if (reader.ParseError() < 0) {
@@ -144,14 +152,17 @@ int identify(pam_handle_t *pamh, int flags, int argc, const char **argv, bool au
 
   // Stop if we're in a remote shell and configured to exit
   if (reader.GetBoolean("core", "ignore_ssh", true)) {
-    if (getenv("SSH_CONNECTION") != nullptr || getenv("SSH_CLIENT") != nullptr || getenv("SSHD_OPTS") != nullptr) {
+    if (getenv("SSH_CONNECTION") != nullptr ||
+        getenv("SSH_CLIENT") != nullptr || getenv("SSHD_OPTS") != nullptr) {
       return PAM_AUTHINFO_UNAVAIL;
     }
   }
 
   // If enabled, send a notice to the user that facial login is being attempted
   if (reader.GetBoolean("core", "detection_notice", false)) {
-    if ((pam_res = conv_function(PAM_TEXT_INFO, "Attempting facial authentication")) != PAM_SUCCESS) {
+    if ((pam_res = conv_function(PAM_TEXT_INFO,
+                                 "Attempting facial authentication")) !=
+        PAM_SUCCESS) {
       syslog(LOG_ERR, "Failed to send detection notice");
     }
   }
@@ -188,6 +199,7 @@ int identify(pam_handle_t *pamh, int flags, int argc, const char **argv, bool au
   }
   posix_spawn_file_actions_t file_actions;
   posix_spawn_file_actions_init(&file_actions);
+  // We close stdout and stderr for the child
   posix_spawn_file_actions_addclose(&file_actions, STDOUT_FILENO);
   posix_spawn_file_actions_addclose(&file_actions, STDERR_FILENO);
   const char *const args[] = {"/usr/bin/python3", "/lib/security/howdy/compare.py",
@@ -218,7 +230,8 @@ int identify(pam_handle_t *pamh, int flags, int argc, const char **argv, bool au
 
   packaged_task<int()> pass_task([&] {
     char *auth_tok_ptr = nullptr;
-    int pam_res = pam_get_authtok(pamh, PAM_AUTHTOK, (const char **) &auth_tok_ptr, nullptr);
+    int pam_res = pam_get_authtok(pamh, PAM_AUTHTOK,
+                                  (const char **)&auth_tok_ptr, nullptr);
     {
       unique_lock<mutex> lk(m);
       t = Type::Pam;
@@ -239,6 +252,8 @@ int identify(pam_handle_t *pamh, int flags, int argc, const char **argv, bool au
 
   if (t == Type::Howdy) {
     if (auth_tok) {
+      // We cancel the thread using pthread, pam_get_authtok seems to be a
+      // cancellation point
       auto native_hd = pass_thread.native_handle();
       pthread_cancel(native_hd);
       pass_thread.join();
@@ -258,7 +273,7 @@ int identify(pam_handle_t *pamh, int flags, int argc, const char **argv, bool au
     }
   } else {
     kill(child_pid, SIGTERM);
-    child_thread.join();
+    python_thread.join();
     pass_thread.join();
     auto pam_res = pass_future.get();
 
@@ -269,26 +284,33 @@ int identify(pam_handle_t *pamh, int flags, int argc, const char **argv, bool au
   }
 }
 
-// Called by PAM when a user needs to be authenticated, for example by running the sudo command
-PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags, int argc, const char **argv) {
+// Called by PAM when a user needs to be authenticated, for example by running
+// the sudo command
+PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags, int argc,
+                                   const char **argv) {
   return identify(pamh, flags, argc, argv, true);
 }
 
 // Called by PAM when a session is started, such as by the su command
-PAM_EXTERN int pam_sm_open_session(pam_handle_t *pamh, int flags, int argc, const char **argv) {
+PAM_EXTERN int pam_sm_open_session(pam_handle_t *pamh, int flags, int argc,
+                                   const char **argv) {
   return identify(pamh, flags, argc, argv, false);
 }
 
 // The functions below are required by PAM, but not needed in this module
-PAM_EXTERN int pam_sm_acct_mgmt(pam_handle_t *pamh, int flags, int argc, const char **argv) {
+PAM_EXTERN int pam_sm_acct_mgmt(pam_handle_t *pamh, int flags, int argc,
+                                const char **argv) {
   return PAM_IGNORE;
 }
-PAM_EXTERN int pam_sm_close_session(pam_handle_t *pamh, int flags, int argc, const char **argv) {
+PAM_EXTERN int pam_sm_close_session(pam_handle_t *pamh, int flags, int argc,
+                                    const char **argv) {
   return PAM_IGNORE;
 }
-PAM_EXTERN int pam_sm_chauthtok(pam_handle_t *pamh, int flags, int argc, const char **argv) {
+PAM_EXTERN int pam_sm_chauthtok(pam_handle_t *pamh, int flags, int argc,
+                                const char **argv) {
   return PAM_IGNORE;
 }
-PAM_EXTERN int pam_sm_setcred(pam_handle_t *pamh, int flags, int argc, const char **argv) {
+PAM_EXTERN int pam_sm_setcred(pam_handle_t *pamh, int flags, int argc,
+                              const char **argv) {
   return PAM_IGNORE;
 }
