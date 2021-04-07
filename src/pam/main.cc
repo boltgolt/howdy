@@ -70,7 +70,7 @@ int on_howdy_auth(int code, function<int(int, const char *)> conv_function) {
       conv_function(PAM_ERROR_MSG, "Face detection image too dark");
       syslog(LOG_INFO, "Failure, image too dark");
       break;
-    // Otherwise, we can't discribe what happend but it wasn't successful
+    // Otherwise, we can't describe what happened but it wasn't successful
     default:
       conv_function(PAM_ERROR_MSG,
                     string("Unknown error:" + to_string(code)).c_str());
