@@ -30,12 +30,14 @@
 #include <vector>
 
 #include <INIReader.h>
+#include <boost/locale.hpp>
 
 #include <security/pam_appl.h>
 #include <security/pam_ext.h>
 #include <security/pam_modules.h>
 
 using namespace std;
+using namespace boost::locale;
 
 enum class Type { Howdy, Pam };
 
@@ -54,7 +56,7 @@ int on_howdy_auth(int code, function<int(int, const char *)> conv_function) {
     switch (code) {
     // Status 10 means we couldn't find any face models
     case 10:
-      conv_function(PAM_ERROR_MSG, "There is no face model known");
+      conv_function(PAM_ERROR_MSG, dgettext("pam", "There is no face model known"));
       syslog(LOG_NOTICE, "Failure, no face model known");
       break;
     // Status 11 means we exceded the maximum retry count
@@ -67,13 +69,13 @@ int on_howdy_auth(int code, function<int(int, const char *)> conv_function) {
       break;
     // Status 13 means the image was too dark
     case 13:
-      conv_function(PAM_ERROR_MSG, "Face detection image too dark");
+      conv_function(PAM_ERROR_MSG, dgettext("pam", "Face detection image too dark"));
       syslog(LOG_INFO, "Failure, image too dark");
       break;
     // Otherwise, we can't describe what happened but it wasn't successful
     default:
       conv_function(PAM_ERROR_MSG,
-                    string("Unknown error:" + to_string(code)).c_str());
+                    string(dgettext("pam", "Unknown error:") + to_string(code)).c_str());
       syslog(LOG_INFO, "Failure, unknown error %d", code);
     }
   }
@@ -141,12 +143,13 @@ int identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
 
   // Error out if we could not ready the config file
   if (reader.ParseError() < 0) {
-    syslog(LOG_ERR, "Failed to parse the configuration");
+    syslog(LOG_ERR, "Failed to parse the configuration file");
     return PAM_SYSTEM_ERR;
   }
 
   // Stop executing if Howdy has been disabled in the config
   if (reader.GetBoolean("core", "disabled", false)) {
+    syslog(LOG_INFO, "Skipped authentication, Howdy is disabled");
     return PAM_AUTHINFO_UNAVAIL;
   }
 
@@ -154,36 +157,36 @@ int identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
   if (reader.GetBoolean("core", "ignore_ssh", true)) {
     if (getenv("SSH_CONNECTION") != nullptr ||
         getenv("SSH_CLIENT") != nullptr || getenv("SSHD_OPTS") != nullptr) {
+      syslog(LOG_INFO, "Skipped authentication, SSH session detected");
       return PAM_AUTHINFO_UNAVAIL;
     }
   }
 
-  // If enabled, send a notice to the user that facial login is being attempted
-  if (reader.GetBoolean("core", "detection_notice", false)) {
-    if ((pam_res = conv_function(PAM_TEXT_INFO,
-                                 "Attempting facial authentication")) !=
-        PAM_SUCCESS) {
-      syslog(LOG_ERR, "Failed to send detection notice");
-    }
-  }
 
+  // Try to detect the laptop lid state and stop if it's closed
   if (reader.GetBoolean("core", "ignore_closed_lid", true)) {
     glob_t glob_result{};
 
-    int return_value =
-        glob("/proc/acpi/button/lid/*/state", 0, nullptr, &glob_result);
+    // Get any files containing lid state
+    int return_value = glob("/proc/acpi/button/lid/*/state", 0, nullptr, &glob_result);
 
     // TODO: We ignore the result
     if (return_value != 0) {
       globfree(&glob_result);
     }
 
+    // For each lid status file found
     for (size_t i = 0; i < glob_result.gl_pathc; ++i) {
+      // Read the file contents
       ifstream file(string(glob_result.gl_pathv[i]));
       string lid_state;
       getline(file, lid_state, (char)file.eof());
+
+      // Stop if the lid is closed
       if (lid_state.find("closed") != std::string::npos) {
         globfree(&glob_result);
+
+        syslog(LOG_INFO, "Skipped authentication, closed lid detected");
         return PAM_AUTHINFO_UNAVAIL;
       }
     }
@@ -191,21 +194,33 @@ int identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
     globfree(&glob_result);
   }
 
+  // If enabled, send a notice to the user that facial login is being attempted
+  if (reader.GetBoolean("core", "detection_notice", false)) {
+    if ((pam_res = conv_function(PAM_TEXT_INFO, dgettext("pam", "Attempting facial authentication"))) != PAM_SUCCESS) {
+      syslog(LOG_ERR, "Failed to send detection notice");
+    }
+  }
+
+  // Get the username from PAM, needed to match correct face model
   char *user_ptr = nullptr;
   if ((pam_res = pam_get_user(pamh, (const char **)&user_ptr, nullptr)) !=
       PAM_SUCCESS) {
     syslog(LOG_ERR, "Failed to get username");
     return pam_res;
   }
+
   posix_spawn_file_actions_t file_actions;
   posix_spawn_file_actions_init(&file_actions);
   // We close stdout and stderr for the child
   posix_spawn_file_actions_addclose(&file_actions, STDOUT_FILENO);
   posix_spawn_file_actions_addclose(&file_actions, STDERR_FILENO);
+
+  // Prepare the python command that will run the facial authentication
   const char *const args[] = {"/usr/bin/python3", "/lib/security/howdy/compare.py",
                               user_ptr, nullptr};
   pid_t child_pid;
 
+  // Start the python subprocess
   if (posix_spawnp(&child_pid, "/usr/bin/python3", &file_actions, nullptr,
                    (char *const *)args, nullptr) < 0) {
     syslog(LOG_ERR, "Can't spawn the howdy process: %s", strerror(errno));
@@ -263,7 +278,10 @@ int identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
 
     if (howdy_status == 0) {
       if (!reader.GetBoolean("core", "no_confirmation", true)) {
-        string identify_msg("Identified face as " + string(user_ptr));
+        // Construct confirmation text from i18n string
+        string confirm_text = dgettext("pam", "Identified face as {}");
+        string identify_msg(confirm_text.replace(confirm_text.find("{}"), 2, string(user_ptr)));
+        // Send confirmation message to user
         conv_function(PAM_TEXT_INFO, identify_msg.c_str());
       }
       syslog(LOG_INFO, "Login approved");
@@ -273,7 +291,6 @@ int identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
     }
   } else {
     kill(child_pid, SIGTERM);
-    python_thread.join();
     pass_thread.join();
     auto pam_res = pass_future.get();
 
