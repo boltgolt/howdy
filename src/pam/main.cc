@@ -247,7 +247,7 @@ int identify(pam_handle_t *pamh, int flags, int argc, const char **argv, bool au
     int howdy_status = child_future.get();
 
     if (howdy_status == 0) {
-      if (!reader.GetBoolean("section", "no_confirmation", true)) {
+      if (!reader.GetBoolean("core", "no_confirmation", true)) {
         string identify_msg("Identified face as " + string(user_ptr));
         conv_function(PAM_TEXT_INFO, identify_msg.c_str());
       }
