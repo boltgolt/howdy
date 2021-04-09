@@ -51,14 +51,14 @@ class VideoCapture:
 		"""
 		Frees resources when destroyed
 		"""
-		if self is not None:
+		if hasattr(self, "internal"):
 			self.internal.release()
 
 	def release(self):
 		"""
 		Release cameras
 		"""
-		if self is not None:
+		if hasattr(self, "internal"):
 			self.internal.release()
 
 	def read_frame(self):
