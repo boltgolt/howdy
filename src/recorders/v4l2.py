@@ -48,7 +48,6 @@ Python bindings for the v4l2 userspace api in Linux 2.6.34
 
 import ctypes
 
-
 _IOC_NRBITS = 8
 _IOC_TYPEBITS = 8
 _IOC_SIZEBITS = 14
@@ -61,15 +60,15 @@ _IOC_DIRSHIFT = _IOC_SIZESHIFT + _IOC_SIZEBITS
 
 _IOC_NONE = 0
 _IOC_WRITE = 1
-_IOC_READ  = 2
+_IOC_READ = 2
 
 
 def _IOC(dir_, type_, nr, size):
     return (
-        ctypes.c_int32(dir_ << _IOC_DIRSHIFT).value |
-        ctypes.c_int32(ord(type_) << _IOC_TYPESHIFT).value |
-        ctypes.c_int32(nr << _IOC_NRSHIFT).value |
-        ctypes.c_int32(size << _IOC_SIZESHIFT).value)
+            ctypes.c_int32(dir_ << _IOC_DIRSHIFT).value |
+            ctypes.c_int32(ord(type_) << _IOC_TYPESHIFT).value |
+            ctypes.c_int32(nr << _IOC_NRSHIFT).value |
+            ctypes.c_int32(size << _IOC_SIZESHIFT).value)
 
 
 def _IOC_TYPECHECK(t):
@@ -118,7 +117,6 @@ class timeval(ctypes.Structure):
 
 VIDEO_MAX_FRAME = 32
 
-
 VID_TYPE_CAPTURE = 1
 VID_TYPE_TUNER = 2
 VID_TYPE_TELETEXT = 4
@@ -126,7 +124,7 @@ VID_TYPE_OVERLAY = 8
 VID_TYPE_CHROMAKEY = 16
 VID_TYPE_CLIPPING = 32
 VID_TYPE_FRAMERAM = 64
-VID_TYPE_SCALES	= 128
+VID_TYPE_SCALES = 128
 VID_TYPE_MONOCHROME = 256
 VID_TYPE_SUBCAPTURE = 512
 VID_TYPE_MPEG_DECODER = 1024
@@ -156,31 +154,31 @@ v4l2_field = enum
 
 def V4L2_FIELD_HAS_TOP(field):
     return (
-	field == V4L2_FIELD_TOP or
-	field == V4L2_FIELD_INTERLACED or
-	field == V4L2_FIELD_INTERLACED_TB or
-	field == V4L2_FIELD_INTERLACED_BT or
-	field == V4L2_FIELD_SEQ_TB or
-	field == V4L2_FIELD_SEQ_BT)
+            field == V4L2_FIELD_TOP or
+            field == V4L2_FIELD_INTERLACED or
+            field == V4L2_FIELD_INTERLACED_TB or
+            field == V4L2_FIELD_INTERLACED_BT or
+            field == V4L2_FIELD_SEQ_TB or
+            field == V4L2_FIELD_SEQ_BT)
 
 
 def V4L2_FIELD_HAS_BOTTOM(field):
     return (
-        field == V4L2_FIELD_BOTTOM or
-        field == V4L2_FIELD_INTERLACED or
-        field == V4L2_FIELD_INTERLACED_TB or
-        field == V4L2_FIELD_INTERLACED_BT or
-        field == V4L2_FIELD_SEQ_TB or
-        field == V4L2_FIELD_SEQ_BT)
+            field == V4L2_FIELD_BOTTOM or
+            field == V4L2_FIELD_INTERLACED or
+            field == V4L2_FIELD_INTERLACED_TB or
+            field == V4L2_FIELD_INTERLACED_BT or
+            field == V4L2_FIELD_SEQ_TB or
+            field == V4L2_FIELD_SEQ_BT)
 
 
 def V4L2_FIELD_HAS_BOTH(field):
     return (
-        field == V4L2_FIELD_INTERLACED or
-        field == V4L2_FIELD_INTERLACED_TB or
-        field == V4L2_FIELD_INTERLACED_BT or
-        field == V4L2_FIELD_SEQ_TB or
-        field == V4L2_FIELD_SEQ_BT)
+            field == V4L2_FIELD_INTERLACED or
+            field == V4L2_FIELD_INTERLACED_TB or
+            field == V4L2_FIELD_INTERLACED_BT or
+            field == V4L2_FIELD_SEQ_TB or
+            field == V4L2_FIELD_SEQ_BT)
 
 
 v4l2_buf_type = enum
@@ -196,7 +194,6 @@ v4l2_buf_type = enum
     V4L2_BUF_TYPE_PRIVATE,
 ) = list(range(1, 9)) + [0x80]
 
-
 v4l2_ctrl_type = enum
 (
     V4L2_CTRL_TYPE_INTEGER,
@@ -208,7 +205,6 @@ v4l2_ctrl_type = enum
     V4L2_CTRL_TYPE_STRING,
 ) = range(1, 8)
 
-
 v4l2_tuner_type = enum
 (
     V4L2_TUNER_RADIO,
@@ -216,14 +212,12 @@ v4l2_tuner_type = enum
     V4L2_TUNER_DIGITAL_TV,
 ) = range(1, 4)
 
-
 v4l2_memory = enum
 (
     V4L2_MEMORY_MMAP,
     V4L2_MEMORY_USERPTR,
     V4L2_MEMORY_OVERLAY,
 ) = range(1, 4)
-
 
 v4l2_colorspace = enum
 (
@@ -236,7 +230,6 @@ v4l2_colorspace = enum
     V4L2_COLORSPACE_JPEG,
     V4L2_COLORSPACE_SRGB,
 ) = range(1, 9)
-
 
 v4l2_priority = enum
 (
@@ -321,6 +314,7 @@ class v4l2_pix_format(ctypes.Structure):
         ('priv', ctypes.c_uint32),
     ]
 
+
 # RGB formats
 V4L2_PIX_FMT_RGB332 = v4l2_fourcc('R', 'G', 'B', '1')
 V4L2_PIX_FMT_RGB444 = v4l2_fourcc('R', '4', '4', '4')
@@ -335,7 +329,7 @@ V4L2_PIX_FMT_RGB32 = v4l2_fourcc('R', 'G', 'B', '4')
 
 # Grey formats
 V4L2_PIX_FMT_GREY = v4l2_fourcc('G', 'R', 'E', 'Y')
-V4L2_PIX_FMT_Y10 =  v4l2_fourcc('Y', '1', '0', ' ')
+V4L2_PIX_FMT_Y10 = v4l2_fourcc('Y', '1', '0', ' ')
 V4L2_PIX_FMT_Y16 = v4l2_fourcc('Y', '1', '6', ' ')
 
 # Palette formats
@@ -421,9 +415,9 @@ class v4l2_fmtdesc(ctypes.Structure):
         ('reserved', ctypes.c_uint32 * 4),
     ]
 
+
 V4L2_FMT_FLAG_COMPRESSED = 0x0001
 V4L2_FMT_FLAG_EMULATED = 0x0002
-
 
 #
 # Experimental frame size and frame rate enumeration
@@ -620,8 +614,9 @@ class v4l2_framebuffer(ctypes.Structure):
         ('fmt', v4l2_pix_format),
     ]
 
+
 V4L2_FBUF_CAP_EXTERNOVERLAY = 0x0001
-V4L2_FBUF_CAP_CHROMAKEY	= 0x0002
+V4L2_FBUF_CAP_CHROMAKEY = 0x0002
 V4L2_FBUF_CAP_LIST_CLIPPING = 0x0004
 V4L2_FBUF_CAP_BITMAP_CLIPPING = 0x0008
 V4L2_FBUF_CAP_LOCAL_ALPHA = 0x0010
@@ -640,6 +635,8 @@ V4L2_FBUF_FLAG_SRC_CHROMAKEY = 0x0040
 
 class v4l2_clip(ctypes.Structure):
     pass
+
+
 v4l2_clip._fields_ = [
     ('c', v4l2_rect),
     ('next', ctypes.POINTER(v4l2_clip)),
@@ -714,7 +711,6 @@ class v4l2_crop(ctypes.Structure):
 
 v4l2_std_id = ctypes.c_uint64
 
-
 V4L2_STD_PAL_B = 0x00000001
 V4L2_STD_PAL_B1 = 0x00000002
 V4L2_STD_PAL_G = 0x00000004
@@ -746,14 +742,14 @@ V4L2_STD_SECAM_LC = 0x00800000
 V4L2_STD_ATSC_8_VSB = 0x01000000
 V4L2_STD_ATSC_16_VSB = 0x02000000
 
-
 # some common needed stuff
 V4L2_STD_PAL_BG = (V4L2_STD_PAL_B | V4L2_STD_PAL_B1 | V4L2_STD_PAL_G)
 V4L2_STD_PAL_DK = (V4L2_STD_PAL_D | V4L2_STD_PAL_D1 | V4L2_STD_PAL_K)
 V4L2_STD_PAL = (V4L2_STD_PAL_BG | V4L2_STD_PAL_DK | V4L2_STD_PAL_H | V4L2_STD_PAL_I)
 V4L2_STD_NTSC = (V4L2_STD_NTSC_M | V4L2_STD_NTSC_M_JP | V4L2_STD_NTSC_M_KR)
 V4L2_STD_SECAM_DK = (V4L2_STD_SECAM_D | V4L2_STD_SECAM_K | V4L2_STD_SECAM_K1)
-V4L2_STD_SECAM = (V4L2_STD_SECAM_B | V4L2_STD_SECAM_G | V4L2_STD_SECAM_H | V4L2_STD_SECAM_DK | V4L2_STD_SECAM_L | V4L2_STD_SECAM_LC)
+V4L2_STD_SECAM = (
+            V4L2_STD_SECAM_B | V4L2_STD_SECAM_G | V4L2_STD_SECAM_H | V4L2_STD_SECAM_DK | V4L2_STD_SECAM_L | V4L2_STD_SECAM_LC)
 
 V4L2_STD_525_60 = (V4L2_STD_PAL_M | V4L2_STD_PAL_60 | V4L2_STD_NTSC | V4L2_STD_NTSC_443)
 V4L2_STD_625_50 = (V4L2_STD_PAL | V4L2_STD_PAL_N | V4L2_STD_PAL_Nc | V4L2_STD_SECAM)
@@ -765,7 +761,7 @@ V4L2_STD_ALL = (V4L2_STD_525_60 | V4L2_STD_625_50)
 # some merged standards
 V4L2_STD_MN = (V4L2_STD_PAL_M | V4L2_STD_PAL_N | V4L2_STD_PAL_Nc | V4L2_STD_NTSC)
 V4L2_STD_B = (V4L2_STD_PAL_B | V4L2_STD_PAL_B1 | V4L2_STD_SECAM_B)
-V4L2_STD_GH = (V4L2_STD_PAL_G | V4L2_STD_PAL_H|V4L2_STD_SECAM_G | V4L2_STD_SECAM_H)
+V4L2_STD_GH = (V4L2_STD_PAL_G | V4L2_STD_PAL_H | V4L2_STD_SECAM_G | V4L2_STD_SECAM_H)
 V4L2_STD_DK = (V4L2_STD_PAL_DK | V4L2_STD_SECAM_DK)
 
 
@@ -805,6 +801,7 @@ class v4l2_dv_enum_preset(ctypes.Structure):
         ('reserved', ctypes.c_uint32 * 4),
     ]
 
+
 #
 # DV preset values
 #
@@ -819,15 +816,15 @@ V4L2_DV_720P50 = 6
 V4L2_DV_720P59_94 = 7
 V4L2_DV_720P60 = 8
 V4L2_DV_1080I29_97 = 9
-V4L2_DV_1080I30	= 10
-V4L2_DV_1080I25	= 11
-V4L2_DV_1080I50	= 12
-V4L2_DV_1080I60	= 13
-V4L2_DV_1080P24	= 14
-V4L2_DV_1080P25	= 15
-V4L2_DV_1080P30	= 16
-V4L2_DV_1080P50	= 17
-V4L2_DV_1080P60	= 18
+V4L2_DV_1080I30 = 10
+V4L2_DV_1080I25 = 11
+V4L2_DV_1080I50 = 12
+V4L2_DV_1080I60 = 13
+V4L2_DV_1080P24 = 14
+V4L2_DV_1080P25 = 15
+V4L2_DV_1080P30 = 16
+V4L2_DV_1080P50 = 17
+V4L2_DV_1080P60 = 18
 
 
 #
@@ -854,6 +851,7 @@ class v4l2_bt_timings(ctypes.Structure):
     ]
 
     _pack_ = True
+
 
 # Interlaced or progressive format
 V4L2_DV_PROGRESSIVE = 0
@@ -926,6 +924,7 @@ V4L2_IN_CAP_PRESETS = 0x00000001
 V4L2_IN_CAP_CUSTOM_TIMINGS = 0x00000002
 V4L2_IN_CAP_STD = 0x00000004
 
+
 #
 # Video outputs
 #
@@ -943,12 +942,13 @@ class v4l2_output(ctypes.Structure):
 
 
 V4L2_OUTPUT_TYPE_MODULATOR = 1
-V4L2_OUTPUT_TYPE_ANALOG	= 2
+V4L2_OUTPUT_TYPE_ANALOG = 2
 V4L2_OUTPUT_TYPE_ANALOGVGAOVERLAY = 3
 
 V4L2_OUT_CAP_PRESETS = 0x00000001
 V4L2_OUT_CAP_CUSTOM_TIMINGS = 0x00000002
 V4L2_OUT_CAP_STD = 0x00000004
+
 
 #
 # Controls
@@ -1000,7 +1000,7 @@ def V4L2_CTRL_ID_MASK():
 
 
 def V4L2_CTRL_ID2CLASS(id_):
-    return id_ & 0x0fff0000 # unsigned long
+    return id_ & 0x0fff0000  # unsigned long
 
 
 def V4L2_CTRL_DRIVER_PRIV(id_):
@@ -1055,13 +1055,13 @@ V4L2_CID_AUDIO_BASS = V4L2_CID_BASE + 7
 V4L2_CID_AUDIO_TREBLE = V4L2_CID_BASE + 8
 V4L2_CID_AUDIO_MUTE = V4L2_CID_BASE + 9
 V4L2_CID_AUDIO_LOUDNESS = V4L2_CID_BASE + 10
-V4L2_CID_BLACK_LEVEL = V4L2_CID_BASE + 11 # Deprecated
+V4L2_CID_BLACK_LEVEL = V4L2_CID_BASE + 11  # Deprecated
 V4L2_CID_AUTO_WHITE_BALANCE = V4L2_CID_BASE + 12
 V4L2_CID_DO_WHITE_BALANCE = V4L2_CID_BASE + 13
 V4L2_CID_RED_BALANCE = V4L2_CID_BASE + 14
 V4L2_CID_BLUE_BALANCE = V4L2_CID_BASE + 15
 V4L2_CID_GAMMA = V4L2_CID_BASE + 16
-V4L2_CID_WHITENESS = V4L2_CID_GAMMA # Deprecated
+V4L2_CID_WHITENESS = V4L2_CID_GAMMA  # Deprecated
 V4L2_CID_EXPOSURE = V4L2_CID_BASE + 17
 V4L2_CID_AUTOGAIN = V4L2_CID_BASE + 18
 V4L2_CID_GAIN = V4L2_CID_BASE + 19
@@ -1252,7 +1252,7 @@ v4l2_mpeg_audio_crc = enum
 
 V4L2_CID_MPEG_AUDIO_MUTE = V4L2_CID_MPEG_BASE + 109
 V4L2_CID_MPEG_AUDIO_AAC_BITRATE = V4L2_CID_MPEG_BASE + 110
-V4L2_CID_MPEG_AUDIO_AC3_BITRATE	= V4L2_CID_MPEG_BASE + 111
+V4L2_CID_MPEG_AUDIO_AC3_BITRATE = V4L2_CID_MPEG_BASE + 111
 
 v4l2_mpeg_audio_ac3_bitrate = enum
 (
@@ -1328,7 +1328,7 @@ V4L2_CID_MPEG_CX2341X_VIDEO_LUMA_SPATIAL_FILTER_TYPE = V4L2_CID_MPEG_CX2341X_BAS
 
 v4l2_mpeg_cx2341x_video_luma_spatial_filter_type = enum
 (
-    V4L2_MPEG_CX2341X_VIDEO_LUMA_SPATIAL_FILTER_TYPE_OFF, 
+    V4L2_MPEG_CX2341X_VIDEO_LUMA_SPATIAL_FILTER_TYPE_OFF,
     V4L2_MPEG_CX2341X_VIDEO_LUMA_SPATIAL_FILTER_TYPE_1D_HOR,
     V4L2_MPEG_CX2341X_VIDEO_LUMA_SPATIAL_FILTER_TYPE_1D_VERT,
     V4L2_MPEG_CX2341X_VIDEO_LUMA_SPATIAL_FILTER_TYPE_2D_HV_SEPARABLE,
@@ -1527,7 +1527,7 @@ class v4l2_rds_data(ctypes.Structure):
     _pack_ = True
 
 
-V4L2_RDS_BLOCK_MSK =  0x7
+V4L2_RDS_BLOCK_MSK = 0x7
 V4L2_RDS_BLOCK_A = 0
 V4L2_RDS_BLOCK_B = 1
 V4L2_RDS_BLOCK_C = 2
@@ -1665,7 +1665,7 @@ V4L2_SLICED_CAPTION_525 = 0x1000
 V4L2_SLICED_WSS_625 = 0x4000
 V4L2_SLICED_VBI_525 = V4L2_SLICED_CAPTION_525
 V4L2_SLICED_VBI_625 = (
-    V4L2_SLICED_TELETEXT_B | V4L2_SLICED_VPS | V4L2_SLICED_WSS_625)
+        V4L2_SLICED_TELETEXT_B | V4L2_SLICED_VPS | V4L2_SLICED_WSS_625)
 
 
 class v4l2_sliced_vbi_cap(ctypes.Structure):
@@ -1709,7 +1709,7 @@ class v4l2_mpeg_vbi_itv0_line(ctypes.Structure):
 
 class v4l2_mpeg_vbi_itv0(ctypes.Structure):
     _fields_ = [
-        ('linemask', ctypes.c_uint32 * 2), # how to define __le32 in ctypes?
+        ('linemask', ctypes.c_uint32 * 2),  # how to define __le32 in ctypes?
         ('line', v4l2_mpeg_vbi_itv0_line * 35),
     ]
 
@@ -1835,7 +1835,7 @@ VIDIOC_ENUM_FMT = _IOWR('V', 2, v4l2_fmtdesc)
 VIDIOC_G_FMT = _IOWR('V', 4, v4l2_format)
 VIDIOC_S_FMT = _IOWR('V', 5, v4l2_format)
 VIDIOC_REQBUFS = _IOWR('V', 8, v4l2_requestbuffers)
-VIDIOC_QUERYBUF	= _IOWR('V', 9, v4l2_buffer)
+VIDIOC_QUERYBUF = _IOWR('V', 9, v4l2_buffer)
 VIDIOC_G_FBUF = _IOR('V', 10, v4l2_framebuffer)
 VIDIOC_S_FBUF = _IOW('V', 11, v4l2_framebuffer)
 VIDIOC_OVERLAY = _IOW('V', 14, ctypes.c_int)
@@ -1863,7 +1863,7 @@ VIDIOC_G_OUTPUT = _IOR('V', 46, ctypes.c_int)
 VIDIOC_S_OUTPUT = _IOWR('V', 47, ctypes.c_int)
 VIDIOC_ENUMOUTPUT = _IOWR('V', 48, v4l2_output)
 VIDIOC_G_AUDOUT = _IOR('V', 49, v4l2_audioout)
-VIDIOC_S_AUDOUT	= _IOW('V', 50, v4l2_audioout)
+VIDIOC_S_AUDOUT = _IOW('V', 50, v4l2_audioout)
 VIDIOC_G_MODULATOR = _IOWR('V', 54, v4l2_modulator)
 VIDIOC_S_MODULATOR = _IOW('V', 55, v4l2_modulator)
 VIDIOC_G_FREQUENCY = _IOWR('V', 56, v4l2_frequency)
