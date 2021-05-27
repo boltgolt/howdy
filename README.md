@@ -26,15 +26,14 @@ Howdy is currently available and packaged for Debian/Ubuntu, Arch Linux, Fedora 
 **Note:** The build of dlib can hang on 100% for over a minute, give it time.
 
 ### Ubuntu or Linux Mint
-
+Download the .deb file from the [Releases page](https://github.com/boltgolt/howdy/releases) and open a terminal in that directory.
 Run the installer by pasting (`ctrl+shift+V`) the following commands into the terminal one at a time:
-
 ```
 sudo add-apt-repository ppa:boltgolt/howdy
 sudo apt update
-sudo apt install howdy
+pip3 install --upgrade pip
+sudo dpkg --install howdy_2.5.1.deb
 ```
-
 This will guide you through the installation.
 
 ### Debian
