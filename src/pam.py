@@ -5,6 +5,7 @@ import subprocess
 import os
 import glob
 import syslog
+import pwd
 
 # pam-python is running python 2, so we use the old module here
 import ConfigParser
@@ -16,6 +17,17 @@ config.read(os.path.dirname(os.path.abspath(__file__)) + "/config.ini")
 
 def doAuth(pamh):
 	"""Starts authentication in a seperate process"""
+	pam_user = pamh.get_user()
+
+	if config.getboolean("core", "display_full_name"):
+		# pw_gecos is the 'User name or comment field' (comma separated)
+		user_display_name = pwd.getpwnam(user).pw_gecos.split(',')[0]
+		if not user_display_name:
+			# The user's Full Name could be blank
+			user_display_name = pam_user
+	else:
+		user_display_name = pam_user
+
 
 	# Abort is Howdy is disabled
 	if config.getboolean("core", "disabled"):
@@ -38,10 +50,10 @@ def doAuth(pamh):
 	if config.getboolean("core", "detection_notice"):
 		pamh.conversation(pamh.Message(pamh.PAM_TEXT_INFO, "Attempting face detection"))
 
-	syslog.syslog(syslog.LOG_INFO, "Attempting facial authentication for user " + pamh.get_user())
+	syslog.syslog(syslog.LOG_INFO, "Attempting facial authentication for user " + user_display_name)
 
 	# Run compare as python3 subprocess to circumvent python version and import issues
-	status = subprocess.call(["/usr/bin/python3", os.path.dirname(os.path.abspath(__file__)) + "/compare.py", pamh.get_user()])
+	status = subprocess.call(["/usr/bin/python3", os.path.dirname(os.path.abspath(__file__)) + "/compare.py", pam_user])
 
 	# Status 10 means we couldn't find any face models
 	if status == 10:
