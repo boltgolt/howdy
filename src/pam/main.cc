@@ -2,6 +2,7 @@
 #include <csignal>
 #include <cstdlib>
 #include <glob.h>
+#include <ostream>
 #include <poll.h>
 #include <pthread.h>
 #include <spawn.h>
@@ -13,6 +14,7 @@
 #include <syslog.h>
 #include <unistd.h>
 
+#include <atomic>
 #include <chrono>
 #include <condition_variable>
 #include <cstring>
@@ -30,16 +32,19 @@
 #include <vector>
 
 #include <INIReader.h>
+
 #include <boost/locale.hpp>
 
 #include <security/pam_appl.h>
 #include <security/pam_ext.h>
 #include <security/pam_modules.h>
 
+#include "main.hh"
+#include "optional_task.hh"
+
 using namespace std;
 using namespace boost::locale;
-
-enum class Type { Howdy, Pam };
+using namespace std::chrono_literals;
 
 /**
  * Inspect the status code returned by the compare process
@@ -56,7 +61,8 @@ int on_howdy_auth(int code, function<int(int, const char *)> conv_function) {
     switch (code) {
     // Status 10 means we couldn't find any face models
     case 10:
-      conv_function(PAM_ERROR_MSG, dgettext("pam", "There is no face model known"));
+      conv_function(PAM_ERROR_MSG,
+                    dgettext("pam", "There is no face model known"));
       syslog(LOG_NOTICE, "Failure, no face model known");
       break;
     // Status 11 means we exceded the maximum retry count
@@ -69,13 +75,15 @@ int on_howdy_auth(int code, function<int(int, const char *)> conv_function) {
       break;
     // Status 13 means the image was too dark
     case 13:
-      conv_function(PAM_ERROR_MSG, dgettext("pam", "Face detection image too dark"));
+      conv_function(PAM_ERROR_MSG,
+                    dgettext("pam", "Face detection image too dark"));
       syslog(LOG_INFO, "Failure, image too dark");
       break;
     // Otherwise, we can't describe what happened but it wasn't successful
     default:
-      conv_function(PAM_ERROR_MSG,
-                    string(dgettext("pam", "Unknown error:") + to_string(code)).c_str());
+      conv_function(
+          PAM_ERROR_MSG,
+          string(dgettext("pam", "Unknown error:") + to_string(code)).c_str());
       syslog(LOG_INFO, "Failure, unknown error %d", code);
     }
   }
@@ -109,6 +117,17 @@ int send_message(function<int(int, const struct pam_message **,
   return conv(1, &msgp, &resp_, nullptr);
 }
 
+bool operator==(const string &l, const Workaround &r) {
+  switch (r) {
+  case Workaround::Off:
+    return (l == "off");
+  case Workaround::Input:
+    return (l == "input");
+  case Workaround::Native:
+    return (l == "native");
+  }
+}
+
 /**
  * The main function, runs the identification and authentication
  * @param  pamh     The handle to interface directly with PAM
@@ -124,6 +143,11 @@ int identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
   INIReader reader("/lib/security/howdy/config.ini");
   // Open the system log so we can write to it
   openlog("pam_howdy", 0, LOG_AUTHPRIV);
+
+  string workaround = reader.GetString("core", "workaround", "input");
+  // In this case, we are not asking for any password
+  if (workaround == Workaround::Off)
+    auth_tok = false;
 
   // Will contain PAM conversation function
   struct pam_conv *conv = nullptr;
@@ -162,21 +186,20 @@ int identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
     }
   }
 
-
   // Try to detect the laptop lid state and stop if it's closed
   if (reader.GetBoolean("core", "ignore_closed_lid", true)) {
     glob_t glob_result{};
 
     // Get any files containing lid state
-    int return_value = glob("/proc/acpi/button/lid/*/state", 0, nullptr, &glob_result);
+    int return_value =
+        glob("/proc/acpi/button/lid/*/state", 0, nullptr, &glob_result);
 
     // TODO: We ignore the result
     if (return_value != 0) {
       globfree(&glob_result);
     }
 
-    // For each lid status file found
-    for (size_t i = 0; i < glob_result.gl_pathc; ++i) {
+    for (size_t i = 0; i < glob_result.gl_pathc; i++) {
       // Read the file contents
       ifstream file(string(glob_result.gl_pathv[i]));
       string lid_state;
@@ -196,7 +219,10 @@ int identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
 
   // If enabled, send a notice to the user that facial login is being attempted
   if (reader.GetBoolean("core", "detection_notice", false)) {
-    if ((pam_res = conv_function(PAM_TEXT_INFO, dgettext("pam", "Attempting facial authentication"))) != PAM_SUCCESS) {
+    if ((pam_res = conv_function(
+             PAM_TEXT_INFO,
+             dgettext("pam", "Attempting facial authentication"))) !=
+        PAM_SUCCESS) {
       syslog(LOG_ERR, "Failed to send detection notice");
     }
   }
@@ -215,9 +241,8 @@ int identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
   posix_spawn_file_actions_addclose(&file_actions, STDOUT_FILENO);
   posix_spawn_file_actions_addclose(&file_actions, STDERR_FILENO);
 
-  // Prepare the python command that will run the facial authentication
-  const char *const args[] = {"/usr/bin/python3", "/lib/security/howdy/compare.py",
-                              user_ptr, nullptr};
+  const char *const args[] = {
+      "/usr/bin/python3", "/lib/security/howdy/compare.py", user_ptr, nullptr};
   pid_t child_pid;
 
   // Start the python subprocess
@@ -227,10 +252,12 @@ int identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
     return PAM_SYSTEM_ERR;
   }
 
-  std::mutex m;
-  std::condition_variable cv;
+  mutex m;
+  condition_variable cv;
   Type t;
-  packaged_task<int()> child_task([&] {
+  // This task wait for the status of the python subprocess (we don't want a
+  // zombie process).
+  optional_task<int> child_task(packaged_task<int()>([&] {
     int status;
     wait(&status);
     {
@@ -239,48 +266,50 @@ int identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
     }
     cv.notify_all();
     return status;
-  });
-  auto child_future = child_task.get_future();
-  thread child_thread(move(child_task));
+  }));
 
-  packaged_task<int()> pass_task([&] {
-    char *auth_tok_ptr = nullptr;
-    int pam_res = pam_get_authtok(pamh, PAM_AUTHTOK,
-                                  (const char **)&auth_tok_ptr, nullptr);
-    {
-      unique_lock<mutex> lk(m);
-      t = Type::Pam;
-    }
-    cv.notify_all();
-    return pam_res;
-  });
-  auto pass_future = pass_task.get_future();
-  thread pass_thread;
+  optional_task<tuple<int, char *>> pass_task(
+      packaged_task<tuple<int, char *>()>([&] {
+        char *auth_tok_ptr = nullptr;
+        int pam_res = pam_get_authtok(pamh, PAM_AUTHTOK,
+                                      (const char **)&auth_tok_ptr, nullptr);
+        {
+          unique_lock<mutex> lk(m);
+          t = Type::Pam;
+        }
+        cv.notify_all();
+        return tuple<int, char *>(pam_res, auth_tok_ptr);
+      }));
   if (auth_tok) {
-    pass_thread = thread(move(pass_task));
+    pass_task.activate();
   }
 
-  {
+  // Wait for the end
+  if (workaround == Workaround::Native) {
     unique_lock<mutex> lk(m);
     cv.wait(lk);
+  } else if (auth_tok) {
+    pass_task.stop(false);
   }
 
   if (t == Type::Howdy) {
     if (auth_tok) {
       // We cancel the thread using pthread, pam_get_authtok seems to be a
       // cancellation point
-      auto native_hd = pass_thread.native_handle();
-      pthread_cancel(native_hd);
-      pass_thread.join();
+      if (child_task.wait(1s) == future_status::timeout) {
+        kill(child_pid, SIGTERM);
+      }
+      child_task.stop(false);
+      pass_task.stop(false);
     }
-    child_thread.join();
-    int howdy_status = child_future.get();
+    int howdy_status = child_task.get();
 
     if (howdy_status == 0) {
       if (!reader.GetBoolean("core", "no_confirmation", true)) {
         // Construct confirmation text from i18n string
         string confirm_text = dgettext("pam", "Identified face as {}");
-        string identify_msg(confirm_text.replace(confirm_text.find("{}"), 2, string(user_ptr)));
+        string identify_msg(
+            confirm_text.replace(confirm_text.find("{}"), 2, string(user_ptr)));
         // Send confirmation message to user
         conv_function(PAM_TEXT_INFO, identify_msg.c_str());
       }
@@ -290,12 +319,39 @@ int identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
       return on_howdy_auth(howdy_status, conv_function);
     }
   } else {
-    kill(child_pid, SIGTERM);
-    pass_thread.join();
-    auto pam_res = pass_future.get();
+    if (!(workaround == Workaround::Native)) {
+      if (child_task.wait(1s) == future_status::timeout) {
+        kill(child_pid, SIGTERM);
+      }
+      child_task.stop(false);
+    }
+    if (auth_tok) {
+      pass_task.stop(false);
+    }
+
+    char *token = nullptr;
+    tie(pam_res, token) = pass_task.get();
 
     if (pam_res != PAM_SUCCESS)
       return pam_res;
+
+    int howdy_status = child_task.get();
+    if (strlen(token) == 0) {
+      if (howdy_status == 0) {
+        if (!reader.GetBoolean("core", "no_confirmation", true)) {
+          // Construct confirmation text from i18n string
+          string confirm_text = dgettext("pam", "Identified face as {}");
+          string identify_msg(confirm_text.replace(confirm_text.find("{}"), 2,
+                                                   string(user_ptr)));
+          // Send confirmation message to user
+          conv_function(PAM_TEXT_INFO, identify_msg.c_str());
+        }
+        syslog(LOG_INFO, "Login approved");
+        return PAM_SUCCESS;
+      } else {
+        return on_howdy_auth(howdy_status, conv_function);
+      }
+    }
 
     return PAM_IGNORE;
   }
