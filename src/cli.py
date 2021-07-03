@@ -80,7 +80,7 @@ builtins.howdy_user = args.user
 
 # Check if we have rootish rights
 # This is this far down the file so running the command for help is always possible
-if os.getenv("SUDO_USER") is None:
+if os.getenv("SUDO_USER") is None and os.getuid() != 0:
 	print("Please run this command as root:\n")
 	print("\tsudo howdy " + " ".join(sys.argv[1:]))
 	sys.exit(1)
