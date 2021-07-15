@@ -71,6 +71,14 @@ def doAuth(pamh):
 		syslog.closelog()
 		pamh.conversation(pamh.Message(pamh.PAM_ERROR_MSG, "Face detection image too dark"))
 		return pamh.PAM_AUTH_ERR
+
+	elif status == 14:
+		syslog.syslog(syslog.LOG_INFO, "Failure, VideoCapture error")
+		syslog.closelog()
+		pamh.conversation(pamh.Message(pamh.PAM_ERROR_MSG, "Unable to find camera from device_path setting"))
+		#pamh.conversation(pamh.Message(pamh.PAM_ERROR_MSG, "error when geting camera"))
+		return pamh.PAM_AUTH_ERR
+
 	# Status 0 is a successful exit
 	elif status == 0:
 		# Show the success message if it isn't suppressed

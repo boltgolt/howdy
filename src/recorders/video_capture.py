@@ -33,7 +33,7 @@ class VideoCapture:
 		# Check device path
 		if not os.path.exists(self.config.get("video", "device_path")):
 			print("Camera path is not configured correctly, please edit the 'device_path' config value.")
-			sys.exit(1)
+			sys.exit(14)
 
 		# Create reader
 		# The internal video recorder
@@ -76,7 +76,7 @@ class VideoCapture:
 		ret, frame = self.internal.read()
 		if not ret:
 			print("Failed to read camera specified in your 'device_path', aborting")
-			sys.exit(1)
+			sys.exit(14)
 
 		try:
 			# Convert from color to grayscale
