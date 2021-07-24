@@ -302,7 +302,7 @@ int identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
     }
     int howdy_status = child_task.get();
 
-    // If exited succesfully
+    // If exited successfully
     if (howdy_status == 0) {
       if (!reader.GetBoolean("core", "no_confirmation", true)) {
         // Construct confirmation text from i18n string
