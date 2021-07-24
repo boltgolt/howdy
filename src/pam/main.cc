@@ -104,28 +104,15 @@ int send_message(function<int(int, const struct pam_message **,
                               struct pam_response **, void *)>
                      conv,
                  int type, const char *message) {
-  // Formet the message as PAM expects it
   // No need to free this, it's allocated on the stack
   const struct pam_message msg = {.msg_style = type, .msg = message};
   const struct pam_message *msgp = &msg;
 
-  // Create a variable for the response to be stored in
   struct pam_response res_ = {};
   struct pam_response *resp_ = &res_;
 
   // Call the conversation function with the constructed arguments
   return conv(1, &msgp, &resp_, nullptr);
-}
-
-bool operator==(const string &l, const Workaround &r) {
-  switch (r) {
-  case Workaround::Off:
-    return (l == "off");
-  case Workaround::Input:
-    return (l == "input");
-  case Workaround::Native:
-    return (l == "native");
-  }
 }
 
 /**
@@ -139,13 +126,13 @@ bool operator==(const string &l, const Workaround &r) {
  */
 int identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
              bool auth_tok) {
-  // Open and read the config file
   INIReader reader("/lib/security/howdy/config.ini");
   // Open the system log so we can write to it
   openlog("pam_howdy", 0, LOG_AUTHPRIV);
 
   string workaround = reader.GetString("core", "workaround", "input");
-  // In this case, we are not asking for any password
+
+  // In this case, we are not asking for the password
   if (workaround == Workaround::Off)
     auth_tok = false;
 
@@ -200,12 +187,10 @@ int identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
     }
 
     for (size_t i = 0; i < glob_result.gl_pathc; i++) {
-      // Read the file contents
       ifstream file(string(glob_result.gl_pathv[i]));
       string lid_state;
       getline(file, lid_state, (char)file.eof());
 
-      // Stop if the lid is closed
       if (lid_state.find("closed") != std::string::npos) {
         globfree(&glob_result);
 
@@ -237,9 +222,10 @@ int identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
 
   posix_spawn_file_actions_t file_actions;
   posix_spawn_file_actions_init(&file_actions);
-  // We close stdout and stderr for the child
+  // We close standard descriptors for the child
   posix_spawn_file_actions_addclose(&file_actions, STDOUT_FILENO);
   posix_spawn_file_actions_addclose(&file_actions, STDERR_FILENO);
+  posix_spawn_file_actions_addclose(&file_actions, STDIN_FILENO);
 
   const char *const args[] = {
       "/usr/bin/python3", "/lib/security/howdy/compare.py", user_ptr, nullptr};
@@ -254,20 +240,23 @@ int identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
 
   mutex m;
   condition_variable cv;
-  Type t;
+  Type confirmation_type;
+
   // This task wait for the status of the python subprocess (we don't want a
-  // zombie process).
+  // zombie process)
   optional_task<int> child_task(packaged_task<int()>([&] {
     int status;
     wait(&status);
     {
       unique_lock<mutex> lk(m);
-      t = Type::Howdy;
+      confirmation_type = Type::Howdy;
     }
     cv.notify_all();
     return status;
   }));
+  child_task.activate();
 
+  // This task waits for the password input (if the workaround wants it)
   optional_task<tuple<int, char *>> pass_task(
       packaged_task<tuple<int, char *>()>([&] {
         char *auth_tok_ptr = nullptr;
@@ -275,35 +264,45 @@ int identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
                                       (const char **)&auth_tok_ptr, nullptr);
         {
           unique_lock<mutex> lk(m);
-          t = Type::Pam;
+          confirmation_type = Type::Pam;
         }
         cv.notify_all();
         return tuple<int, char *>(pam_res, auth_tok_ptr);
       }));
+
   if (auth_tok) {
     pass_task.activate();
   }
 
-  // Wait for the end
-  if (workaround == Workaround::Native) {
+  // Wait for the end either of the child or the password input
+  {
     unique_lock<mutex> lk(m);
     cv.wait(lk);
-  } else if (auth_tok) {
+  }
+
+  if (workaround != Workaround::Native && auth_tok) {
     pass_task.stop(false);
   }
 
-  if (t == Type::Howdy) {
+  if (confirmation_type == Type::Howdy) {
+    // This one is just to be sure that we're not going to block forever if the
+    // child has a problem
+    if (child_task.wait(3s) == future_status::timeout) {
+      kill(child_pid, SIGTERM);
+    }
+    child_task.stop(false);
+
+    // If the workaround is native
     if (auth_tok) {
       // We cancel the thread using pthread, pam_get_authtok seems to be a
       // cancellation point
-      if (child_task.wait(1s) == future_status::timeout) {
-        kill(child_pid, SIGTERM);
+      if (pass_task.is_active()) {
+        pass_task.stop(true);
       }
-      child_task.stop(false);
-      pass_task.stop(false);
     }
     int howdy_status = child_task.get();
 
+    // If exited succesfully
     if (howdy_status == 0) {
       if (!reader.GetBoolean("core", "no_confirmation", true)) {
         // Construct confirmation text from i18n string
@@ -319,13 +318,12 @@ int identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
       return on_howdy_auth(howdy_status, conv_function);
     }
   } else {
-    if (!(workaround == Workaround::Native)) {
+    if (workaround != Workaround::Native) {
       if (child_task.wait(1s) == future_status::timeout) {
         kill(child_pid, SIGTERM);
       }
       child_task.stop(false);
-    }
-    if (auth_tok) {
+    } else {
       pass_task.stop(false);
     }
 
@@ -353,6 +351,7 @@ int identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
       }
     }
 
+    // The password has been entered, we are passing it to PAM stack
     return PAM_IGNORE;
   }
 }

@@ -16,8 +16,9 @@ template <typename T> class optional_task {
 public:
   optional_task(std::packaged_task<T()>);
   void activate();
-  std::future_status wait(std::chrono::duration<int>);
+  template <typename Dur> std::future_status wait(std::chrono::duration<Dur>);
   T get();
+  bool is_active();
   void stop(bool);
   ~optional_task();
 };
@@ -31,8 +32,10 @@ template <typename T> void optional_task<T>::activate() {
   _spawned = true;
   _is_active = true;
 }
+
 template <typename T>
-std::future_status optional_task<T>::wait(std::chrono::duration<int> dur) {
+template <typename Dur>
+std::future_status optional_task<T>::wait(std::chrono::duration<Dur> dur) {
   return _future.wait_for(dur);
 }
 
@@ -40,6 +43,8 @@ template <typename T> T optional_task<T>::get() {
   assert(!_is_active && _spawned);
   return _future.get();
 }
+
+template <typename T> bool optional_task<T>::is_active() { return _is_active; }
 
 template <typename T> void optional_task<T>::stop(bool force) {
   if (!(_is_active && _thread.joinable()) && _spawned) {
