@@ -133,7 +133,7 @@ int identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
   string workaround = reader.GetString("core", "workaround", "input");
 
   // In this case, we are not asking for the password
-  if (workaround == Workaround::Off)
+  if (workaround == Workaround::Off && auth_tok)
     auth_tok = false;
 
   // Will contain PAM conversation function
@@ -241,6 +241,8 @@ int identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
   mutex m;
   condition_variable cv;
   Type confirmation_type;
+  // TODO: Find a clean way to do this
+  Type final_type;
 
   // This task wait for the status of the python subprocess (we don't want a
   // zombie process)
@@ -278,14 +280,11 @@ int identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
   {
     unique_lock<mutex> lk(m);
     cv.wait(lk);
+    final_type = confirmation_type;
   }
 
-  if (workaround != Workaround::Native && auth_tok) {
-    pass_task.stop(false);
-  }
-
-  if (confirmation_type == Type::Howdy) {
-    // This one is just to be sure that we're not going to block forever if the
+  if (final_type == Type::Howdy) {
+    // We need to be sure that we're not going to block forever if the
     // child has a problem
     if (child_task.wait(3s) == future_status::timeout) {
       kill(child_pid, SIGTERM);
@@ -317,43 +316,50 @@ int identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
     } else {
       return on_howdy_auth(howdy_status, conv_function);
     }
-  } else {
-    if (workaround != Workaround::Native) {
-      if (child_task.wait(1s) == future_status::timeout) {
-        kill(child_pid, SIGTERM);
-      }
-      child_task.stop(false);
-    } else {
-      pass_task.stop(false);
-    }
-
-    char *token = nullptr;
-    tie(pam_res, token) = pass_task.get();
-
-    if (pam_res != PAM_SUCCESS)
-      return pam_res;
-
-    int howdy_status = child_task.get();
-    if (strlen(token) == 0) {
-      if (howdy_status == 0) {
-        if (!reader.GetBoolean("core", "no_confirmation", true)) {
-          // Construct confirmation text from i18n string
-          string confirm_text = dgettext("pam", "Identified face as {}");
-          string identify_msg(confirm_text.replace(confirm_text.find("{}"), 2,
-                                                   string(user_ptr)));
-          // Send confirmation message to user
-          conv_function(PAM_TEXT_INFO, identify_msg.c_str());
-        }
-        syslog(LOG_INFO, "Login approved");
-        return PAM_SUCCESS;
-      } else {
-        return on_howdy_auth(howdy_status, conv_function);
-      }
-    }
-
-    // The password has been entered, we are passing it to PAM stack
-    return PAM_IGNORE;
   }
+
+  // The branch with Howdy confirmation type returns early, so we don't need an
+  // else statement
+
+  // Again, we need to be sure that we're not going to block forever if the
+  // child has a problem
+  if (child_task.wait(1.5s) == future_status::timeout) {
+    kill(child_pid, SIGTERM);
+  }
+  child_task.stop(false);
+
+  // We just wait for the thread to stop since it's this one which sent us the
+  // confirmation type
+  if (workaround == Workaround::Input && auth_tok) {
+    pass_task.stop(false);
+  }
+
+  char *token = nullptr;
+  tie(pam_res, token) = pass_task.get();
+
+  if (pam_res != PAM_SUCCESS)
+    return pam_res;
+
+  int howdy_status = child_task.get();
+  if (strlen(token) == 0) {
+    if (howdy_status == 0) {
+      if (!reader.GetBoolean("core", "no_confirmation", true)) {
+        // Construct confirmation text from i18n string
+        string confirm_text = dgettext("pam", "Identified face as {}");
+        string identify_msg(
+            confirm_text.replace(confirm_text.find("{}"), 2, string(user_ptr)));
+        // Send confirmation message to user
+        conv_function(PAM_TEXT_INFO, identify_msg.c_str());
+      }
+      syslog(LOG_INFO, "Login approved");
+      return PAM_SUCCESS;
+    } else {
+      return on_howdy_auth(howdy_status, conv_function);
+    }
+  }
+
+  // The password has been entered, we are passing it to PAM stack
+  return PAM_IGNORE;
 }
 
 // Called by PAM when a user needs to be authenticated, for example by running
