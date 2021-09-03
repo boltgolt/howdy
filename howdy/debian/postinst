@@ -81,7 +81,14 @@ if not os.path.exists("/tmp/howdy_picked_device"):
 					if key == "capture_failed" or key == "capture_successful":
 						if value == "true":
 							print("NOTICE: Howdy login image captures have been disabled by default, change the config to enable them again")
-						continue
+							value = "false"
+
+					# MIGRATION 2.6.1 -> 3.0.0
+					# Rename config options so they don't do the opposite of what is commonly expected
+					if key == "ignore_ssh":
+						key = "abort_if_ssh"
+					if key == "ignore_closed_lid":
+						key = "abort_if_lid_closed"
 
 					try:
 						newConf.set(section, key, value)
