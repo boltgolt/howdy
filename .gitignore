@@ -101,10 +101,10 @@ ENV/
 .mypy_cache/
 
 # generated models
-/src/models
+/howdy/src/models
 
 # snapshots
-/src/snapshots
+/howdy/src/snapshots
 
 # build files
 debian/howdy.substvars
