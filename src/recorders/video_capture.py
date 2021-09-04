@@ -6,6 +6,7 @@ import configparser
 import cv2
 import os
 import sys
+import time
 
 
 # Class to provide boilerplate code to build a video recorder with the
@@ -115,6 +116,13 @@ class VideoCapture:
 			self.internal = cv2.VideoCapture(
 				self.config.get("video", "device_path")
 			)
+
+		# Retry if we failed to open the camera
+		timeout = self.config.getint("video", "timeout", fallback=5)
+		start_time = time.time()
+		while not self.internal.isOpened() and time.time() - start_time < timeout:
+			time.sleep(0.2)
+			self.internal.open(self.config.get("video", "device_path"))
 
 		# Force MJPEG decoding if true
 		if self.config.getboolean("video", "force_mjpeg", fallback=False):
