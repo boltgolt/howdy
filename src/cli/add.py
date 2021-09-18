@@ -163,7 +163,7 @@ while frames < 60:
 video_capture.release()
 
 # If we've found no faces, try to determine why
-if face_locations is None or not face_locations:
+if not face_locations:
 	if valid_frames == 0:
 		print("Camera saw only black frames - is IR emitter working?")
 	elif valid_frames == dark_tries:
