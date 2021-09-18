@@ -15,7 +15,7 @@ config.read(os.path.dirname(os.path.abspath(__file__)) + "/config.ini")
 
 
 def doAuth(pamh):
-	"""Starts authentication in a seperate process"""
+	"""Starts authentication in a separate process"""
 
 	# Abort is Howdy is disabled
 	if config.getboolean("core", "disabled"):
@@ -81,7 +81,7 @@ def doAuth(pamh):
 		syslog.closelog()
 		return pamh.PAM_SUCCESS
 
-	# Otherwise, we can't discribe what happend but it wasn't successful
+	# Otherwise, we can't describe what happened but it wasn't successful
 	pamh.conversation(pamh.Message(pamh.PAM_ERROR_MSG, "Unknown error: " + str(status)))
 	syslog.syslog(syslog.LOG_INFO, "Failure, unknown error" + str(status))
 	syslog.closelog()
