@@ -111,3 +111,13 @@ This package is in no way as secure as a password and will never be. Although it
 To minimize the chance of this program being compromised, it's recommended to leave Howdy in `/lib/security` and to keep it read-only.
 
 DO NOT USE HOWDY AS THE SOLE AUTHENTICATION METHOD FOR YOUR SYSTEM.
+
+## Sponsors
+
+Thanks to the following organisations for supporting development on the Howdy project financially!
+
+<p align="center">
+	<a href="https://lifedigitalwiki.org/ja/torrent/">
+		<img src="https://i.imgur.com/NjFT21V.png">
+	</a>
+</p>
