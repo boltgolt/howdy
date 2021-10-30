@@ -192,8 +192,8 @@ class OnboardingWindow(gtk.Window):
 		self.treeview.set_model(self.listmodel)
 		self.treeview.set_cursor(0)
 
-		self.loadinglabel.hide()
 		self.treeview.show()
+		self.loadinglabel.hide()
 		self.enable_next()
 
 	def execute_slide3(self):
