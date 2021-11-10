@@ -68,12 +68,22 @@ class OnboardingWindow(gtk.Window):
 		eventbox = self.builder.get_object("downloadeventbox")
 		eventbox.modify_bg(gtk.StateType.NORMAL, gdk.Color(red=0, green=0, blue=0))
 
-		if os.path.exists("/lib/security/howdy/dlib-data/shape_predictor_5_face_landmarks.dat"):
+		for lib_site in ("/lib", "/usr/lib", "/lib64", "/usr/lib64"):
+			if os.path.exists(lib_site + "/security/howdy/"):
+				break
+			else:
+				lib_site = None
+		
+		if lib_site is None:
+			self.downloadoutputlabel.set_text(_("Unable to find Howdy's installation location"))
+			return
+
+		if os.path.exists(lib_site + "/security/howdy/dlib-data/shape_predictor_5_face_landmarks.dat"):
 			self.downloadoutputlabel.set_text(_("Datafiles have already been downloaded!\nClick Next to continue"))
 			self.enable_next()
 			return
 
-		self.proc = subprocess.Popen("./install.sh", stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True, cwd="/lib/security/howdy/dlib-data")
+		self.proc = subprocess.Popen("./install.sh", stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True, cwd=lib_site + "/security/howdy/dlib-data")
 
 		self.download_lines = []
 		self.read_download_line()
@@ -138,28 +148,21 @@ class OnboardingWindow(gtk.Window):
 				if re_name:
 					device_name = re_name.group(1)
 
+			capture = cv2.VideoCapture(device_path)
+			is_open, frame = capture.read()
+			if not is_open:
+				device_rows.append([device_name, device_path, -9, _("No, not an infrared camera")])
+				continue
+
 			try:
-				capture = cv2.VideoCapture(device_path)
-				capture.grab()
-				ret, frame = capture.read()
+				if not is_gray(frame):
+					raise Exception()
 			except Exception:
-				device_rows.append([device_name, device_path, -9, _("No, camera can't be opened")])
-				continue
-
-			if not is_gray(frame):
-				device_rows.append([device_name, device_path, -5, _("No, not an infrared camera")])
-				continue
-
-			time.sleep(.2)
-
-			ret, frame = capture.read()
-
-			if not is_gray(frame):
-				device_rows.append([device_name, device_path, -5, _("No, not an infrared camera")])
+				device_rows.append([device_name, device_path, -5, _("No, camera can't be opened")])
+				capture.release()
 				continue
 
 			device_rows.append([device_name, device_path, 5, _("Yes, compatible infrared camera")])
-
 			capture.release()
 
 		device_rows = sorted(device_rows, key=lambda k: -k[2])
@@ -189,8 +192,8 @@ class OnboardingWindow(gtk.Window):
 		self.treeview.set_model(self.listmodel)
 		self.treeview.set_cursor(0)
 
-		self.loadinglabel.hide()
 		self.treeview.show()
+		self.loadinglabel.hide()
 		self.enable_next()
 
 	def execute_slide3(self):
