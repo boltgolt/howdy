@@ -34,7 +34,8 @@ class OnboardingWindow(gtk.Window):
 			self.builder.get_object("slide2"),
 			self.builder.get_object("slide3"),
 			self.builder.get_object("slide4"),
-			self.builder.get_object("slide5")
+			self.builder.get_object("slide5"),
+			self.builder.get_object("slide6")
 		]
 
 		self.window.show_all()
@@ -48,8 +49,8 @@ class OnboardingWindow(gtk.Window):
 	def go_next_slide(self, button=None):
 		self.nextbutton.set_sensitive(False)
 
-		self.slides[self.window.current_slide].hide()
 		self.slides[self.window.current_slide + 1].show()
+		self.slides[self.window.current_slide].hide()
 		self.window.current_slide += 1
 
 		if self.window.current_slide == 1:
@@ -62,6 +63,8 @@ class OnboardingWindow(gtk.Window):
 			self.execute_slide4()
 		elif self.window.current_slide == 5:
 			self.execute_slide5()
+		elif self.window.current_slide == 6:
+			self.execute_slide6()
 
 	def execute_slide1(self):
 		self.downloadoutputlabel = self.builder.get_object("downloadoutputlabel")
@@ -151,14 +154,14 @@ class OnboardingWindow(gtk.Window):
 			capture = cv2.VideoCapture(device_path)
 			is_open, frame = capture.read()
 			if not is_open:
-				device_rows.append([device_name, device_path, -9, _("No, not an infrared camera")])
+				device_rows.append([device_name, device_path, -9, _("No, camera can't be opened")])
 				continue
 
 			try:
 				if not is_gray(frame):
 					raise Exception()
 			except Exception:
-				device_rows.append([device_name, device_path, -5, _("No, camera can't be opened")])
+				device_rows.append([device_name, device_path, -5, _("No, not an infrared camera")])
 				capture.release()
 				continue
 
@@ -197,6 +200,27 @@ class OnboardingWindow(gtk.Window):
 		self.enable_next()
 
 	def execute_slide3(self):
+		try:
+			import cv2
+		except Exception:
+			self.show_error(_("Error while importing OpenCV2"), _("Try reinstalling cv2"))
+
+		selection = self.treeview.get_selection()
+		(listmodel, rowlist) = selection.get_selected_rows()
+		
+		if len(rowlist) != 1:
+			self.show_error(_("Error selecting camera"))
+
+		device_path = listmodel.get_value(listmodel.get_iter(rowlist[0]), 2)
+
+		capture = cv2.VideoCapture(device_path)
+		if not capture.isOpened():
+			self.show_error(_("The selected camera can be opened"), _("Try to select another one"))
+		capture.read()
+		time.sleep(2)
+		capture.release()
+		
+	def execute_slide4(self):
 		selection = self.treeview.get_selection()
 		(listmodel, rowlist) = selection.get_selected_rows()
 
@@ -235,10 +259,10 @@ class OnboardingWindow(gtk.Window):
 
 		gobject.timeout_add(10, self.go_next_slide)
 
-	def execute_slide4(self):
+	def execute_slide5(self):
 		self.enable_next()
 
-	def execute_slide5(self):
+	def execute_slide6(self):
 		radio_buttons = self.builder.get_object("radiobalanced").get_group()
 		radio_selected = False
 		radio_certanty = 5.0
@@ -289,3 +313,28 @@ class OnboardingWindow(gtk.Window):
 		"""Cleanly exit"""
 		gtk.main_quit()
 		sys.exit(0)
+
+	def show_leie(self, button):
+		def install_leie():
+			if not os.path.exists("/usr/bin/linux-enable-ir-emitter"):	
+				subprocess.call(["git", "clone", "https://github.com/EmixamPP/linux-enable-ir-emitter.git", "/tmp/linux-enable-ir-emitter"])
+				subprocess.call(["bash", "installer.sh", "install"], cwd="/tmp/linux-enable-ir-emitter")
+				subprocess.call(["rm", "-rv", "linux-enable-ir-emitter"], cwd="/tmp")
+			
+		self.builder.get_object("leiebutton").hide()
+		self.builder.get_object("skipleiebutton").hide()
+		self.leiestatus = self.builder.get_object("leiestatus")
+		self.leiestatus.set_text(_("Please, look at the terminal in order to configure your webcam with linux-enable-ir-emitter. When it's done click on next"))
+
+		selection = self.treeview.get_selection()
+		(listmodel, rowlist) = selection.get_selected_rows()
+		
+		if len(rowlist) != 1:
+			self.show_error(_("Error selecting camera"))
+		
+		device_path = listmodel.get_value(listmodel.get_iter(rowlist[0]), 2)
+
+		install_leie()
+		subprocess.call(["gnome-terminal -- sh -c 'linux-enable-ir-emitter configure -d {} ; echo press enter to quit ; read'".format(device_path)], shell=True)
+
+		self.enable_next()
