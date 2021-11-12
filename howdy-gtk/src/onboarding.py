@@ -151,14 +151,14 @@ class OnboardingWindow(gtk.Window):
 			capture = cv2.VideoCapture(device_path)
 			is_open, frame = capture.read()
 			if not is_open:
-				device_rows.append([device_name, device_path, -9, _("No, not an infrared camera")])
+				device_rows.append([device_name, device_path, -9, _("No, camera can't be opened")])
 				continue
 
 			try:
 				if not is_gray(frame):
 					raise Exception()
 			except Exception:
-				device_rows.append([device_name, device_path, -5, _("No, camera can't be opened")])
+				device_rows.append([device_name, device_path, -5, _("No, not an infrared camera")])
 				capture.release()
 				continue
 
