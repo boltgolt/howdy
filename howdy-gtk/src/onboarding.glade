@@ -452,7 +452,7 @@ but will take much longer to authenticate you</property>
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
                     <property name="receives-default">True</property>
-                    <signal name="clicked" handler="go_next_slide" swapped="no"/>
+                    <signal name="clicked" handler="leie_button_yes" swapped="no"/>
                   </object>
                   <packing>
                     <property name="expand">True</property>
@@ -466,7 +466,7 @@ but will take much longer to authenticate you</property>
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
                     <property name="receives-default">True</property>
-                    <signal name="clicked" handler="show_leie" swapped="no"/>
+                    <signal name="clicked" handler="leie_button_no" swapped="no"/>
                   </object>
                   <packing>
                     <property name="expand">True</property>

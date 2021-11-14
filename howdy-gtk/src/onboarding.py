@@ -27,6 +27,12 @@ class OnboardingWindow(gtk.Window):
 
 		self.window = self.builder.get_object("onboardingwindow")
 		self.nextbutton = self.builder.get_object("nextbutton")
+		self.cancelbutton = self.builder.get_object("cancelbutton")
+
+		# used for linux-enable-ir-emitter https://github.com/EmixamPP/linux-enable-ir-emitter
+		self.leiestatus = self.builder.get_object("leiestatus")
+		self.leie_proc = None
+		self.leie_thread = None
 
 		self.slides = [
 			self.builder.get_object("slide0"),
@@ -217,7 +223,7 @@ class OnboardingWindow(gtk.Window):
 		if not capture.isOpened():
 			self.show_error(_("The selected camera can be opened"), _("Try to select another one"))
 		capture.read()
-		time.sleep(2)
+		time.sleep(1.5)
 		capture.release()
 		
 	def execute_slide4(self):
@@ -314,27 +320,82 @@ class OnboardingWindow(gtk.Window):
 		gtk.main_quit()
 		sys.exit(0)
 
-	def show_leie(self, button):
+	"""all methods used for linux-enable-ir-emitter https://github.com/EmixamPP/linux-enable-ir-emitter"""
+	def execute_leie(self):
 		def install_leie():
 			if not os.path.exists("/usr/bin/linux-enable-ir-emitter"):	
 				subprocess.call(["git", "clone", "https://github.com/EmixamPP/linux-enable-ir-emitter.git", "/tmp/linux-enable-ir-emitter"])
 				subprocess.call(["bash", "installer.sh", "install"], cwd="/tmp/linux-enable-ir-emitter")
 				subprocess.call(["rm", "-rv", "linux-enable-ir-emitter"], cwd="/tmp")
-			
+		
 		self.builder.get_object("leiebutton").hide()
 		self.builder.get_object("skipleiebutton").hide()
-		self.leiestatus = self.builder.get_object("leiestatus")
-		self.leiestatus.set_text(_("Please, look at the terminal in order to configure your webcam with linux-enable-ir-emitter. When it's done click on next"))
+		self.leiestatus.set_text(_(""))
+		self.cancelbutton.set_sensitive(False)
 
 		selection = self.treeview.get_selection()
 		(listmodel, rowlist) = selection.get_selected_rows()
 		
 		if len(rowlist) != 1:
 			self.show_error(_("Error selecting camera"))
-		
+
 		device_path = listmodel.get_value(listmodel.get_iter(rowlist[0]), 2)
 
 		install_leie()
-		subprocess.call(["gnome-terminal -- sh -c 'linux-enable-ir-emitter configure -d {} ; echo press enter to quit ; read'".format(device_path)], shell=True)
+		self.leie_proc = subprocess.Popen(["linux-enable-ir-emitter", "configure", "-p", "-d", device_path], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+		self.leie_thread = gobject.io_add_watch(self.leie_proc.stdout, gobject.IO_IN, self.process_leie)
+		gobject.io_add_watch(self.leie_proc.stdout, gobject.IO_HUP, self.exit_leie)			
+		
+	def process_leie(self, __, ___):
+		line = self.leie_proc.stdout.readline().decode("utf-8").strip()
+		self.leiestatus.set_text(_(line))
 
+		if "Yes/No" in line:
+			self.builder.get_object("leiebutton").show()
+			self.builder.get_object("skipleiebutton").show()
+			
+		return True
+
+	def leie_button_yes(self, button):
+		if self.leie_proc:
+			self.leie_proc.stdin.write(b"Yes\n")
+			self.leie_proc.stdin.flush()
+			self.builder.get_object("leiebutton").hide()
+			self.builder.get_object("skipleiebutton").hide()
+		else:
+			self.go_next_slide()
+
+	def leie_button_no(self, button):
+		if self.leie_proc:
+			self.leie_proc.stdin.write(b"No\n")
+			self.leie_proc.stdin.flush()
+			self.builder.get_object("leiebutton").hide()
+			self.builder.get_object("skipleiebutton").hide()
+		else:
+			self.execute_leie()
+	
+	def exit_leie(self, __, ___):
+		selection = self.treeview.get_selection()
+		(listmodel, rowlist) = selection.get_selected_rows()
+		
+		if len(rowlist) != 1:
+			self.show_error(_("Error selecting camera"))
+
+		device_path = listmodel.get_value(listmodel.get_iter(rowlist[0]), 2)
+		device_path = os.path.realpath(device_path)  # reduce to /dev/videoX format (more readable)
+
+		gobject.source_remove(self.leie_thread)
+		self.leie_proc.stdout.close()
+		self.leie_proc.stdin.close()
+		status = self.leie_proc.wait()
+
+		if status != 0:
+			self.leiestatus.set_text(_("The configuration of your infrared camera by linux-enable-ir-emitter has failed. \
+You can try again by executing the command 'linux-enable-ir-emitter configure -d {}. \
+Please visit https://github.com/EmixamPP/linux-enable-ir-emitter/wiki in order to get more information.").format(device_path))
+		else:
+			self.leiestatus.set_text(_("A driver has been successfully genereted for your infrared camera by linux-enable-ir-emitter https://github.com/EmixamPP/linux-enable-ir-emitter/. \
+This software is now installed on your computer, please reboot after Howdy has been configured."))
+
+		self.cancelbutton.set_sensitive(True)
 		self.enable_next()
