@@ -3,6 +3,7 @@ import os
 import re
 import time
 import subprocess
+import shutil
 
 from i18n import _
 
@@ -193,10 +194,11 @@ class OnboardingWindow(gtk.Window):
 		self.devicelistbox.add(self.treeview)
 
 		# Create a datamodel
-		self.listmodel = gtk.ListStore(str, str, str)
+		self.listmodel = gtk.ListStore(str, str, str, bool)
 
 		for device in device_rows:
-			self.listmodel.append([device[0], device[3], device[1]])
+			is_gray = device[2] == 5
+			self.listmodel.append([device[0], device[3], device[1], is_gray])
 
 		self.treeview.set_model(self.listmodel)
 		self.treeview.set_cursor(0)
@@ -204,28 +206,7 @@ class OnboardingWindow(gtk.Window):
 		self.treeview.show()
 		self.loadinglabel.hide()
 		self.enable_next()
-
-	def execute_slide3(self):
-		try:
-			import cv2
-		except Exception:
-			self.show_error(_("Error while importing OpenCV2"), _("Try reinstalling cv2"))
-
-		selection = self.treeview.get_selection()
-		(listmodel, rowlist) = selection.get_selected_rows()
-		
-		if len(rowlist) != 1:
-			self.show_error(_("Error selecting camera"))
-
-		device_path = listmodel.get_value(listmodel.get_iter(rowlist[0]), 2)
-
-		capture = cv2.VideoCapture(device_path)
-		if not capture.isOpened():
-			self.show_error(_("The selected camera can be opened"), _("Try to select another one"))
-		capture.read()
-		time.sleep(1.5)
-		capture.release()
-		
+	
 	def execute_slide4(self):
 		selection = self.treeview.get_selection()
 		(listmodel, rowlist) = selection.get_selected_rows()
@@ -321,6 +302,34 @@ class OnboardingWindow(gtk.Window):
 		sys.exit(0)
 
 	"""all methods used for linux-enable-ir-emitter https://github.com/EmixamPP/linux-enable-ir-emitter"""
+	def execute_slide3(self):
+		try:
+			import cv2
+		except Exception:
+			self.show_error(_("Error while importing OpenCV2"), _("Try reinstalling cv2"))
+
+		selection = self.treeview.get_selection()
+		(listmodel, rowlist) = selection.get_selected_rows()
+		
+		if len(rowlist) != 1:
+			self.show_error(_("Error selecting camera"))
+
+		device_path = listmodel.get_value(listmodel.get_iter(rowlist[0]), 2)
+		is_gray = listmodel.get_value(listmodel.get_iter(rowlist[0]), 3)
+
+		if is_gray:  
+			# test if linux-enable-ir-emitter should be executed, 
+			# the user must click on the yes/no button which calls the method leie_button_yes|no
+			capture = cv2.VideoCapture(device_path)
+			if not capture.isOpened():
+				self.show_error(_("The selected camera can be opened"), _("Try to select another one"))
+			capture.read()
+			time.sleep(1.5)
+			capture.release()
+		else:  
+			# skip linux-enable-ir-emitter execution, the selected camera isn't an infrared camera
+			self.go_next_slide()
+
 	def execute_leie(self):
 		def install_leie():
 			if not os.path.exists("/usr/bin/linux-enable-ir-emitter"):	
