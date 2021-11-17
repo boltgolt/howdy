@@ -51,12 +51,14 @@ You will need to do some additional configuration steps. Please read the [ArchWi
 ### Fedora
 _Maintainer: [@luyatshimbalanga](https://github.com/luyatshimbalanga)_
 
-The `howdy` package is available as a [Fedora COPR repository](https://copr.fedorainfracloud.org/coprs/luya/howdy/), install it by simply executing the following commands in a terminal:
+The `howdy` package is available as a [Fedora COPR repository](https://copr.fedorainfracloud.org/coprs/principis/howdy/), install it by simply executing the following commands in a terminal:
 
 ```
-sudo dnf copr enable luya/howdy
-sudo dnf install howdy
+sudo dnf copr enable principis/howdy
+sudo dnf --refresh install howdy
 ```
+
+See the link to the COPR repository for detailed configuration steps.
 
 ### openSUSE
 _Maintainer: [@dmafanasyev](https://github.com/dmafanasyev)_
