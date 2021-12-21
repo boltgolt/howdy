@@ -332,10 +332,20 @@ class OnboardingWindow(gtk.Window):
 
 	def execute_leie(self):
 		def install_leie():
-			if not os.path.exists("/usr/bin/linux-enable-ir-emitter"):	
-				subprocess.call(["git", "clone", "https://github.com/EmixamPP/linux-enable-ir-emitter.git", "/tmp/linux-enable-ir-emitter"])
-				subprocess.call(["bash", "installer.sh", "install"], cwd="/tmp/linux-enable-ir-emitter")
-				subprocess.call(["rm", "-rv", "linux-enable-ir-emitter"], cwd="/tmp")
+			if not shutil.which("/usr/bin/linux-enable-ir-emitter"):	
+				version = "3.2.5"
+
+				downloader = shutil.which("wget")
+				if downloader:  # wget
+					download_cmd = [downloader, "--tries", "5", "--output-document"]
+				else:  # curl
+					downloader = shutil.which("curl")
+					download_cmd = [downloader, "--retry", "5", "--location", "--output"]
+
+				subprocess.call(download_cmd + ["/tmp/linux-enable-ir-emitter.tar.gz", "https://github.com/EmixamPP/linux-enable-ir-emitter/archive/{}.tar.gz".format(version)])
+				subprocess.call(["tar", "-cvzf ", "linux-enable-ir-emitter.tar.gz"], cwd="/tmp/")
+				subprocess.call(["bash", "installer.sh", "install"], cwd="/tmp/linux-enable-ir-emitter-{}/".format(version))
+				subprocess.call(["rm", "-rv", "linux-enable-ir-emitter*"], cwd="/tmp/")
 		
 		self.builder.get_object("leiebutton").hide()
 		self.builder.get_object("skipleiebutton").hide()
