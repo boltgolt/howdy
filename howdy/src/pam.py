@@ -17,7 +17,7 @@ config.read(os.path.dirname(os.path.abspath(__file__)) + "/config.ini")
 def doAuth(pamh):
 	"""Starts authentication in a seperate process"""
 
-	# Abort is Howdy is disabled
+	# Abort if Howdy is disabled
 	if config.getboolean("core", "disabled"):
 		return pamh.PAM_AUTHINFO_UNAVAIL
 

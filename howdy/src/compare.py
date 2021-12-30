@@ -96,7 +96,7 @@ def send_to_ui(type, message):
 			pass
 
 
-# Make sure we were given an username to tast against
+# Make sure we were given an username to test against
 if len(sys.argv) < 2:
 	exit(12)
 
@@ -272,7 +272,7 @@ while True:
 		dark_tries += 1
 		continue
 
-	# If the hight is too high
+	# If the height is too high
 	if scaling_factor != 1:
 		# Apply that factor to the frame
 		frame = cv2.resize(frame, None, fx=scaling_factor, fy=scaling_factor, interpolation=cv2.INTER_AREA)
