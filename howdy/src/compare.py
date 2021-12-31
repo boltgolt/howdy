@@ -102,8 +102,8 @@ if len(sys.argv) < 2:
 	exit(12)
 
 # Get the absolute path to the current directory
-#PATH = os.path.abspath(__file__ + "/..")
-PATH = "/usr/lib/security/howdy"
+PATH = os.path.abspath(__file__ + "/..")
+
 # The username of the user being authenticated
 user = sys.argv[1]
 # The model file contents
