@@ -102,8 +102,8 @@ if len(sys.argv) < 2:
 	exit(12)
 
 # Get the absolute path to the current directory
-PATH = os.path.abspath(__file__ + "/..")
-
+#PATH = os.path.abspath(__file__ + "/..")
+PATH = "/usr/lib/security/howdy"
 # The username of the user being authenticated
 user = sys.argv[1]
 # The model file contents
@@ -202,9 +202,11 @@ screen_width = dsp.screen().width_in_pixels
 screen_height = dsp.screen().height_in_pixels
 if screen_height > screen_width:
 	landscape = False
-# Get the height of the image
-height = video_capture.internal.get(cv2.CAP_PROP_FRAME_HEIGHT) or 1
-
+# Get the height of the image (which would be the width if screen is portait oriented)
+if landscape:
+	height = video_capture.internal.get(cv2.CAP_PROP_FRAME_HEIGHT) or 1
+else:
+	height = video_capture.internal.get(cv2.CAP_PROP_FRAME_WIDTH) or 1
 # Calculate the amount the image has to shrink
 scaling_factor = (max_height / height) or 1
 
@@ -286,11 +288,18 @@ while True:
 		# Apply that factor to the frame
 		frame = cv2.resize(frame, None, fx=scaling_factor, fy=scaling_factor, interpolation=cv2.INTER_AREA)
 		gsframe = cv2.resize(gsframe, None, fx=scaling_factor, fy=scaling_factor, interpolation=cv2.INTER_AREA)
-
+	# If orientaion is portrait
+	# Alternate checking photo rotated clockwise and counter clockwise (since we don't know which side portrait is to)
+	if not landscape:
+		if frames % 2 == 0:
+			frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
+			gsframe = cv2.rotate(gsframe, cv2.ROTATE_90_COUNTERCLOCKWISE)
+		else:
+			frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
+			gsframe = cv2.rotate(gsframe, cv2.ROTATE_90_CLOCKWISE)
 	# Get all faces from that frame as encodings
 	# Upsamples 1 time
 	face_locations = face_detector(gsframe, 1)
-
 	# Loop through each face
 	for fl in face_locations:
 		if use_cnn:
