@@ -22,6 +22,7 @@ import subprocess
 import snapshot
 import numpy as np
 import _thread as thread
+import Xlib.display as display
 
 from i18n import _
 from recorders.video_capture import VideoCapture
@@ -193,6 +194,14 @@ del lock
 
 # Fetch the max frame height
 max_height = config.getfloat("video", "max_height", fallback=0.0)
+
+# Get screen orientaion
+landscape = True
+dsp = display.Display()
+screen_width = dsp.screen().width_in_pixels
+screen_height = dsp.screen().height_in_pixels
+if screen_height > screen_width:
+	landscape = False
 # Get the height of the image
 height = video_capture.internal.get(cv2.CAP_PROP_FRAME_HEIGHT) or 1
 
