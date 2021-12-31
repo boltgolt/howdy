@@ -118,6 +118,11 @@ log("Upgrading numpy to the latest version")
 # Update numpy
 handleStatus(subprocess.call(["pip3", "install", "--upgrade", "numpy"]))
 
+log("Installing xlib")
+
+# Install xlib
+handleStatus(subprocess.call(["pip3", "install", "--upgrade", "python3-xlib"]))
+
 log("Downloading and unpacking data files")
 
 # Run the bash script to download and unpack the .dat files needed
