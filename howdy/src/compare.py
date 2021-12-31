@@ -195,14 +195,14 @@ del lock
 # Fetch the max frame height
 max_height = config.getfloat("video", "max_height", fallback=0.0)
 
-# Get screen orientaion
+# Get screen orientation
 landscape = True
 dsp = display.Display()
 screen_width = dsp.screen().width_in_pixels
 screen_height = dsp.screen().height_in_pixels
 if screen_height > screen_width:
 	landscape = False
-# Get the height of the image (which would be the width if screen is portait oriented)
+# Get the height of the image (which would be the width if screen is portrait oriented)
 if landscape:
 	height = video_capture.internal.get(cv2.CAP_PROP_FRAME_HEIGHT) or 1
 else:
@@ -288,7 +288,7 @@ while True:
 		# Apply that factor to the frame
 		frame = cv2.resize(frame, None, fx=scaling_factor, fy=scaling_factor, interpolation=cv2.INTER_AREA)
 		gsframe = cv2.resize(gsframe, None, fx=scaling_factor, fy=scaling_factor, interpolation=cv2.INTER_AREA)
-	# If orientaion is portrait
+	# If orientation is portrait
 	# Alternate checking photo rotated clockwise and counter clockwise (since we don't know which side portrait is to)
 	if not landscape:
 		if frames % 2 == 0:
