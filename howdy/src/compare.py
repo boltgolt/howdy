@@ -96,7 +96,7 @@ def send_to_ui(type, message):
 			pass
 
 
-# Make sure we were given an username to tast against
+# Make sure we were given an username to test against
 if len(sys.argv) < 2:
 	exit(12)
 
@@ -150,6 +150,7 @@ end_report = config.getboolean("debug", "end_report", fallback=False)
 capture_failed = config.getboolean("snapshots", "capture_failed", fallback=False)
 capture_successful = config.getboolean("snapshots", "capture_successful", fallback=False)
 gtk_stdout = config.getboolean("debug", "gtk_stdout", fallback=False)
+rotate = config.getint("video", "rotate", fallback=0)
 
 # Send the gtk outupt to the terminal if enabled in the config
 gtk_pipe = sys.stdout if gtk_stdout else subprocess.DEVNULL
@@ -193,9 +194,11 @@ del lock
 
 # Fetch the max frame height
 max_height = config.getfloat("video", "max_height", fallback=0.0)
-# Get the height of the image
-height = video_capture.internal.get(cv2.CAP_PROP_FRAME_HEIGHT) or 1
 
+# Get the height of the image (which would be the width if screen is portrait oriented)
+height = video_capture.internal.get(cv2.CAP_PROP_FRAME_HEIGHT) or 1
+if rotate == 2:
+	height = video_capture.internal.get(cv2.CAP_PROP_FRAME_WIDTH) or 1
 # Calculate the amount the image has to shrink
 scaling_factor = (max_height / height) or 1
 
@@ -272,16 +275,30 @@ while True:
 		dark_tries += 1
 		continue
 
-	# If the hight is too high
+	# If the height is too high
 	if scaling_factor != 1:
 		# Apply that factor to the frame
 		frame = cv2.resize(frame, None, fx=scaling_factor, fy=scaling_factor, interpolation=cv2.INTER_AREA)
 		gsframe = cv2.resize(gsframe, None, fx=scaling_factor, fy=scaling_factor, interpolation=cv2.INTER_AREA)
-
+	# If camera is configured to rotate = 1, check portrait in addition to landscape
+	if rotate == 1:
+		if frames % 3 == 1:
+			frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
+			gsframe = cv2.rotate(gsframe, cv2.ROTATE_90_COUNTERCLOCKWISE)
+		if frames % 3 == 2:
+			frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
+			gsframe = cv2.rotate(gsframe, cv2.ROTATE_90_CLOCKWISE)
+	# If camera is configured to rotate = 2, check portrait orientation
+	elif rotate == 2:
+		if frames % 2 == 0:
+			frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
+			gsframe = cv2.rotate(gsframe, cv2.ROTATE_90_COUNTERCLOCKWISE)
+		else:
+			frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
+			gsframe = cv2.rotate(gsframe, cv2.ROTATE_90_CLOCKWISE)
 	# Get all faces from that frame as encodings
 	# Upsamples 1 time
 	face_locations = face_detector(gsframe, 1)
-
 	# Loop through each face
 	for fl in face_locations:
 		if use_cnn:
