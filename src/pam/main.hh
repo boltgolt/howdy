@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <string>
 
-enum class Type { Howdy, Pam };
+enum class Type { Unset, Howdy, Pam };
 
 enum class Workaround { Off, Input, Native };
 

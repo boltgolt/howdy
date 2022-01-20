@@ -175,7 +175,7 @@ int identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
 
   // Try to detect the laptop lid state and stop if it's closed
   if (reader.GetBoolean("core", "ignore_closed_lid", true)) {
-    glob_t glob_result{};
+    glob_t glob_result;
 
     // Get any files containing lid state
     int return_value =
@@ -238,22 +238,27 @@ int identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
     return PAM_SYSTEM_ERR;
   }
 
+  // NOTE: We could replace mutex and condition_variable by atomic wait, but
+  // it's too recent (C++20)
   mutex m;
   condition_variable cv;
-  Type confirmation_type;
-  // TODO: Find a clean way to do this
-  Type final_type;
+  atomic<Type> confirmation_type(Type::Unset);
 
   // This task wait for the status of the python subprocess (we don't want a
   // zombie process)
   optional_task<int> child_task(packaged_task<int()>([&] {
     int status;
     wait(&status);
+
     {
       unique_lock<mutex> lk(m);
-      confirmation_type = Type::Howdy;
+      Type type = confirmation_type.load(memory_order_acquire);
+      if (type == Type::Unset) {
+        confirmation_type.store(Type::Howdy, memory_order_release);
+      }
     }
-    cv.notify_all();
+    cv.notify_one();
+
     return status;
   }));
   child_task.activate();
@@ -266,9 +271,13 @@ int identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
                                       (const char **)&auth_tok_ptr, nullptr);
         {
           unique_lock<mutex> lk(m);
-          confirmation_type = Type::Pam;
+          Type type = confirmation_type.load(memory_order_acquire);
+          if (type == Type::Unset) {
+            confirmation_type.store(Type::Pam, memory_order_release);
+          }
         }
-        cv.notify_all();
+        cv.notify_one();
+
         return tuple<int, char *>(pam_res, auth_tok_ptr);
       }));
 
@@ -279,16 +288,10 @@ int identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
   // Wait for the end either of the child or the password input
   {
     unique_lock<mutex> lk(m);
-    cv.wait(lk);
-    final_type = confirmation_type;
+    cv.wait(lk, [&] { return confirmation_type != Type::Unset; });
   }
 
-  if (final_type == Type::Howdy) {
-    // We need to be sure that we're not going to block forever if the
-    // child has a problem
-    if (child_task.wait(3s) == future_status::timeout) {
-      kill(child_pid, SIGTERM);
-    }
+  if (confirmation_type == Type::Howdy) {
     child_task.stop(false);
 
     // If the workaround is native
@@ -313,13 +316,13 @@ int identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
       }
       syslog(LOG_INFO, "Login approved");
       return PAM_SUCCESS;
-    } else {
-      return on_howdy_auth(howdy_status, conv_function);
     }
+
+    // We got an error
+    return on_howdy_auth(howdy_status, conv_function);
   }
 
-  // The branch with Howdy confirmation type returns early, so we don't need an
-  // else statement
+  // The password has been entered
 
   // Again, we need to be sure that we're not going to block forever if the
   // child has a problem
@@ -334,14 +337,15 @@ int identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
     pass_task.stop(false);
   }
 
-  char *token = nullptr;
-  tie(pam_res, token) = pass_task.get();
+  char *password = nullptr;
+  tie(pam_res, password) = pass_task.get();
 
   if (pam_res != PAM_SUCCESS)
     return pam_res;
 
   int howdy_status = child_task.get();
-  if (strlen(token) == 0) {
+  // If python process sent Enter key
+  if (strlen(password) == 0) {
     if (howdy_status == 0) {
       if (!reader.GetBoolean("core", "no_confirmation", true)) {
         // Construct confirmation text from i18n string
