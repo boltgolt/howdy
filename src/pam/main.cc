@@ -100,19 +100,16 @@ int on_howdy_auth(int code, function<int(int, const char *)> conv_function) {
  * @param  message String to show the user
  * @return         Returns the conversation function return code
  */
-int send_message(function<int(int, const struct pam_message **,
-                              struct pam_response **, void *)>
-                     conv,
-                 int type, const char *message) {
+int send_message(struct pam_conv *conv, int type, const char *message) {
   // No need to free this, it's allocated on the stack
   const struct pam_message msg = {.msg_style = type, .msg = message};
   const struct pam_message *msgp = &msg;
 
-  struct pam_response res_ = {};
-  struct pam_response *resp_ = &res_;
+  struct pam_response res = {};
+  struct pam_response *resp = &res;
 
   // Call the conversation function with the constructed arguments
-  return conv(1, &msgp, &resp_, nullptr);
+  return conv->conv(1, &msgp, &resp, conv->appdata_ptr);
 }
 
 /**
@@ -150,7 +147,7 @@ int identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
 
   // Wrap the PAM conversation function in our own, easier function
   auto conv_function =
-      bind(send_message, conv->conv, placeholders::_1, placeholders::_2);
+      bind(send_message, conv, placeholders::_1, placeholders::_2);
 
   // Error out if we could not ready the config file
   if (reader.ParseError() < 0) {
