@@ -247,10 +247,6 @@ int identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
 
   posix_spawn_file_actions_t file_actions;
   posix_spawn_file_actions_init(&file_actions);
-  // We close standard descriptors for the child
-  posix_spawn_file_actions_addclose(&file_actions, STDOUT_FILENO);
-  posix_spawn_file_actions_addclose(&file_actions, STDERR_FILENO);
-  posix_spawn_file_actions_addclose(&file_actions, STDIN_FILENO);
 
   const char *const args[] = {
       "/usr/bin/python3", "/lib/security/howdy/compare.py", username, nullptr};
