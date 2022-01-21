@@ -3,10 +3,9 @@
 #include <cstdlib>
 #include <glob.h>
 #include <ostream>
-#include <poll.h>
+
 #include <pthread.h>
 #include <spawn.h>
-#include <sys/poll.h>
 #include <sys/signalfd.h>
 #include <sys/syslog.h>
 #include <sys/types.h>
@@ -44,21 +43,20 @@
 
 using namespace std;
 using namespace boost::locale;
-using namespace std::chrono_literals;
 
 /**
  * Inspect the status code returned by the compare process
- * @param  code          The status code
+ * @param  status        The status code
  * @param  conv_function The PAM conversation function
  * @return               A PAM return code
  */
-int on_howdy_auth(int code, function<int(int, const char *)> conv_function) {
+int howdy_error(int status, function<int(int, const char *)> conv_function) {
   // If the process has exited
-  if (!WIFEXITED(code)) {
+  if (!WIFEXITED(status)) {
     // Get the status code returned
-    code = WEXITSTATUS(code);
+    status = WEXITSTATUS(status);
 
-    switch (code) {
+    switch (status) {
     // Status 10 means we couldn't find any face models
     case 10:
       conv_function(PAM_ERROR_MSG,
@@ -81,16 +79,44 @@ int on_howdy_auth(int code, function<int(int, const char *)> conv_function) {
       break;
     // Otherwise, we can't describe what happened but it wasn't successful
     default:
-      conv_function(
-          PAM_ERROR_MSG,
-          string(dgettext("pam", "Unknown error:") + to_string(code)).c_str());
-      syslog(LOG_INFO, "Failure, unknown error %d", code);
+      conv_function(PAM_ERROR_MSG, string(dgettext("pam", "Unknown error:") +
+                                          to_string(status))
+                                       .c_str());
+      syslog(LOG_INFO, "Failure, unknown error %d", status);
     }
   }
 
   // As this function is only called for error status codes, signal an error to
   // PAM
   return PAM_AUTH_ERR;
+}
+
+/**
+ * Format the success message if the status is successful or log the error in
+ * the other case
+ * @param  username      Username
+ * @param  status        Status code
+ * @param  reader        INI  configuration
+ * @param  conv_function PAM conversation function
+ * @return          Returns the conversation function return code
+ */
+int howdy_msg(char *username, int status, INIReader &reader,
+              function<int(int, const char *)> conv_function) {
+  if (status != EXIT_SUCCESS) {
+    return howdy_error(status, conv_function);
+  }
+
+  if (!reader.GetBoolean("core", "no_confirmation", true)) {
+    // Construct confirmation text from i18n string
+    string confirm_text = dgettext("pam", "Identified face as {}");
+    string identify_msg =
+        confirm_text.replace(confirm_text.find("{}"), 2, string(username));
+    conv_function(PAM_TEXT_INFO, identify_msg.c_str());
+  }
+
+  syslog(LOG_INFO, "Login approved");
+
+  return PAM_SUCCESS;
 }
 
 /**
@@ -130,10 +156,11 @@ int identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
   string workaround = reader.GetString("core", "workaround", "input");
 
   // In this case, we are not asking for the password
-  if (workaround == Workaround::Off && auth_tok)
+  if (workaround == Workaround::Off && auth_tok) {
     auth_tok = false;
+  }
 
-  // Will contain PAM conversation function
+  // Will contain PAM conversation structure
   struct pam_conv *conv = nullptr;
   // Will contain the responses from PAM functions
   int pam_res = PAM_IGNORE;
@@ -210,8 +237,8 @@ int identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
   }
 
   // Get the username from PAM, needed to match correct face model
-  char *user_ptr = nullptr;
-  if ((pam_res = pam_get_user(pamh, (const char **)&user_ptr, nullptr)) !=
+  char *username = nullptr;
+  if ((pam_res = pam_get_user(pamh, (const char **)&username, nullptr)) !=
       PAM_SUCCESS) {
     syslog(LOG_ERR, "Failed to get username");
     return pam_res;
@@ -225,7 +252,7 @@ int identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
   posix_spawn_file_actions_addclose(&file_actions, STDIN_FILENO);
 
   const char *const args[] = {
-      "/usr/bin/python3", "/lib/security/howdy/compare.py", user_ptr, nullptr};
+      "/usr/bin/python3", "/lib/security/howdy/compare.py", username, nullptr};
   pid_t child_pid;
 
   // Start the python subprocess
@@ -235,7 +262,7 @@ int identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
     return PAM_SYSTEM_ERR;
   }
 
-  // NOTE: We could replace mutex and condition_variable by atomic wait, but
+  // NOTE: We should replace mutex and condition_variable by atomic wait, but
   // it's too recent (C++20)
   mutex m;
   condition_variable cv;
@@ -301,66 +328,38 @@ int identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
     }
     int howdy_status = child_task.get();
 
-    // If exited successfully
-    if (howdy_status == 0) {
-      if (!reader.GetBoolean("core", "no_confirmation", true)) {
-        // Construct confirmation text from i18n string
-        string confirm_text = dgettext("pam", "Identified face as {}");
-        string identify_msg(
-            confirm_text.replace(confirm_text.find("{}"), 2, string(user_ptr)));
-        // Send confirmation message to user
-        conv_function(PAM_TEXT_INFO, identify_msg.c_str());
-      }
-      syslog(LOG_INFO, "Login approved");
-      return PAM_SUCCESS;
+    return howdy_msg(username, howdy_status, reader, conv_function);
+  } else {
+    // The password has been entered
+
+    // We need to be sure that we're not going to block forever if the
+    // child has a problem
+    if (child_task.wait(1.5s) == future_status::timeout) {
+      kill(child_pid, SIGTERM);
+    }
+    child_task.stop(false);
+
+    // We just wait for the thread to stop since it's this one which sent us the
+    // confirmation type
+    if (workaround == Workaround::Input && auth_tok) {
+      pass_task.stop(false);
     }
 
-    // We got an error
-    return on_howdy_auth(howdy_status, conv_function);
-  }
+    char *password = nullptr;
+    tie(pam_res, password) = pass_task.get();
 
-  // The password has been entered
+    if (pam_res != PAM_SUCCESS)
+      return pam_res;
 
-  // Again, we need to be sure that we're not going to block forever if the
-  // child has a problem
-  if (child_task.wait(1.5s) == future_status::timeout) {
-    kill(child_pid, SIGTERM);
-  }
-  child_task.stop(false);
-
-  // We just wait for the thread to stop since it's this one which sent us the
-  // confirmation type
-  if (workaround == Workaround::Input && auth_tok) {
-    pass_task.stop(false);
-  }
-
-  char *password = nullptr;
-  tie(pam_res, password) = pass_task.get();
-
-  if (pam_res != PAM_SUCCESS)
-    return pam_res;
-
-  int howdy_status = child_task.get();
-  // If python process sent Enter key
-  if (strlen(password) == 0) {
-    if (howdy_status == 0) {
-      if (!reader.GetBoolean("core", "no_confirmation", true)) {
-        // Construct confirmation text from i18n string
-        string confirm_text = dgettext("pam", "Identified face as {}");
-        string identify_msg(
-            confirm_text.replace(confirm_text.find("{}"), 2, string(user_ptr)));
-        // Send confirmation message to user
-        conv_function(PAM_TEXT_INFO, identify_msg.c_str());
-      }
-      syslog(LOG_INFO, "Login approved");
-      return PAM_SUCCESS;
-    } else {
-      return on_howdy_auth(howdy_status, conv_function);
+    int howdy_status = child_task.get();
+    // If python process (or user) sent Enter key
+    if (strlen(password) == 0) {
+      return howdy_msg(username, howdy_status, reader, conv_function);
     }
-  }
 
-  // The password has been entered, we are passing it to PAM stack
-  return PAM_IGNORE;
+    // The password has been entered, we are passing it to PAM stack
+    return PAM_IGNORE;
+  }
 }
 
 // Called by PAM when a user needs to be authenticated, for example by running
