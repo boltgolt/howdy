@@ -14,12 +14,13 @@ template <typename T> class optional_task {
   std::atomic<bool> _is_active;
 
 public:
-  optional_task(std::packaged_task<T()>);
+  explicit optional_task(std::packaged_task<T()> task);
   void activate();
-  template <typename Dur> std::future_status wait(std::chrono::duration<Dur>);
-  T get();
-  bool is_active();
-  void stop(bool);
+  template <typename Dur, typename Rat>
+  auto wait(std::chrono::duration<Dur, Rat> dur) -> std::future_status;
+  auto get() -> T;
+  auto is_active() -> bool;
+  void stop(bool force);
   ~optional_task();
 };
 
@@ -34,17 +35,20 @@ template <typename T> void optional_task<T>::activate() {
 }
 
 template <typename T>
-template <typename Dur>
-std::future_status optional_task<T>::wait(std::chrono::duration<Dur> dur) {
+template <typename Dur, typename Rat>
+auto optional_task<T>::wait(std::chrono::duration<Dur, Rat> dur)
+    -> std::future_status {
   return _future.wait_for(dur);
 }
 
-template <typename T> T optional_task<T>::get() {
+template <typename T> auto optional_task<T>::get() -> T {
   assert(!_is_active && _spawned);
   return _future.get();
 }
 
-template <typename T> bool optional_task<T>::is_active() { return _is_active; }
+template <typename T> auto optional_task<T>::is_active() -> bool {
+  return _is_active;
+}
 
 template <typename T> void optional_task<T>::stop(bool force) {
   if (!(_is_active && _thread.joinable()) && _spawned) {
@@ -62,8 +66,9 @@ template <typename T> void optional_task<T>::stop(bool force) {
 }
 
 template <typename T> optional_task<T>::~optional_task<T>() {
-  if (_is_active && _spawned)
+  if (_is_active && _spawned) {
     stop(false);
+  }
 }
 
 #endif // OPTIONAL_TASK_H_

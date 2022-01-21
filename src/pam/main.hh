@@ -4,16 +4,18 @@
 #include <cstdint>
 #include <string>
 
-enum class Type { Unset, Howdy, Pam };
+enum class ConfirmationType { Unset, Howdy, Pam };
 
 enum class Workaround { Off, Input, Native };
 
-inline Workaround get_workaround(std::string workaround) {
-  if (workaround == "input")
+inline auto get_workaround(const std::string &workaround) -> Workaround {
+  if (workaround == "input") {
     return Workaround::Input;
+  }
 
-  if (workaround == "native")
+  if (workaround == "native") {
     return Workaround::Native;
+  }
 
   return Workaround::Off;
 }
