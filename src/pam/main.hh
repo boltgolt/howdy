@@ -8,29 +8,14 @@ enum class Type { Unset, Howdy, Pam };
 
 enum class Workaround { Off, Input, Native };
 
-inline bool operator==(const std::string &l, const Workaround &r) {
-  switch (r) {
-  case Workaround::Off:
-    return (l == "off");
-  case Workaround::Input:
-    return (l == "input");
-  case Workaround::Native:
-    return (l == "native");
-  default:
-    return false;
-  }
-}
+inline Workaround get_workaround(std::string workaround) {
+  if (workaround == "input")
+    return Workaround::Input;
 
-inline bool operator==(const Workaround &l, const std::string &r) {
-  return operator==(r, l);
-}
+  if (workaround == "native")
+    return Workaround::Native;
 
-inline bool operator!=(const std::string &l, const Workaround &r) {
-  return !operator==(l, r);
-}
-
-inline bool operator!=(const Workaround &l, const std::string &r) {
-  return operator!=(r, l);
+  return Workaround::Off;
 }
 
 #endif // MAIN_H_

@@ -79,9 +79,9 @@ int howdy_error(int status, function<int(int, const char *)> conv_function) {
       break;
     // Otherwise, we can't describe what happened but it wasn't successful
     default:
-      conv_function(PAM_ERROR_MSG, string(dgettext("pam", "Unknown error:") +
-                                          to_string(status))
-                                       .c_str());
+      conv_function(
+          PAM_ERROR_MSG,
+          string(dgettext("pam", "Unknown error: ") + status).c_str());
       syslog(LOG_INFO, "Failure, unknown error %d", status);
     }
   }
@@ -153,7 +153,8 @@ int identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
   // Open the system log so we can write to it
   openlog("pam_howdy", 0, LOG_AUTHPRIV);
 
-  string workaround = reader.GetString("core", "workaround", "input");
+  Workaround workaround =
+      get_workaround(reader.GetString("core", "workaround", "input"));
 
   // In this case, we are not asking for the password
   if (workaround == Workaround::Off && auth_tok) {
