@@ -52,7 +52,7 @@ using namespace boost::locale;
  */
 int howdy_error(int status, function<int(int, const char *)> conv_function) {
   // If the process has exited
-  if (!WIFEXITED(status)) {
+  if (WIFEXITED(status)) {
     // Get the status code returned
     status = WEXITSTATUS(status);
 
