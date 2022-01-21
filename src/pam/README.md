@@ -2,10 +2,8 @@
 
 ## Prepare
 
-Howdy PAM module depends on `INIReader`.
-
-If you are building a distro package,
-there is a list for it below:
+This module depends on `INIReader`.
+It can be installed with these packages:
 
 ```
 Arch Linux - libinih
@@ -13,6 +11,9 @@ Debian     - libinih-dev
 Fedora     - inih-devel
 OpenSUSE   - inih
 ```
+
+If your distribution doesn't provide `INIReader`,
+it will be automatically pulled from the latest git version.
 
 ## Build
 
@@ -24,7 +25,7 @@ meson compile -C build
 ## Install
 
 ``` sh
-sudo meson install -C build
+meson install -C build
 ```
 
 Change PAM config line to:
