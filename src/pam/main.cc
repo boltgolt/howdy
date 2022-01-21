@@ -1,9 +1,9 @@
 #include <cerrno>
 #include <csignal>
 #include <cstdlib>
-#include <glob.h>
 #include <ostream>
 
+#include <glob.h>
 #include <pthread.h>
 #include <spawn.h>
 #include <sys/signalfd.h>
@@ -65,25 +65,31 @@ int howdy_error(int status, function<int(int, const char *)> conv_function) {
       break;
     // Status 11 means we exceded the maximum retry count
     case 11:
-      syslog(LOG_INFO, "Failure, timeout reached");
+      syslog(LOG_ERR, "Failure, timeout reached");
       break;
     // Status 12 means we aborted
     case 12:
-      syslog(LOG_INFO, "Failure, general abort");
+      syslog(LOG_ERR, "Failure, general abort");
       break;
     // Status 13 means the image was too dark
     case 13:
       conv_function(PAM_ERROR_MSG,
                     dgettext("pam", "Face detection image too dark"));
-      syslog(LOG_INFO, "Failure, image too dark");
+      syslog(LOG_ERR, "Failure, image too dark");
       break;
     // Otherwise, we can't describe what happened but it wasn't successful
     default:
       conv_function(
           PAM_ERROR_MSG,
           string(dgettext("pam", "Unknown error: ") + status).c_str());
-      syslog(LOG_INFO, "Failure, unknown error %d", status);
+      syslog(LOG_ERR, "Failure, unknown error %d", status);
     }
+  } else {
+    // We get the signal
+    status = WIFSIGNALED(status);
+
+    syslog(LOG_ERR, "Child killed by signal %s (%d)", strsignal(status),
+           status);
   }
 
   // As this function is only called for error status codes, signal an error to
@@ -255,7 +261,8 @@ int identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
   // Start the python subprocess
   if (posix_spawnp(&child_pid, "/usr/bin/python3", &file_actions, nullptr,
                    (char *const *)args, nullptr) < 0) {
-    syslog(LOG_ERR, "Can't spawn the howdy process: %s", strerror(errno));
+    syslog(LOG_ERR, "Can't spawn the howdy process: %s (%d)", strerror(errno),
+           errno);
     return PAM_SYSTEM_ERR;
   }
 
