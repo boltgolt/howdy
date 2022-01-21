@@ -6,7 +6,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install required libraries
-        run: sudo apt-get update && sudo apt-get install -y python devscripts dh-make debhelper fakeroot python3 python3-pip python3-setuptools python3-wheel ninja-build meson libpam0g-dev libboost-locale-dev python3-dev python3-setuptools libopencv-dev cmake make build-essential clang-tidy
+        run: sudo apt-get update && sudo apt-get install -y python devscripts dh-make debhelper fakeroot python3 python3-pip python3-setuptools python3-wheel ninja-build meson libpam0g-dev libinih-dev libboost-locale-dev python3-dev python3-setuptools libopencv-dev cmake make build-essential clang-tidy
 
       - uses: actions/checkout@v2
 
