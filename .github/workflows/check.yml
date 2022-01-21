@@ -13,7 +13,7 @@ jobs:
       - name: Build
         run: |
           meson setup build src/pam
-          meson compile -C build
+          ninja -C build
 
       - name: Check source code
         run: |
