@@ -277,9 +277,9 @@ int identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
 
     {
       unique_lock<mutex> lk(m);
-      Type type = confirmation_type.load(memory_order_acquire);
+      Type type = confirmation_type.load(memory_order_relaxed);
       if (type == Type::Unset) {
-        confirmation_type.store(Type::Howdy, memory_order_release);
+        confirmation_type.store(Type::Howdy, memory_order_relaxed);
       }
     }
     cv.notify_one();
@@ -296,9 +296,9 @@ int identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
                                       (const char **)&auth_tok_ptr, nullptr);
         {
           unique_lock<mutex> lk(m);
-          Type type = confirmation_type.load(memory_order_acquire);
+          Type type = confirmation_type.load(memory_order_relaxed);
           if (type == Type::Unset) {
-            confirmation_type.store(Type::Pam, memory_order_release);
+            confirmation_type.store(Type::Pam, memory_order_relaxed);
           }
         }
         cv.notify_one();
@@ -335,7 +335,7 @@ int identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
 
     // We need to be sure that we're not going to block forever if the
     // child has a problem
-    if (child_task.wait(1.5s) == future_status::timeout) {
+    if (child_task.wait(2.5s) == future_status::timeout) {
       kill(child_pid, SIGTERM);
     }
     child_task.stop(false);
