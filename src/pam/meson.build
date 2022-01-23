@@ -5,6 +5,9 @@ inih_cpp = dependency('INIReader', fallback: ['inih', 'INIReader_dep'])
 libpam = meson.get_compiler('cpp').find_library('pam')
 threads = dependency('threads')
 
+# Translations
+subdir('po')
+
 shared_library(
 	'pam_howdy',
 	'main.cc',
