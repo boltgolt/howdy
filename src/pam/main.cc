@@ -1,10 +1,10 @@
-#include <boost/locale/message.hpp>
 #include <cerrno>
 #include <csignal>
 #include <cstdlib>
 #include <ostream>
 
 #include <glob.h>
+#include <libintl.h>
 #include <pthread.h>
 #include <spawn.h>
 #include <sys/signalfd.h>
@@ -33,8 +33,6 @@
 
 #include <INIReader.h>
 
-#include <boost/locale.hpp>
-
 #include <security/pam_appl.h>
 #include <security/pam_ext.h>
 #include <security/pam_modules.h>
@@ -42,10 +40,16 @@
 #include "main.hh"
 #include "optional_task.hh"
 
+// Should be defined by the build system
+#ifndef GETTEXT_PACKAGE
+#define GETTEXT_PACKAGE "pam_howdy"
+#define LOCALEDIR "/usr/local/share/locales"
+#endif
+
 const auto DEFAULT_TIMEOUT =
     std::chrono::duration<int, std::chrono::milliseconds::period>(2500);
 
-#define S(msg) boost::locale::dgettext("pam", msg)
+#define S(msg) gettext (msg)
 
 /**
  * Inspect the status code returned by the compare process
@@ -64,7 +68,7 @@ auto howdy_error(int status,
     switch (status) {
     // Status 10 means we couldn't find any face models
     case 10:
-      conv_function(PAM_ERROR_MSG, S("There is no face model known").c_str());
+      conv_function(PAM_ERROR_MSG, S("There is no face model known"));
       syslog(LOG_NOTICE, "Failure, no face model known");
       break;
     // Status 11 means we exceded the maximum retry count
@@ -77,14 +81,13 @@ auto howdy_error(int status,
       break;
     // Status 13 means the image was too dark
     case 13:
-      conv_function(PAM_ERROR_MSG, S("Face detection image too dark").c_str());
+      conv_function(PAM_ERROR_MSG, S("Face detection image too dark"));
       syslog(LOG_ERR, "Failure, image too dark");
       break;
     // Otherwise, we can't describe what happened but it wasn't successful
     default:
-      conv_function(
-          PAM_ERROR_MSG,
-          S("Unknown error: ").append(std::to_string(status)).c_str());
+      conv_function(PAM_ERROR_MSG,
+                    std::string(S("Unknown error: ") + status).c_str());
       syslog(LOG_ERR, "Failure, unknown error %d", status);
     }
   } else {
@@ -178,7 +181,7 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
     return conv->conv(1, &msgp, &resp, conv->appdata_ptr);
   };
 
-  // Error out if we could not ready the config file
+  // Error out if we could not read the config file
   if (reader.ParseError() < 0) {
     syslog(LOG_ERR, "Failed to parse the configuration file");
     return PAM_SYSTEM_ERR;
@@ -231,10 +234,14 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
     globfree(&glob_result);
   }
 
+  // Initialize gettext
+  setlocale(LC_ALL, "");
+  bindtextdomain(GETTEXT_PACKAGE, LOCALEDIR);
+  textdomain(GETTEXT_PACKAGE);
+
   // If enabled, send a notice to the user that facial login is being attempted
   if (reader.GetBoolean("core", "detection_notice", false)) {
-    if ((conv_function(PAM_TEXT_INFO,
-                       S("Attempting facial authentication").c_str())) !=
+    if ((conv_function(PAM_TEXT_INFO, S("Attempting facial authentication"))) !=
         PAM_SUCCESS) {
       syslog(LOG_ERR, "Failed to send detection notice");
     }
