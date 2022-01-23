@@ -112,7 +112,7 @@ auto howdy_error(int status,
  * @param  conv_function PAM conversation function
  * @return          Returns the conversation function return code
  */
-auto howdy_msg(char *username, int status, INIReader &reader,
+ auto howdy_msg(char *username, int status, const INIReader &reader,
                const std::function<int(int, const char *)> &conv_function)
     -> int {
   if (status != EXIT_SUCCESS) {
@@ -155,12 +155,13 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
     auth_tok = false;
   }
 
+  // Will contain the responses from PAM functions
+  int pam_res = PAM_IGNORE;
+
   // Will contain PAM conversation structure
   struct pam_conv *conv = nullptr;
   const void **conv_ptr =
       const_cast<const void **>(reinterpret_cast<void **>(&conv));
-  // Will contain the responses from PAM functions
-  int pam_res = PAM_IGNORE;
 
   // Try to get the conversation function and error out if we can't
   if ((pam_res = pam_get_item(pamh, PAM_CONV, conv_ptr)) != PAM_SUCCESS) {
@@ -255,16 +256,13 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
     return pam_res;
   }
 
-  posix_spawn_file_actions_t file_actions;
-  posix_spawn_file_actions_init(&file_actions);
-
-  const char *const args[] = {"/usr/bin/python3", // NOLINT
+  const char *const args[] = {"python3", // NOLINT
                               "/lib/security/howdy/compare.py", username,
                               nullptr};
   pid_t child_pid;
 
   // Start the python subprocess
-  if (posix_spawnp(&child_pid, "/usr/bin/python3", &file_actions, nullptr,
+  if (posix_spawnp(&child_pid, "python3", nullptr, nullptr,
                    const_cast<char *const *>(args), nullptr) > 0) {
     syslog(LOG_ERR, "Can't spawn the howdy process: %s (%d)", strerror(errno),
            errno);
