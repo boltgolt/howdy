@@ -49,7 +49,7 @@
 const auto DEFAULT_TIMEOUT =
     std::chrono::duration<int, std::chrono::milliseconds::period>(2500);
 
-#define S(msg) gettext (msg)
+#define S(msg) gettext(msg)
 
 /**
  * Inspect the status code returned by the compare process
@@ -112,7 +112,7 @@ auto howdy_error(int status,
  * @param  conv_function PAM conversation function
  * @return          Returns the conversation function return code
  */
- auto howdy_msg(char *username, int status, const INIReader &reader,
+auto howdy_msg(char *username, int status, const INIReader &reader,
                const std::function<int(int, const char *)> &conv_function)
     -> int {
   if (status != EXIT_SUCCESS) {
@@ -277,7 +277,7 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
 
   // This task wait for the status of the python subprocess (we don't want a
   // zombie process)
-  optional_task<int> child_task(std::packaged_task<int()>([&] {
+  optional_task<int> child_task([&] {
     int status;
     wait(&status);
 
@@ -292,29 +292,26 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
     cv.notify_one();
 
     return status;
-  }));
+  });
   child_task.activate();
 
   // This task waits for the password input (if the workaround wants it)
-  optional_task<std::tuple<int, char *>> pass_task(
-      std::packaged_task<std::tuple<int, char *>()>([&] {
-        char *auth_tok_ptr = nullptr;
-        int pam_res =
-            pam_get_authtok(pamh, PAM_AUTHTOK,
-                            const_cast<const char **>(&auth_tok_ptr), nullptr);
-        {
-          std::unique_lock<std::mutex> lk(m);
-          ConfirmationType type =
-              confirmation_type.load(std::memory_order_relaxed);
-          if (type == ConfirmationType::Unset) {
-            confirmation_type.store(ConfirmationType::Pam,
-                                    std::memory_order_relaxed);
-          }
-        }
-        cv.notify_one();
+  optional_task<std::tuple<int, char *>> pass_task([&] {
+    char *auth_tok_ptr = nullptr;
+    int pam_res = pam_get_authtok(
+        pamh, PAM_AUTHTOK, const_cast<const char **>(&auth_tok_ptr), nullptr);
+    {
+      std::unique_lock<std::mutex> lk(m);
+      ConfirmationType type = confirmation_type.load(std::memory_order_relaxed);
+      if (type == ConfirmationType::Unset) {
+        confirmation_type.store(ConfirmationType::Pam,
+                                std::memory_order_relaxed);
+      }
+    }
+    cv.notify_one();
 
-        return std::tuple<int, char *>(pam_res, auth_tok_ptr);
-      }));
+    return std::tuple<int, char *>(pam_res, auth_tok_ptr);
+  });
 
   if (auth_tok) {
     pass_task.activate();
@@ -331,8 +328,8 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
 
     // If the workaround is native
     if (auth_tok) {
-      // We cancel the thread using pthread, pam_get_authtok seems to be a
-      // cancellation point
+      // UNSAFE: We cancel the thread using pthread, pam_get_authtok seems to be
+      // a cancellation point
       if (pass_task.is_active()) {
         pass_task.stop(true);
       }
