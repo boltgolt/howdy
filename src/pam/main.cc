@@ -48,6 +48,9 @@
 
 const auto DEFAULT_TIMEOUT =
     std::chrono::duration<int, std::chrono::milliseconds::period>(2500);
+const auto MAX_RETRIES = 5;
+const auto PYTHON_EXECUTABLE = "python3";
+const auto COMPARE_PROCESS_PATH = "/lib/security/howdy/compare.py";
 
 #define S(msg) gettext(msg)
 
@@ -112,7 +115,7 @@ auto howdy_error(int status,
  * @param  conv_function PAM conversation function
  * @return          Returns the conversation function return code
  */
-auto howdy_msg(char *username, int status, const INIReader &reader,
+auto howdy_status(char *username, int status, const INIReader &reader,
                const std::function<int(int, const char *)> &conv_function)
     -> int {
   if (status != EXIT_SUCCESS) {
@@ -121,7 +124,7 @@ auto howdy_msg(char *username, int status, const INIReader &reader,
 
   if (!reader.GetBoolean("core", "no_confirmation", true)) {
     // Construct confirmation text from i18n string
-    std::string confirm_text = S("Identified face as {}");
+    std::string confirm_text(S("Identified face as {}"));
     std::string identify_msg =
         confirm_text.replace(confirm_text.find("{}"), 2, std::string(username));
     conv_function(PAM_TEXT_INFO, identify_msg.c_str());
@@ -150,10 +153,9 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
   Workaround workaround =
       get_workaround(reader.GetString("core", "workaround", "input"));
 
-  // In this case, we are not asking for the password
-  if (workaround == Workaround::Off && auth_tok) {
-    auth_tok = false;
-  }
+  // We ask for the password if the function requires it and if a workaround is
+  // set
+  auth_tok = auth_tok && workaround != Workaround::Off;
 
   // Will contain the responses from PAM functions
   int pam_res = PAM_IGNORE;
@@ -171,20 +173,19 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
 
   // Wrap the PAM conversation function in our own, easier function
   auto conv_function = [conv](int msg_type, const char *msg_str) {
-    // No need to free this, it's allocated on the stack
     const struct pam_message msg = {.msg_style = msg_type, .msg = msg_str};
     const struct pam_message *msgp = &msg;
 
     struct pam_response res = {};
     struct pam_response *resp = &res;
 
-    // Call the conversation function with the constructed arguments
     return conv->conv(1, &msgp, &resp, conv->appdata_ptr);
   };
 
   // Error out if we could not read the config file
-  if (reader.ParseError() < 0) {
-    syslog(LOG_ERR, "Failed to parse the configuration file");
+  if (reader.ParseError() != 0) {
+    syslog(LOG_ERR, "Failed to parse the configuration file: %d",
+           reader.ParseError());
     return PAM_SYSTEM_ERR;
   }
 
@@ -216,9 +217,7 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
       if (errno != 0) {
         syslog(LOG_ERR, "Underlying error: %s (%d)", strerror(errno), errno);
       }
-      globfree(&glob_result);
-    }
-
+    } else {
     for (size_t i = 0; i < glob_result.gl_pathc; i++) {
       std::ifstream file(std::string(glob_result.gl_pathv[i]));
       std::string lid_state;
@@ -231,7 +230,7 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
         return PAM_AUTHINFO_UNAVAIL;
       }
     }
-
+    }
     globfree(&glob_result);
   }
 
@@ -256,13 +255,12 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
     return pam_res;
   }
 
-  const char *const args[] = {"python3", // NOLINT
-                              "/lib/security/howdy/compare.py", username,
-                              nullptr};
+  const char *const args[] = {PYTHON_EXECUTABLE, // NOLINT
+                              COMPARE_PROCESS_PATH, username, nullptr};
   pid_t child_pid;
 
   // Start the python subprocess
-  if (posix_spawnp(&child_pid, "python3", nullptr, nullptr,
+  if (posix_spawnp(&child_pid, PYTHON_EXECUTABLE, nullptr, nullptr,
                    const_cast<char *const *>(args), nullptr) > 0) {
     syslog(LOG_ERR, "Can't spawn the howdy process: %s (%d)", strerror(errno),
            errno);
