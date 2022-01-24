@@ -42,12 +42,6 @@
 #include "main.hh"
 #include "optional_task.hh"
 
-// Should be defined by the build system
-#ifndef GETTEXT_PACKAGE
-#define GETTEXT_PACKAGE "pam_howdy"
-#define LOCALEDIR "/usr/local/share/locales"
-#endif
-
 const auto DEFAULT_TIMEOUT =
     std::chrono::duration<int, std::chrono::milliseconds::period>(100);
 const auto MAX_RETRIES = 5;
@@ -138,59 +132,13 @@ auto howdy_status(char *username, int status, const INIReader &reader,
 }
 
 /**
- * The main function, runs the identification and authentication
- * @param  pamh     The handle to interface directly with PAM
- * @param  flags    Flags passed on to us by PAM, XORed
- * @param  argc     Amount of rules in the PAM config (disregared)
- * @param  argv     Options defined in the PAM config
- * @param  auth_tok True if we should ask for a password too
- * @return          Returns a PAM return code
+ * Check if Howdy should be enabled according to the configuration and the
+ * environment.
+ * @param  reader INI configuration
+ * @return        Returns PAM_AUTHINFO_UNAVAIL if it shouldn't be enabled,
+ * PAM_SUCCESS otherwise
  */
-auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
-              bool auth_tok) -> int {
-  INIReader reader("/lib/security/howdy/config.ini");
-  // Open the system log so we can write to it
-  openlog("pam_howdy", 0, LOG_AUTHPRIV);
-
-  Workaround workaround =
-      get_workaround(reader.GetString("core", "workaround", "input"));
-
-  // We ask for the password if the function requires it and if a workaround is
-  // set
-  auth_tok = auth_tok && workaround != Workaround::Off;
-
-  // Will contain the responses from PAM functions
-  int pam_res = PAM_IGNORE;
-
-  // Will contain PAM conversation structure
-  struct pam_conv *conv = nullptr;
-  const void **conv_ptr =
-      const_cast<const void **>(reinterpret_cast<void **>(&conv));
-
-  // Try to get the conversation function and error out if we can't
-  if ((pam_res = pam_get_item(pamh, PAM_CONV, conv_ptr)) != PAM_SUCCESS) {
-    syslog(LOG_ERR, "Failed to acquire conversation");
-    return pam_res;
-  }
-
-  // Wrap the PAM conversation function in our own, easier function
-  auto conv_function = [conv](int msg_type, const char *msg_str) {
-    const struct pam_message msg = {.msg_style = msg_type, .msg = msg_str};
-    const struct pam_message *msgp = &msg;
-
-    struct pam_response res = {};
-    struct pam_response *resp = &res;
-
-    return conv->conv(1, &msgp, &resp, conv->appdata_ptr);
-  };
-
-  // Error out if we could not read the config file
-  if (reader.ParseError() != 0) {
-    syslog(LOG_ERR, "Failed to parse the configuration file: %d",
-           reader.ParseError());
-    return PAM_SYSTEM_ERR;
-  }
-
+auto check_enabled(const INIReader &reader) -> int {
   // Stop executing if Howdy has been disabled in the config
   if (reader.GetBoolean("core", "disabled", false)) {
     syslog(LOG_INFO, "Skipped authentication, Howdy is disabled");
@@ -235,6 +183,66 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
     }
     globfree(&glob_result);
   }
+
+  return PAM_SUCCESS;
+}
+
+/**
+ * The main function, runs the identification and authentication
+ * @param  pamh     The handle to interface directly with PAM
+ * @param  flags    Flags passed on to us by PAM, XORed
+ * @param  argc     Amount of rules in the PAM config (disregared)
+ * @param  argv     Options defined in the PAM config
+ * @param  auth_tok True if we should ask for a password too
+ * @return          Returns a PAM return code
+ */
+auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
+              bool auth_tok) -> int {
+  INIReader reader("/lib/security/howdy/config.ini");
+  openlog("pam_howdy", 0, LOG_AUTHPRIV);
+
+  // Error out if we could not read the config file
+  if (reader.ParseError() != 0) {
+    syslog(LOG_ERR, "Failed to parse the configuration file: %d",
+           reader.ParseError());
+    return PAM_SYSTEM_ERR;
+  }
+
+  // Will contain the responses from PAM functions
+  int pam_res = PAM_IGNORE;
+
+  // Check if we shoud continue
+  if ((pam_res = check_enabled(reader)) != PAM_SUCCESS) {
+    return pam_res;
+  }
+
+  Workaround workaround =
+      get_workaround(reader.GetString("core", "workaround", "input"));
+
+  // We ask for the password if the function requires it and if a workaround is
+  // set
+  auth_tok = auth_tok && workaround != Workaround::Off;
+
+  // Will contain PAM conversation structure
+  struct pam_conv *conv = nullptr;
+  const void **conv_ptr =
+      const_cast<const void **>(reinterpret_cast<void **>(&conv));
+
+  if ((pam_res = pam_get_item(pamh, PAM_CONV, conv_ptr)) != PAM_SUCCESS) {
+    syslog(LOG_ERR, "Failed to acquire conversation");
+    return pam_res;
+  }
+
+  // Wrap the PAM conversation function in our own, easier function
+  auto conv_function = [conv](int msg_type, const char *msg_str) {
+    const struct pam_message msg = {.msg_style = msg_type, .msg = msg_str};
+    const struct pam_message *msgp = &msg;
+
+    struct pam_response res = {};
+    struct pam_response *resp = &res;
+
+    return conv->conv(1, &msgp, &resp, conv->appdata_ptr);
+  };
 
   // Initialize gettext
   setlocale(LC_ALL, "");
@@ -350,7 +358,7 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
   // We want to stop the password prompt, either by canceling the thread when
   // workaround is set to "native", or by emulating "Enter" input with
   // "input"
-  
+
   // UNSAFE: We cancel the thread using pthread, pam_get_authtok seems to be
   // a cancellation point
   if (workaround == Workaround::Native && pass_task.is_active()) {
@@ -381,6 +389,7 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
     // input wasn't focused or if the uinput device failed to send keypress)
     pass_task.stop(false);
   }
+  
   int status = child_task.get();
 
   return howdy_status(username, status, reader, conv_function);
