@@ -7,6 +7,7 @@
 #include <libintl.h>
 #include <pthread.h>
 #include <spawn.h>
+#include <stdexcept>
 #include <sys/signalfd.h>
 #include <sys/syslog.h>
 #include <sys/types.h>
@@ -37,6 +38,7 @@
 #include <security/pam_ext.h>
 #include <security/pam_modules.h>
 
+#include "enter_device.hh"
 #include "main.hh"
 #include "optional_task.hh"
 
@@ -47,7 +49,7 @@
 #endif
 
 const auto DEFAULT_TIMEOUT =
-    std::chrono::duration<int, std::chrono::milliseconds::period>(2500);
+    std::chrono::duration<int, std::chrono::milliseconds::period>(100);
 const auto MAX_RETRIES = 5;
 const auto PYTHON_EXECUTABLE = "python3";
 const auto COMPARE_PROCESS_PATH = "/lib/security/howdy/compare.py";
@@ -116,7 +118,7 @@ auto howdy_error(int status,
  * @return          Returns the conversation function return code
  */
 auto howdy_status(char *username, int status, const INIReader &reader,
-               const std::function<int(int, const char *)> &conv_function)
+                  const std::function<int(int, const char *)> &conv_function)
     -> int {
   if (status != EXIT_SUCCESS) {
     return howdy_error(status, conv_function);
@@ -218,18 +220,18 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
         syslog(LOG_ERR, "Underlying error: %s (%d)", strerror(errno), errno);
       }
     } else {
-    for (size_t i = 0; i < glob_result.gl_pathc; i++) {
-      std::ifstream file(std::string(glob_result.gl_pathv[i]));
-      std::string lid_state;
-      std::getline(file, lid_state, static_cast<char>(file.eof()));
+      for (size_t i = 0; i < glob_result.gl_pathc; i++) {
+        std::ifstream file(std::string(glob_result.gl_pathv[i]));
+        std::string lid_state;
+        std::getline(file, lid_state, static_cast<char>(file.eof()));
 
-      if (lid_state.find("closed") != std::string::npos) {
-        globfree(&glob_result);
+        if (lid_state.find("closed") != std::string::npos) {
+          globfree(&glob_result);
 
-        syslog(LOG_INFO, "Skipped authentication, closed lid detected");
-        return PAM_AUTHINFO_UNAVAIL;
+          syslog(LOG_INFO, "Skipped authentication, closed lid detected");
+          return PAM_AUTHINFO_UNAVAIL;
+        }
       }
-    }
     }
     globfree(&glob_result);
   }
@@ -321,52 +323,67 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
     cv.wait(lk, [&] { return confirmation_type != ConfirmationType::Unset; });
   }
 
-  if (confirmation_type == ConfirmationType::Howdy) {
+  // The password has been entered or an error has occurred
+  if (confirmation_type == ConfirmationType::Pam) {
+    // We kill the child because we don't need its result
+    kill(child_pid, SIGTERM);
     child_task.stop(false);
 
-    // If the workaround is native
-    if (auth_tok) {
-      // UNSAFE: We cancel the thread using pthread, pam_get_authtok seems to be
-      // a cancellation point
-      if (pass_task.is_active()) {
-        pass_task.stop(true);
-      }
+    // We just wait for the thread to stop since it's this one which sent us the
+    // confirmation type
+    pass_task.stop(false);
+
+    char *password = nullptr;
+    std::tie(pam_res, password) = pass_task.get();
+
+    if (pam_res != PAM_SUCCESS) {
+      return pam_res;
     }
-    int howdy_status = child_task.get();
 
-    return howdy_msg(username, howdy_status, reader, conv_function);
+    // The password has been entered, we are passing it to PAM stack
+    return PAM_IGNORE;
   }
 
-  // The password has been entered
-
-  // We need to be sure that we're not going to block forever if the
-  // child has a problem
-  if (child_task.wait(DEFAULT_TIMEOUT) == std::future_status::timeout) {
-    kill(child_pid, SIGTERM);
-  }
+  // The compare process has finished its execution
   child_task.stop(false);
 
-  // We just wait for the thread to stop since it's this one which sent us the
-  // confirmation type
-  if (workaround == Workaround::Input && auth_tok) {
+  // We want to stop the password prompt, either by canceling the thread when
+  // workaround is set to "native", or by emulating "Enter" input with
+  // "input"
+  
+  // UNSAFE: We cancel the thread using pthread, pam_get_authtok seems to be
+  // a cancellation point
+  if (workaround == Workaround::Native && pass_task.is_active()) {
+    pass_task.stop(true);
+  } else if (workaround == Workaround::Input) {
+    if (geteuid() != 0) {
+      syslog(LOG_WARNING, "Insufficient permission to create the fake device");
+      conv_function(PAM_ERROR_MSG, S("Insufficient permission to send Enter "
+                                     "input, waiting for Enter input..."));
+    } else {
+      try {
+        EnterDevice enter_device;
+        for (int retries = 0;
+             retries < MAX_RETRIES &&
+             pass_task.wait(DEFAULT_TIMEOUT) == std::future_status::timeout;
+             retries++) {
+          enter_device.send_enter_press();
+        }
+      } catch (std::runtime_error &err) {
+        syslog(LOG_WARNING, "Failed to send enter input: %s", err.what());
+        conv_function(
+            PAM_ERROR_MSG,
+            S("Failed to send enter input, waiting for Enter input..."));
+      }
+    }
+
+    // We stop the thread (will block until the enter key is pressed, if the
+    // input wasn't focused or if the uinput device failed to send keypress)
     pass_task.stop(false);
   }
+  int status = child_task.get();
 
-  char *password = nullptr;
-  std::tie(pam_res, password) = pass_task.get();
-
-  if (pam_res != PAM_SUCCESS) {
-    return pam_res;
-  }
-
-  int howdy_status = child_task.get();
-  // If python process (or user) sent Enter key
-  if (strlen(password) == 0) {
-    return howdy_msg(username, howdy_status, reader, conv_function);
-  }
-
-  // The password has been entered, we are passing it to PAM stack
-  return PAM_IGNORE;
+  return howdy_status(username, status, reader, conv_function);
 }
 
 // Called by PAM when a user needs to be authenticated, for example by running
