@@ -281,20 +281,17 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
   // it's too recent (C++20)
   std::mutex m;
   std::condition_variable cv;
-  std::atomic<ConfirmationType> confirmation_type(ConfirmationType::Unset);
+  ConfirmationType confirmation_type(ConfirmationType::Unset);
 
   // This task wait for the status of the python subprocess (we don't want a
   // zombie process)
   optional_task<int> child_task([&] {
     int status;
     wait(&status);
-
     {
       std::unique_lock<std::mutex> lk(m);
-      ConfirmationType type = confirmation_type.load(std::memory_order_relaxed);
-      if (type == ConfirmationType::Unset) {
-        confirmation_type.store(ConfirmationType::Howdy,
-                                std::memory_order_relaxed);
+      if (confirmation_type == ConfirmationType::Unset) {
+        confirmation_type = ConfirmationType::Howdy;
       }
     }
     cv.notify_one();
@@ -310,10 +307,8 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
         pamh, PAM_AUTHTOK, const_cast<const char **>(&auth_tok_ptr), nullptr);
     {
       std::unique_lock<std::mutex> lk(m);
-      ConfirmationType type = confirmation_type.load(std::memory_order_relaxed);
-      if (type == ConfirmationType::Unset) {
-        confirmation_type.store(ConfirmationType::Pam,
-                                std::memory_order_relaxed);
+      if (confirmation_type == ConfirmationType::Unset) {
+        confirmation_type = ConfirmationType::Pam;
       }
     }
     cv.notify_one();
