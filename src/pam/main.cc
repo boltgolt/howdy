@@ -361,8 +361,9 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
   } else if (workaround == Workaround::Input) {
     if (geteuid() != 0) {
       syslog(LOG_WARNING, "Insufficient permission to create the fake device");
-      conv_function(PAM_ERROR_MSG, S("Insufficient permission to send Enter "
-                                     "input, waiting for Enter input..."));
+      conv_function(PAM_ERROR_MSG,
+                    S("Insufficient permission to send Enter "
+                      "press, waiting for user to press it instead"));
     } else {
       try {
         EnterDevice enter_device;
@@ -374,13 +375,12 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
         }
       } catch (std::runtime_error &err) {
         syslog(LOG_WARNING, "Failed to send enter input: %s", err.what());
-        conv_function(
-            PAM_ERROR_MSG,
-            S("Failed to send Enter input, waiting for Enter input..."));
+        conv_function(PAM_ERROR_MSG, S("Failed to send Enter press, waiting "
+                                       "for user to press it instead"));
       }
     }
 
-    // We stop the thread (will block until the enter key is pressed, if the
+    // We stop the thread (will block until the enter key is pressed if the
     // input wasn't focused or if the uinput device failed to send keypress)
     pass_task.stop(false);
   }
