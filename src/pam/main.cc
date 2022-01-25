@@ -107,18 +107,18 @@ auto howdy_error(int status,
  * the other case
  * @param  username      Username
  * @param  status        Status code
- * @param  reader        INI  configuration
+ * @param  config        INI  configuration
  * @param  conv_function PAM conversation function
  * @return          Returns the conversation function return code
  */
-auto howdy_status(char *username, int status, const INIReader &reader,
+auto howdy_status(char *username, int status, const INIReader &config,
                   const std::function<int(int, const char *)> &conv_function)
     -> int {
   if (status != EXIT_SUCCESS) {
     return howdy_error(status, conv_function);
   }
 
-  if (!reader.GetBoolean("core", "no_confirmation", true)) {
+  if (!config.GetBoolean("core", "no_confirmation", true)) {
     // Construct confirmation text from i18n string
     std::string confirm_text(S("Identified face as {}"));
     std::string identify_msg =
@@ -134,19 +134,19 @@ auto howdy_status(char *username, int status, const INIReader &reader,
 /**
  * Check if Howdy should be enabled according to the configuration and the
  * environment.
- * @param  reader INI configuration
+ * @param  config INI configuration
  * @return        Returns PAM_AUTHINFO_UNAVAIL if it shouldn't be enabled,
  * PAM_SUCCESS otherwise
  */
-auto check_enabled(const INIReader &reader) -> int {
+auto check_enabled(const INIReader &config) -> int {
   // Stop executing if Howdy has been disabled in the config
-  if (reader.GetBoolean("core", "disabled", false)) {
+  if (config.GetBoolean("core", "disabled", false)) {
     syslog(LOG_INFO, "Skipped authentication, Howdy is disabled");
     return PAM_AUTHINFO_UNAVAIL;
   }
 
   // Stop if we're in a remote shell and configured to exit
-  if (reader.GetBoolean("core", "ignore_ssh", true)) {
+  if (config.GetBoolean("core", "ignore_ssh", true)) {
     if (getenv("SSH_CONNECTION") != nullptr ||
         getenv("SSH_CLIENT") != nullptr || getenv("SSHD_OPTS") != nullptr) {
       syslog(LOG_INFO, "Skipped authentication, SSH session detected");
@@ -155,7 +155,7 @@ auto check_enabled(const INIReader &reader) -> int {
   }
 
   // Try to detect the laptop lid state and stop if it's closed
-  if (reader.GetBoolean("core", "ignore_closed_lid", true)) {
+  if (config.GetBoolean("core", "ignore_closed_lid", true)) {
     glob_t glob_result;
 
     // Get any files containing lid state
@@ -198,13 +198,13 @@ auto check_enabled(const INIReader &reader) -> int {
  */
 auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
               bool auth_tok) -> int {
-  INIReader reader("/lib/security/howdy/config.ini");
+  INIReader config("/lib/security/howdy/config.ini");
   openlog("pam_howdy", 0, LOG_AUTHPRIV);
 
   // Error out if we could not read the config file
-  if (reader.ParseError() != 0) {
+  if (config.ParseError() != 0) {
     syslog(LOG_ERR, "Failed to parse the configuration file: %d",
-           reader.ParseError());
+           config.ParseError());
     return PAM_SYSTEM_ERR;
   }
 
@@ -212,12 +212,12 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
   int pam_res = PAM_IGNORE;
 
   // Check if we shoud continue
-  if ((pam_res = check_enabled(reader)) != PAM_SUCCESS) {
+  if ((pam_res = check_enabled(config)) != PAM_SUCCESS) {
     return pam_res;
   }
 
   Workaround workaround =
-      get_workaround(reader.GetString("core", "workaround", "input"));
+      get_workaround(config.GetString("core", "workaround", "input"));
 
   // We ask for the password if the function requires it and if a workaround is
   // set
@@ -250,7 +250,7 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
   textdomain(GETTEXT_PACKAGE);
 
   // If enabled, send a notice to the user that facial login is being attempted
-  if (reader.GetBoolean("core", "detection_notice", false)) {
+  if (config.GetBoolean("core", "detection_notice", false)) {
     if ((conv_function(PAM_TEXT_INFO, S("Attempting facial authentication"))) !=
         PAM_SUCCESS) {
       syslog(LOG_ERR, "Failed to send detection notice");
@@ -376,7 +376,7 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
         syslog(LOG_WARNING, "Failed to send enter input: %s", err.what());
         conv_function(
             PAM_ERROR_MSG,
-            S("Failed to send enter input, waiting for Enter input..."));
+            S("Failed to send Enter input, waiting for Enter input..."));
       }
     }
 
@@ -384,10 +384,10 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
     // input wasn't focused or if the uinput device failed to send keypress)
     pass_task.stop(false);
   }
-  
+
   int status = child_task.get();
 
-  return howdy_status(username, status, reader, conv_function);
+  return howdy_status(username, status, config, conv_function);
 }
 
 // Called by PAM when a user needs to be authenticated, for example by running
