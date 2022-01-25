@@ -271,7 +271,7 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
 
   // Start the python subprocess
   if (posix_spawnp(&child_pid, PYTHON_EXECUTABLE, nullptr, nullptr,
-                   const_cast<char *const *>(args), nullptr) > 0) {
+                   const_cast<char *const *>(args), nullptr) != 0) {
     syslog(LOG_ERR, "Can't spawn the howdy process: %s (%d)", strerror(errno),
            errno);
     return PAM_SYSTEM_ERR;
