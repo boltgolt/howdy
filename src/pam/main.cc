@@ -89,9 +89,9 @@ auto howdy_error(int status,
                     std::string(S("Unknown error: ") + status).c_str());
       syslog(LOG_ERR, "Failure, unknown error %d", status);
     }
-  } else {
+  } else if (WIFSIGNALED(status)) {
     // We get the signal
-    status = WIFSIGNALED(status);
+    status = WTERMSIG(status);
 
     syslog(LOG_ERR, "Child killed by signal %s (%d)", strsignal(status),
            status);
