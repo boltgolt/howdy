@@ -21,7 +21,6 @@ EnterDevice::EnterDevice()
                              strerror(-err));
   }
 
-
   raw_uinput_device.reset(uinput_dev_ptr);
 };
 
