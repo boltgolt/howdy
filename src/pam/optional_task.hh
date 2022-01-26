@@ -20,7 +20,6 @@ public:
   template <typename R, typename P>
   auto wait(std::chrono::duration<R, P> dur) -> std::future_status;
   auto get() -> T;
-  auto is_active() -> bool;
   void stop(bool force);
   ~optional_task();
 };
@@ -28,7 +27,7 @@ public:
 template <typename T>
 optional_task<T>::optional_task(std::function<T()> fn)
     : _task(std::packaged_task<T()>(std::move(fn))),
-      _future(_task.get_future()) {}
+      _future(_task.get_future()), _is_active(false), _spawned(false) {}
 
 // Create a new thread and launch the task on it.
 template <typename T> void optional_task<T>::activate() {
