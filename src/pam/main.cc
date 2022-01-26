@@ -359,10 +359,11 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
   if (workaround == Workaround::Native && pass_task.is_active()) {
     pass_task.stop(true);
   } else if (workaround == Workaround::Input) {
-    if (geteuid() != 0) {
-      syslog(LOG_WARNING, "Insufficient permission to create the fake device");
+    // We check if we have the right permissions on /dev/uinput
+    if (euidaccess("/dev/uinput", W_OK | R_OK) != 0) {
+      syslog(LOG_WARNING, "Insufficient permissions to create the fake device");
       conv_function(PAM_ERROR_MSG,
-                    S("Insufficient permission to send Enter "
+                    S("Insufficient permissions to send Enter "
                       "press, waiting for user to press it instead"));
     } else {
       try {
