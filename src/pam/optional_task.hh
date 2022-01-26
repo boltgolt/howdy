@@ -53,10 +53,6 @@ template <typename T> auto optional_task<T>::get() -> T {
   return _future.get();
 }
 
-template <typename T> auto optional_task<T>::is_active() -> bool {
-  return _is_active;
-}
-
 // Stop the thread:
 // - if `force` is `false`, by joining the thread.
 // - if `force` is `true`, by cancelling the thread using `pthread_cancel`.

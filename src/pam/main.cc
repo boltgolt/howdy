@@ -356,7 +356,7 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
 
   // UNSAFE: We cancel the thread using pthread, pam_get_authtok seems to be
   // a cancellation point
-  if (workaround == Workaround::Native && pass_task.is_active()) {
+  if (workaround == Workaround::Native) {
     pass_task.stop(true);
   } else if (workaround == Workaround::Input) {
     // We check if we have the right permissions on /dev/uinput
