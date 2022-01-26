@@ -65,25 +65,20 @@ auto howdy_error(int status,
     status = WEXITSTATUS(status);
 
     switch (status) {
-    // Status 10 means we couldn't find any face models
-    case 10:
+    case CompareError::NO_FACE_MODEL:
       conv_function(PAM_ERROR_MSG, S("There is no face model known"));
       syslog(LOG_NOTICE, "Failure, no face model known");
       break;
-    // Status 11 means we exceded the maximum retry count
-    case 11:
+    case CompareError::TIMEOUT_REACHED:
       syslog(LOG_ERR, "Failure, timeout reached");
       break;
-    // Status 12 means we aborted
-    case 12:
+    case CompareError::ABORT:
       syslog(LOG_ERR, "Failure, general abort");
       break;
-    // Status 13 means the image was too dark
-    case 13:
+    case CompareError::TOO_DARK:
       conv_function(PAM_ERROR_MSG, S("Face detection image too dark"));
       syslog(LOG_ERR, "Failure, image too dark");
       break;
-    // Otherwise, we can't describe what happened but it wasn't successful
     default:
       conv_function(PAM_ERROR_MSG,
                     std::string(S("Unknown error: ") + status).c_str());
@@ -219,10 +214,6 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
   Workaround workaround =
       get_workaround(config.GetString("core", "workaround", "input"));
 
-  // We ask for the password if the function requires it and if a workaround is
-  // set
-  auth_tok = auth_tok && workaround != Workaround::Off;
-
   // Will contain PAM conversation structure
   struct pam_conv *conv = nullptr;
   const void **conv_ptr =
@@ -316,7 +307,9 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
     return std::tuple<int, char *>(pam_res, auth_tok_ptr);
   });
 
-  if (auth_tok) {
+  // We ask for the password if the function requires it and if a workaround is
+  // set
+  if (auth_tok && workaround != Workaround::Off) {
     pass_task.activate();
   }
 

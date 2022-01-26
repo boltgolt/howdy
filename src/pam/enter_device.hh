@@ -1,5 +1,5 @@
-#ifndef __ENTER_DEVICE_H_
-#define __ENTER_DEVICE_H_
+#ifndef ENTER_DEVICE_H_
+#define ENTER_DEVICE_H_
 
 #include <libevdev/libevdev-uinput.h>
 #include <libevdev/libevdev.h>
@@ -16,4 +16,4 @@ public:
   ~EnterDevice() = default;
 };
 
-#endif // __ENTER_DEVICE_H
+#endif // ENTER_DEVICE_H
