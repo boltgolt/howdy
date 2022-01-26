@@ -368,11 +368,23 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
     } else {
       try {
         EnterDevice enter_device;
-        for (int retries = 0;
+        int retries;
+
+        // We try to send it
+        enter_device.send_enter_press();
+
+        for (retries = 0;
              retries < MAX_RETRIES &&
              pass_task.wait(DEFAULT_TIMEOUT) == std::future_status::timeout;
              retries++) {
           enter_device.send_enter_press();
+        }
+
+        if (retries == MAX_RETRIES) {
+          syslog(LOG_WARNING,
+                 "Failed to send enter input before the retries limit");
+          conv_function(PAM_ERROR_MSG, S("Failed to send Enter press, waiting "
+                                         "for user to press it instead"));
         }
       } catch (std::runtime_error &err) {
         syslog(LOG_WARNING, "Failed to send enter input: %s", err.what());
