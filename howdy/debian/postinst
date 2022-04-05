@@ -102,9 +102,9 @@ if not os.path.exists("/tmp/howdy_picked_device"):
 				newConf.write(configfile)
 
 		# Install dlib data files if needed
-		if not os.path.exists("/lib/security/howdy/dlib-data/shape_predictor_5_face_landmarks.dat"):
+		if not os.path.exists("/lib/security/howdy/dlib-data/shape_predictor_5_face_landmarks.dat") and not os.path.exists("/etc/howdy/dlib-data/shape_predictor_5_face_landmarks.dat"):
 			print("Attempting installation of missing data files")
-			handleStatus(subprocess.call(["./install.sh"], shell=True, cwd="/lib/security/howdy/dlib-data"))
+			handleStatus(subprocess.call(["./install.sh"], shell=True, cwd="/etc/howdy/dlib-data"))
 
 	sys.exit(0)
 
@@ -121,7 +121,7 @@ handleStatus(subprocess.call(["pip3", "install", "--upgrade", "numpy"]))
 log("Downloading and unpacking data files")
 
 # Run the bash script to download and unpack the .dat files needed
-handleStatus(subprocess.call(["./install.sh"], shell=True, cwd="/lib/security/howdy/dlib-data"))
+handleStatus(subprocess.call(["./install.sh"], shell=True, cwd="/etc/howdy/dlib-data"))
 
 log("Downloading dlib")
 
@@ -208,6 +208,7 @@ print("Camera ID saved")
 
 # Secure the howdy folder
 handleStatus(sc(["chmod 744 -R /lib/security/howdy/"], shell=True))
+handleStatus(sc(["chmod 744 -R /etc/howdy/"], shell=True))
 
 # Allow anyone to execute the python CLI
 os.chmod("/lib/security/howdy", 0o755)

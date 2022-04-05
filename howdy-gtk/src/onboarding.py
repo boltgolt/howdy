@@ -73,17 +73,18 @@ class OnboardingWindow(gtk.Window):
 				break
 			else:
 				lib_site = None
-		
-		if lib_site is None:
-			self.downloadoutputlabel.set_text(_("Unable to find Howdy's installation location"))
-			return
 
-		if os.path.exists(lib_site + "/security/howdy/dlib-data/shape_predictor_5_face_landmarks.dat"):
+                if lib_site:
+                        conf_path = lib_site + "/security/howdy"
+                else:
+                        conf_path = "/etc/howdy"
+
+		if os.path.exists(conf_path + "/dlib-data/shape_predictor_5_face_landmarks.dat"):
 			self.downloadoutputlabel.set_text(_("Datafiles have already been downloaded!\nClick Next to continue"))
 			self.enable_next()
 			return
 
-		self.proc = subprocess.Popen("./install.sh", stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True, cwd=lib_site + "/security/howdy/dlib-data")
+		self.proc = subprocess.Popen("./install.sh", stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True, cwd=conf_path + "/howdy/dlib-data")
 
 		self.download_lines = []
 		self.read_download_line()
