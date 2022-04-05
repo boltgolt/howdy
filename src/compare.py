@@ -11,6 +11,7 @@ timings = {
 
 # Import required modules
 import sys
+sys.path.append("/lib/security/howdy/")
 import os
 import json
 import configparser
