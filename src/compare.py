@@ -11,7 +11,11 @@ timings = {
 
 # Import required modules
 import sys
+# Some user libraries will make howdy dosn't work
 sys.path.append("/lib/security/howdy/")
+for path in range(len(sys.path)): 
+    if len(sys.path[path])>5 and sys.path[path][:5]=="/home":
+        sys.path[path]=""
 import os
 import json
 import configparser
