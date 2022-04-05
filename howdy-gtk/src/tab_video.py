@@ -17,7 +17,7 @@ def on_page_switch(self, notebook, page, page_num):
 
 		try:
 			self.config = configparser.ConfigParser()
-			self.config.read("/lib/security/howdy/config.ini")
+			self.config.read("/etc/howdy/config.ini")
 		except Exception:
 			print(_("Can't open camera"))
 

@@ -126,7 +126,7 @@ face_encoder = None
 
 # Try to load the face model from the models folder
 try:
-	models = json.load(open(PATH + "/models/" + user + ".dat"))
+	models = json.load(open("/etc/howdy/models/" + user + ".dat"))
 
 	for model in models:
 		encodings += model["data"]
@@ -139,7 +139,7 @@ if len(models) < 1:
 
 # Read config from disk
 config = configparser.ConfigParser()
-config.read(PATH + "/config.ini")
+config.read("/etc/howdy/config.ini")
 
 # Get all config values needed
 use_cnn = config.getboolean("core", "use_cnn", fallback=False)

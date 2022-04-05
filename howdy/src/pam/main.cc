@@ -126,7 +126,7 @@ int send_message(function<int(int, const struct pam_message **,
  */
 int identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
              bool auth_tok) {
-  INIReader reader("/lib/security/howdy/config.ini");
+  INIReader reader("/etc/howdy/config.ini");
   // Open the system log so we can write to it
   openlog("pam_howdy", 0, LOG_AUTHPRIV);
 

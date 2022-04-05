@@ -11,7 +11,7 @@ import ConfigParser
 
 # Read config from disk
 config = ConfigParser.ConfigParser()
-config.read(os.path.dirname(os.path.abspath(__file__)) + "/config.ini")
+config.read(os.path.dirname("/etc/howdy") + "/config.ini")
 
 
 def doAuth(pamh):

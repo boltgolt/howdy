@@ -49,7 +49,7 @@ class MainWindow(gtk.Window):
 		# Add the treeview
 		self.modellistbox.add(self.treeview)
 
-		filelist = os.listdir("/lib/security/howdy/models")
+		filelist = os.listdir("/etc/howdy/models")
 		self.active_user = ""
 
 		self.userlist.items = 0
@@ -117,7 +117,7 @@ signal.signal(signal.SIGINT, signal.SIG_DFL)
 elevate.elevate()
 
 # If no models have been created yet or when it is forced, start the onboarding
-if "--force-onboarding" in sys.argv or not os.path.exists("/lib/security/howdy/models"):
+if "--force-onboarding" in sys.argv or not os.path.exists("/etc/howdy/models"):
 	import onboarding
 	onboarding.OnboardingWindow()
 

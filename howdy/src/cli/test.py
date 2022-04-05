@@ -16,7 +16,7 @@ path = os.path.dirname(os.path.abspath(__file__))
 
 # Read config from disk
 config = configparser.ConfigParser()
-config.read(path + "/../config.ini")
+config.read("/etc/howdy/config.ini")
 
 if config.get("video", "recording_plugin") != "opencv":
 	print(_("Howdy has been configured to use a recorder which doesn't support the test command yet, aborting"))

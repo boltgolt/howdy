@@ -14,7 +14,13 @@ if "upgrade" in sys.argv:
 		# Let the user know so he knows where to look on a failed install
 		print("Backup of Howdy config file created in /tmp/howdy_config_backup_v" + sys.argv[2] + ".ini")
 	except subprocess.CalledProcessError:
-		print("Could not make an backup of old Howdy config file")
+		try:
+			subprocess.call(["cp /etc/howdy/config.ini /tmp/howdy_config_backup_v" + sys.argv[2] + ".ini"], shell=True)
+
+			# Let the user know so he knows where to look on a failed install
+			print("Backup of Howdy config file created in /tmp/howdy_config_backup_v" + sys.argv[2] + ".ini")
+		except subprocess.CalledProcessError:
+			print("Could not make an backup of old Howdy config file")
 
 	# Don't continue setup when we're just upgrading
 	sys.exit(0)

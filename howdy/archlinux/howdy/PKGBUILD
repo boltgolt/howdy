@@ -22,7 +22,7 @@ makedepends=(
 	'cmake'
 	'pkgfile'
 )
-backup=('usr/lib/security/howdy/config.ini')
+backup=('etc/howdy/config.ini')
 source=(
 	"$pkgname-$pkgver.tar.gz::https://github.com/boltgolt/howdy/archive/v${pkgver}.tar.gz"
 	"https://github.com/davisking/dlib-models/raw/master/dlib_face_recognition_resnet_model_v1.dat.bz2"
@@ -39,7 +39,9 @@ package() {
 	cd howdy-$pkgver
 	install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
 	mkdir -p "$pkgdir/usr/lib/security/howdy"
+	mkdir -p "$pkgdir/etc/howdy"
 	cp -r src/* "$pkgdir/usr/lib/security/howdy"
+	cp -r src/config.ini "$pkgdir/etc/howdy"
 	cp "${srcdir}/dlib_face_recognition_resnet_model_v1.dat" "$pkgdir/usr/lib/security/howdy/dlib-data/"
 	cp "${srcdir}/mmod_human_face_detector.dat" "$pkgdir/usr/lib/security/howdy/dlib-data/"
 	cp "${srcdir}/shape_predictor_5_face_landmarks.dat" "$pkgdir/usr/lib/security/howdy/dlib-data/"
