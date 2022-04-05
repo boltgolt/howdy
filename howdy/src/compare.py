@@ -3,14 +3,15 @@
 
 # Import time so we can start timing asap
 import time
-
+import sys
+sys.path.append("/lib/security/howdy/")
 # Start timing
 timings = {
 	"st": time.time()
 }
 
 # Import required modules
-import sys
+
 import os
 import json
 import configparser
