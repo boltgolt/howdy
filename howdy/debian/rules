@@ -10,9 +10,13 @@ include /usr/share/dpkg/default.mk
 build:
 	# Create build dir
 	meson setup -Dinih:with_INIReader=true build src/pam
-	# Compile shared object 
+	# Compile shared object
 	meson compile -C build
 
 clean:
 	# Delete mason build directory
 	rm -rf ./build
+	# Force remove temp debian build directory
+	rm -rf ./debian/howdy
+	# Make sure subprojects get pulled locally
+	meson subprojects download --sourcedir src/pam
