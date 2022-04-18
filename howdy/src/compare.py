@@ -26,7 +26,6 @@ import _thread as thread
 from i18n import _
 from recorders.video_capture import VideoCapture
 
-
 def exit(code=None):
 	"""Exit while closeing howdy-gtk properly"""
 	global gtk_proc

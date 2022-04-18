@@ -1,12 +1,13 @@
 #include <cerrno>
 #include <csignal>
 #include <cstdlib>
-#include <glob.h>
 #include <ostream>
-#include <poll.h>
+
+#include <glob.h>
+#include <libintl.h>
 #include <pthread.h>
 #include <spawn.h>
-#include <sys/poll.h>
+#include <stdexcept>
 #include <sys/signalfd.h>
 #include <sys/syslog.h>
 #include <sys/types.h>
@@ -33,59 +34,62 @@
 
 #include <INIReader.h>
 
-#include <boost/locale.hpp>
-
 #include <security/pam_appl.h>
 #include <security/pam_ext.h>
 #include <security/pam_modules.h>
 
+#include "enter_device.hh"
 #include "main.hh"
 #include "optional_task.hh"
 
-using namespace std;
-using namespace boost::locale;
-using namespace std::chrono_literals;
+const auto DEFAULT_TIMEOUT =
+    std::chrono::duration<int, std::chrono::milliseconds::period>(100);
+const auto MAX_RETRIES = 5;
+const auto PYTHON_EXECUTABLE = "python3";
+const auto COMPARE_PROCESS_PATH = "/lib/security/howdy/compare.py";
+
+#define S(msg) gettext(msg)
 
 /**
  * Inspect the status code returned by the compare process
- * @param  code          The status code
+ * @param  status        The status code
  * @param  conv_function The PAM conversation function
  * @return               A PAM return code
  */
-int on_howdy_auth(int code, function<int(int, const char *)> conv_function) {
+auto howdy_error(int status,
+                 const std::function<int(int, const char *)> &conv_function)
+    -> int {
   // If the process has exited
-  if (!WIFEXITED(code)) {
+  if (WIFEXITED(status)) {
     // Get the status code returned
-    code = WEXITSTATUS(code);
+    status = WEXITSTATUS(status);
 
-    switch (code) {
-    // Status 10 means we couldn't find any face models
-    case 10:
-      conv_function(PAM_ERROR_MSG,
-                    dgettext("pam", "There is no face model known"));
+    switch (status) {
+    case CompareError::NO_FACE_MODEL:
+      conv_function(PAM_ERROR_MSG, S("There is no face model known"));
       syslog(LOG_NOTICE, "Failure, no face model known");
       break;
-    // Status 11 means we exceded the maximum retry count
-    case 11:
-      syslog(LOG_INFO, "Failure, timeout reached");
+    case CompareError::TIMEOUT_REACHED:
+      syslog(LOG_ERR, "Failure, timeout reached");
       break;
-    // Status 12 means we aborted
-    case 12:
-      syslog(LOG_INFO, "Failure, general abort");
+    case CompareError::ABORT:
+      syslog(LOG_ERR, "Failure, general abort");
       break;
-    // Status 13 means the image was too dark
-    case 13:
-      conv_function(PAM_ERROR_MSG,
-                    dgettext("pam", "Face detection image too dark"));
-      syslog(LOG_INFO, "Failure, image too dark");
+    case CompareError::TOO_DARK:
+      conv_function(PAM_ERROR_MSG, S("Face detection image too dark"));
+      syslog(LOG_ERR, "Failure, image too dark");
       break;
-    // Otherwise, we can't describe what happened but it wasn't successful
     default:
-      conv_function(
-          PAM_ERROR_MSG,
-          string(dgettext("pam", "Unknown error:") + to_string(code)).c_str());
-      syslog(LOG_INFO, "Failure, unknown error %d", code);
+      conv_function(PAM_ERROR_MSG,
+                    std::string(S("Unknown error: ") + status).c_str());
+      syslog(LOG_ERR, "Failure, unknown error %d", status);
     }
+  } else if (WIFSIGNALED(status)) {
+    // We get the signal
+    status = WTERMSIG(status);
+
+    syslog(LOG_ERR, "Child killed by signal %s (%d)", strsignal(status),
+           status);
   }
 
   // As this function is only called for error status codes, signal an error to
@@ -94,25 +98,88 @@ int on_howdy_auth(int code, function<int(int, const char *)> conv_function) {
 }
 
 /**
- * Format and send a message to PAM
- * @param  conv    PAM conversation function
- * @param  type    Type of PAM message
- * @param  message String to show the user
- * @return         Returns the conversation function return code
+ * Format the success message if the status is successful or log the error in
+ * the other case
+ * @param  username      Username
+ * @param  status        Status code
+ * @param  config        INI  configuration
+ * @param  conv_function PAM conversation function
+ * @return          Returns the conversation function return code
  */
-int send_message(function<int(int, const struct pam_message **,
-                              struct pam_response **, void *)>
-                     conv,
-                 int type, const char *message) {
-  // No need to free this, it's allocated on the stack
-  const struct pam_message msg = {.msg_style = type, .msg = message};
-  const struct pam_message *msgp = &msg;
+auto howdy_status(char *username, int status, const INIReader &config,
+                  const std::function<int(int, const char *)> &conv_function)
+    -> int {
+  if (status != EXIT_SUCCESS) {
+    return howdy_error(status, conv_function);
+  }
 
-  struct pam_response res_ = {};
-  struct pam_response *resp_ = &res_;
+  if (!config.GetBoolean("core", "no_confirmation", true)) {
+    // Construct confirmation text from i18n string
+    std::string confirm_text(S("Identified face as {}"));
+    std::string identify_msg =
+        confirm_text.replace(confirm_text.find("{}"), 2, std::string(username));
+    conv_function(PAM_TEXT_INFO, identify_msg.c_str());
+  }
 
-  // Call the conversation function with the constructed arguments
-  return conv(1, &msgp, &resp_, nullptr);
+  syslog(LOG_INFO, "Login approved");
+
+  return PAM_SUCCESS;
+}
+
+/**
+ * Check if Howdy should be enabled according to the configuration and the
+ * environment.
+ * @param  config INI configuration
+ * @return        Returns PAM_AUTHINFO_UNAVAIL if it shouldn't be enabled,
+ * PAM_SUCCESS otherwise
+ */
+auto check_enabled(const INIReader &config) -> int {
+  // Stop executing if Howdy has been disabled in the config
+  if (config.GetBoolean("core", "disabled", false)) {
+    syslog(LOG_INFO, "Skipped authentication, Howdy is disabled");
+    return PAM_AUTHINFO_UNAVAIL;
+  }
+
+  // Stop if we're in a remote shell and configured to exit
+  if (config.GetBoolean("core", "ignore_ssh", true)) {
+    if (getenv("SSH_CONNECTION") != nullptr ||
+        getenv("SSH_CLIENT") != nullptr || getenv("SSHD_OPTS") != nullptr) {
+      syslog(LOG_INFO, "Skipped authentication, SSH session detected");
+      return PAM_AUTHINFO_UNAVAIL;
+    }
+  }
+
+  // Try to detect the laptop lid state and stop if it's closed
+  if (config.GetBoolean("core", "ignore_closed_lid", true)) {
+    glob_t glob_result;
+
+    // Get any files containing lid state
+    int return_value =
+        glob("/proc/acpi/button/lid/*/state", 0, nullptr, &glob_result);
+
+    if (return_value != 0) {
+      syslog(LOG_ERR, "Failed to read files from glob: %d", return_value);
+      if (errno != 0) {
+        syslog(LOG_ERR, "Underlying error: %s (%d)", strerror(errno), errno);
+      }
+    } else {
+      for (size_t i = 0; i < glob_result.gl_pathc; i++) {
+        std::ifstream file(std::string(glob_result.gl_pathv[i]));
+        std::string lid_state;
+        std::getline(file, lid_state, static_cast<char>(file.eof()));
+
+        if (lid_state.find("closed") != std::string::npos) {
+          globfree(&glob_result);
+
+          syslog(LOG_INFO, "Skipped authentication, closed lid detected");
+          return PAM_AUTHINFO_UNAVAIL;
+        }
+      }
+    }
+    globfree(&glob_result);
+  }
+
+  return PAM_SUCCESS;
 }
 
 /**
@@ -124,271 +191,238 @@ int send_message(function<int(int, const struct pam_message **,
  * @param  auth_tok True if we should ask for a password too
  * @return          Returns a PAM return code
  */
-int identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
-             bool auth_tok) {
-  INIReader reader("/lib/security/howdy/config.ini");
-  // Open the system log so we can write to it
+auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
+              bool auth_tok) -> int {
+  INIReader config("/lib/security/howdy/config.ini");
   openlog("pam_howdy", 0, LOG_AUTHPRIV);
 
-  string workaround = reader.GetString("core", "workaround", "input");
+  // Error out if we could not read the config file
+  if (config.ParseError() != 0) {
+    syslog(LOG_ERR, "Failed to parse the configuration file: %d",
+           config.ParseError());
+    return PAM_SYSTEM_ERR;
+  }
 
-  // In this case, we are not asking for the password
-  if (workaround == Workaround::Off && auth_tok)
-    auth_tok = false;
-
-  // Will contain PAM conversation function
-  struct pam_conv *conv = nullptr;
   // Will contain the responses from PAM functions
   int pam_res = PAM_IGNORE;
 
-  // Try to get the conversation function and error out if we can't
-  if ((pam_res = pam_get_item(pamh, PAM_CONV, (const void **)&conv)) !=
-      PAM_SUCCESS) {
+  // Check if we shoud continue
+  if ((pam_res = check_enabled(config)) != PAM_SUCCESS) {
+    return pam_res;
+  }
+
+  Workaround workaround =
+      get_workaround(config.GetString("core", "workaround", "input"));
+
+  // Will contain PAM conversation structure
+  struct pam_conv *conv = nullptr;
+  const void **conv_ptr =
+      const_cast<const void **>(reinterpret_cast<void **>(&conv));
+
+  if ((pam_res = pam_get_item(pamh, PAM_CONV, conv_ptr)) != PAM_SUCCESS) {
     syslog(LOG_ERR, "Failed to acquire conversation");
     return pam_res;
   }
 
   // Wrap the PAM conversation function in our own, easier function
-  auto conv_function =
-      bind(send_message, conv->conv, placeholders::_1, placeholders::_2);
+  auto conv_function = [conv](int msg_type, const char *msg_str) {
+    const struct pam_message msg = {.msg_style = msg_type, .msg = msg_str};
+    const struct pam_message *msgp = &msg;
 
-  // Error out if we could not ready the config file
-  if (reader.ParseError() < 0) {
-    syslog(LOG_ERR, "Failed to parse the configuration file");
-    return PAM_SYSTEM_ERR;
-  }
+    struct pam_response res = {};
+    struct pam_response *resp = &res;
 
-  // Stop executing if Howdy has been disabled in the config
-  if (reader.GetBoolean("core", "disabled", false)) {
-    syslog(LOG_INFO, "Skipped authentication, Howdy is disabled");
-    return PAM_AUTHINFO_UNAVAIL;
-  }
+    return conv->conv(1, &msgp, &resp, conv->appdata_ptr);
+  };
 
-  // Stop if we're in a remote shell and configured to exit
-  if (reader.GetBoolean("core", "ignore_ssh", true)) {
-    if (getenv("SSH_CONNECTION") != nullptr ||
-        getenv("SSH_CLIENT") != nullptr || getenv("SSHD_OPTS") != nullptr) {
-      syslog(LOG_INFO, "Skipped authentication, SSH session detected");
-      return PAM_AUTHINFO_UNAVAIL;
-    }
-  }
-
-  // Try to detect the laptop lid state and stop if it's closed
-  if (reader.GetBoolean("core", "ignore_closed_lid", true)) {
-    glob_t glob_result{};
-
-    // Get any files containing lid state
-    int return_value =
-        glob("/proc/acpi/button/lid/*/state", 0, nullptr, &glob_result);
-
-    // TODO: We ignore the result
-    if (return_value != 0) {
-      globfree(&glob_result);
-    }
-
-    for (size_t i = 0; i < glob_result.gl_pathc; i++) {
-      ifstream file(string(glob_result.gl_pathv[i]));
-      string lid_state;
-      getline(file, lid_state, (char)file.eof());
-
-      if (lid_state.find("closed") != std::string::npos) {
-        globfree(&glob_result);
-
-        syslog(LOG_INFO, "Skipped authentication, closed lid detected");
-        return PAM_AUTHINFO_UNAVAIL;
-      }
-    }
-
-    globfree(&glob_result);
-  }
+  // Initialize gettext
+  setlocale(LC_ALL, "");
+  bindtextdomain(GETTEXT_PACKAGE, LOCALEDIR);
+  textdomain(GETTEXT_PACKAGE);
 
   // If enabled, send a notice to the user that facial login is being attempted
-  if (reader.GetBoolean("core", "detection_notice", false)) {
-    if ((pam_res = conv_function(
-             PAM_TEXT_INFO,
-             dgettext("pam", "Attempting facial authentication"))) !=
+  if (config.GetBoolean("core", "detection_notice", false)) {
+    if ((conv_function(PAM_TEXT_INFO, S("Attempting facial authentication"))) !=
         PAM_SUCCESS) {
       syslog(LOG_ERR, "Failed to send detection notice");
     }
   }
 
   // Get the username from PAM, needed to match correct face model
-  char *user_ptr = nullptr;
-  if ((pam_res = pam_get_user(pamh, (const char **)&user_ptr, nullptr)) !=
-      PAM_SUCCESS) {
+  char *username = nullptr;
+  if ((pam_res = pam_get_user(pamh, const_cast<const char **>(&username),
+                              nullptr)) != PAM_SUCCESS) {
     syslog(LOG_ERR, "Failed to get username");
     return pam_res;
   }
 
-  posix_spawn_file_actions_t file_actions;
-  posix_spawn_file_actions_init(&file_actions);
-  // We close standard descriptors for the child
-  posix_spawn_file_actions_addclose(&file_actions, STDOUT_FILENO);
-  posix_spawn_file_actions_addclose(&file_actions, STDERR_FILENO);
-  posix_spawn_file_actions_addclose(&file_actions, STDIN_FILENO);
-
-  const char *const args[] = {
-      "/usr/bin/python3", "/lib/security/howdy/compare.py", user_ptr, nullptr};
+  const char *const args[] = {PYTHON_EXECUTABLE, // NOLINT
+                              COMPARE_PROCESS_PATH, username, nullptr};
   pid_t child_pid;
 
   // Start the python subprocess
-  if (posix_spawnp(&child_pid, "/usr/bin/python3", &file_actions, nullptr,
-                   (char *const *)args, nullptr) < 0) {
-    syslog(LOG_ERR, "Can't spawn the howdy process: %s", strerror(errno));
+  if (posix_spawnp(&child_pid, PYTHON_EXECUTABLE, nullptr, nullptr,
+                   const_cast<char *const *>(args), nullptr) != 0) {
+    syslog(LOG_ERR, "Can't spawn the howdy process: %s (%d)", strerror(errno),
+           errno);
     return PAM_SYSTEM_ERR;
   }
 
-  mutex m;
-  condition_variable cv;
-  Type confirmation_type;
-  // TODO: Find a clean way to do this
-  Type final_type;
+  // NOTE: We should replace mutex and condition_variable by atomic wait, but
+  // it's too recent (C++20)
+  std::mutex m;
+  std::condition_variable cv;
+  ConfirmationType confirmation_type(ConfirmationType::Unset);
 
   // This task wait for the status of the python subprocess (we don't want a
   // zombie process)
-  optional_task<int> child_task(packaged_task<int()>([&] {
+  optional_task<int> child_task([&] {
     int status;
     wait(&status);
     {
-      unique_lock<mutex> lk(m);
-      confirmation_type = Type::Howdy;
+      std::unique_lock<std::mutex> lk(m);
+      if (confirmation_type == ConfirmationType::Unset) {
+        confirmation_type = ConfirmationType::Howdy;
+      }
     }
-    cv.notify_all();
+    cv.notify_one();
+
     return status;
-  }));
+  });
   child_task.activate();
 
   // This task waits for the password input (if the workaround wants it)
-  optional_task<tuple<int, char *>> pass_task(
-      packaged_task<tuple<int, char *>()>([&] {
-        char *auth_tok_ptr = nullptr;
-        int pam_res = pam_get_authtok(pamh, PAM_AUTHTOK,
-                                      (const char **)&auth_tok_ptr, nullptr);
-        {
-          unique_lock<mutex> lk(m);
-          confirmation_type = Type::Pam;
-        }
-        cv.notify_all();
-        return tuple<int, char *>(pam_res, auth_tok_ptr);
-      }));
+  optional_task<std::tuple<int, char *>> pass_task([&] {
+    char *auth_tok_ptr = nullptr;
+    int pam_res = pam_get_authtok(
+        pamh, PAM_AUTHTOK, const_cast<const char **>(&auth_tok_ptr), nullptr);
+    {
+      std::unique_lock<std::mutex> lk(m);
+      if (confirmation_type == ConfirmationType::Unset) {
+        confirmation_type = ConfirmationType::Pam;
+      }
+    }
+    cv.notify_one();
 
-  if (auth_tok) {
+    return std::tuple<int, char *>(pam_res, auth_tok_ptr);
+  });
+
+  // We ask for the password if the function requires it and if a workaround is
+  // set
+  if (auth_tok && workaround != Workaround::Off) {
     pass_task.activate();
   }
 
   // Wait for the end either of the child or the password input
   {
-    unique_lock<mutex> lk(m);
-    cv.wait(lk);
-    final_type = confirmation_type;
+    std::unique_lock<std::mutex> lk(m);
+    cv.wait(lk, [&] { return confirmation_type != ConfirmationType::Unset; });
   }
 
-  if (final_type == Type::Howdy) {
-    // We need to be sure that we're not going to block forever if the
-    // child has a problem
-    if (child_task.wait(3s) == future_status::timeout) {
-      kill(child_pid, SIGTERM);
-    }
+  // The password has been entered or an error has occurred
+  if (confirmation_type == ConfirmationType::Pam) {
+    // We kill the child because we don't need its result
+    kill(child_pid, SIGTERM);
     child_task.stop(false);
 
-    // If the workaround is native
-    if (auth_tok) {
-      // We cancel the thread using pthread, pam_get_authtok seems to be a
-      // cancellation point
-      if (pass_task.is_active()) {
-        pass_task.stop(true);
-      }
-    }
-    int howdy_status = child_task.get();
+    // We just wait for the thread to stop since it's this one which sent us the
+    // confirmation type
+    pass_task.stop(false);
 
-    // If exited successfully
-    if (howdy_status == 0) {
-      if (!reader.GetBoolean("core", "no_confirmation", true)) {
-        // Construct confirmation text from i18n string
-        string confirm_text = dgettext("pam", "Identified face as {}");
-        string identify_msg(
-            confirm_text.replace(confirm_text.find("{}"), 2, string(user_ptr)));
-        // Send confirmation message to user
-        conv_function(PAM_TEXT_INFO, identify_msg.c_str());
-      }
-      syslog(LOG_INFO, "Login approved");
-      return PAM_SUCCESS;
-    } else {
-      return on_howdy_auth(howdy_status, conv_function);
+    char *password = nullptr;
+    std::tie(pam_res, password) = pass_task.get();
+
+    if (pam_res != PAM_SUCCESS) {
+      return pam_res;
     }
+
+    // The password has been entered, we are passing it to PAM stack
+    return PAM_IGNORE;
   }
 
-  // The branch with Howdy confirmation type returns early, so we don't need an
-  // else statement
-
-  // Again, we need to be sure that we're not going to block forever if the
-  // child has a problem
-  if (child_task.wait(1.5s) == future_status::timeout) {
-    kill(child_pid, SIGTERM);
-  }
+  // The compare process has finished its execution
   child_task.stop(false);
 
-  // We just wait for the thread to stop since it's this one which sent us the
-  // confirmation type
-  if (workaround == Workaround::Input && auth_tok) {
+  // We want to stop the password prompt, either by canceling the thread when
+  // workaround is set to "native", or by emulating "Enter" input with
+  // "input"
+
+  // UNSAFE: We cancel the thread using pthread, pam_get_authtok seems to be
+  // a cancellation point
+  if (workaround == Workaround::Native) {
+    pass_task.stop(true);
+  } else if (workaround == Workaround::Input) {
+    // We check if we have the right permissions on /dev/uinput
+    if (euidaccess("/dev/uinput", W_OK | R_OK) != 0) {
+      syslog(LOG_WARNING, "Insufficient permissions to create the fake device");
+      conv_function(PAM_ERROR_MSG,
+                    S("Insufficient permissions to send Enter "
+                      "press, waiting for user to press it instead"));
+    } else {
+      try {
+        EnterDevice enter_device;
+        int retries;
+
+        // We try to send it
+        enter_device.send_enter_press();
+
+        for (retries = 0;
+             retries < MAX_RETRIES &&
+             pass_task.wait(DEFAULT_TIMEOUT) == std::future_status::timeout;
+             retries++) {
+          enter_device.send_enter_press();
+        }
+
+        if (retries == MAX_RETRIES) {
+          syslog(LOG_WARNING,
+                 "Failed to send enter input before the retries limit");
+          conv_function(PAM_ERROR_MSG, S("Failed to send Enter press, waiting "
+                                         "for user to press it instead"));
+        }
+      } catch (std::runtime_error &err) {
+        syslog(LOG_WARNING, "Failed to send enter input: %s", err.what());
+        conv_function(PAM_ERROR_MSG, S("Failed to send Enter press, waiting "
+                                       "for user to press it instead"));
+      }
+    }
+
+    // We stop the thread (will block until the enter key is pressed if the
+    // input wasn't focused or if the uinput device failed to send keypress)
     pass_task.stop(false);
   }
 
-  char *token = nullptr;
-  tie(pam_res, token) = pass_task.get();
+  int status = child_task.get();
 
-  if (pam_res != PAM_SUCCESS)
-    return pam_res;
-
-  int howdy_status = child_task.get();
-  if (strlen(token) == 0) {
-    if (howdy_status == 0) {
-      if (!reader.GetBoolean("core", "no_confirmation", true)) {
-        // Construct confirmation text from i18n string
-        string confirm_text = dgettext("pam", "Identified face as {}");
-        string identify_msg(
-            confirm_text.replace(confirm_text.find("{}"), 2, string(user_ptr)));
-        // Send confirmation message to user
-        conv_function(PAM_TEXT_INFO, identify_msg.c_str());
-      }
-      syslog(LOG_INFO, "Login approved");
-      return PAM_SUCCESS;
-    } else {
-      return on_howdy_auth(howdy_status, conv_function);
-    }
-  }
-
-  // The password has been entered, we are passing it to PAM stack
-  return PAM_IGNORE;
+  return howdy_status(username, status, config, conv_function);
 }
 
 // Called by PAM when a user needs to be authenticated, for example by running
 // the sudo command
-PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags, int argc,
-                                   const char **argv) {
+PAM_EXTERN auto pam_sm_authenticate(pam_handle_t *pamh, int flags, int argc,
+                                    const char **argv) -> int {
   return identify(pamh, flags, argc, argv, true);
 }
 
 // Called by PAM when a session is started, such as by the su command
-PAM_EXTERN int pam_sm_open_session(pam_handle_t *pamh, int flags, int argc,
-                                   const char **argv) {
+PAM_EXTERN auto pam_sm_open_session(pam_handle_t *pamh, int flags, int argc,
+                                    const char **argv) -> int {
   return identify(pamh, flags, argc, argv, false);
 }
 
 // The functions below are required by PAM, but not needed in this module
-PAM_EXTERN int pam_sm_acct_mgmt(pam_handle_t *pamh, int flags, int argc,
-                                const char **argv) {
+PAM_EXTERN auto pam_sm_acct_mgmt(pam_handle_t *pamh, int flags, int argc,
+                                 const char **argv) -> int {
   return PAM_IGNORE;
 }
-PAM_EXTERN int pam_sm_close_session(pam_handle_t *pamh, int flags, int argc,
-                                    const char **argv) {
+PAM_EXTERN auto pam_sm_close_session(pam_handle_t *pamh, int flags, int argc,
+                                     const char **argv) -> int {
   return PAM_IGNORE;
 }
-PAM_EXTERN int pam_sm_chauthtok(pam_handle_t *pamh, int flags, int argc,
-                                const char **argv) {
+PAM_EXTERN auto pam_sm_chauthtok(pam_handle_t *pamh, int flags, int argc,
+                                 const char **argv) -> int {
   return PAM_IGNORE;
 }
-PAM_EXTERN int pam_sm_setcred(pam_handle_t *pamh, int flags, int argc,
-                              const char **argv) {
+PAM_EXTERN auto pam_sm_setcred(pam_handle_t *pamh, int flags, int argc,
+                               const char **argv) -> int {
   return PAM_IGNORE;
 }

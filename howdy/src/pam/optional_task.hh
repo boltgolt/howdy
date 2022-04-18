@@ -6,64 +6,76 @@
 #include <future>
 #include <thread>
 
+// A task executed only if activated.
 template <typename T> class optional_task {
-  std::thread _thread;
-  std::packaged_task<T()> _task;
-  std::future<T> _future;
-  std::atomic<bool> _spawned;
-  std::atomic<bool> _is_active;
+  std::thread thread;
+  std::packaged_task<T()> task;
+  std::future<T> future;
+  bool spawned;
+  bool is_active;
 
 public:
-  optional_task(std::packaged_task<T()>);
+  explicit optional_task(std::function<T()> fn);
   void activate();
-  template <typename Dur> std::future_status wait(std::chrono::duration<Dur>);
-  T get();
-  bool is_active();
-  void stop(bool);
+  template <typename R, typename P>
+  auto wait(std::chrono::duration<R, P> dur) -> std::future_status;
+  auto get() -> T;
+  void stop(bool force);
   ~optional_task();
 };
 
 template <typename T>
-optional_task<T>::optional_task(std::packaged_task<T()> t)
-    : _task(std::move(t)), _future(_task.get_future()) {}
+optional_task<T>::optional_task(std::function<T()> fn)
+    : task(std::packaged_task<T()>(std::move(fn))), future(task.get_future()),
+      spawned(false), is_active(false) {}
 
+// Create a new thread and launch the task on it.
 template <typename T> void optional_task<T>::activate() {
-  _thread = std::thread(std::move(_task));
-  _spawned = true;
-  _is_active = true;
+  thread = std::thread(std::move(task));
+  spawned = true;
+  is_active = true;
 }
 
+// Wait for `dur` time and return a `future` status.
 template <typename T>
-template <typename Dur>
-std::future_status optional_task<T>::wait(std::chrono::duration<Dur> dur) {
-  return _future.wait_for(dur);
+template <typename R, typename P>
+auto optional_task<T>::wait(std::chrono::duration<R, P> dur)
+    -> std::future_status {
+  return future.wait_for(dur);
 }
 
-template <typename T> T optional_task<T>::get() {
-  assert(!_is_active && _spawned);
-  return _future.get();
+// Get the value.
+// WARNING: The function hould be run only if the task has successfully been
+// stopped.
+template <typename T> auto optional_task<T>::get() -> T {
+  assert(!is_active && spawned);
+  return future.get();
 }
 
-template <typename T> bool optional_task<T>::is_active() { return _is_active; }
-
+// Stop the thread:
+// - if `force` is `false`, by joining the thread.
+// - if `force` is `true`, by cancelling the thread using `pthread_cancel`.
+// WARNING: This function should be used with extreme caution when `force` is
+// set to `true`.
 template <typename T> void optional_task<T>::stop(bool force) {
-  if (!(_is_active && _thread.joinable()) && _spawned) {
-    _is_active = false;
+  if (!(is_active && thread.joinable()) && spawned) {
+    is_active = false;
     return;
   }
 
   // We use pthread to cancel the thread
   if (force) {
-    auto native_hd = _thread.native_handle();
+    auto native_hd = thread.native_handle();
     pthread_cancel(native_hd);
   }
-  _thread.join();
-  _is_active = false;
+  thread.join();
+  is_active = false;
 }
 
 template <typename T> optional_task<T>::~optional_task<T>() {
-  if (_is_active && _spawned)
+  if (is_active && spawned) {
     stop(false);
+  }
 }
 
 #endif // OPTIONAL_TASK_H_

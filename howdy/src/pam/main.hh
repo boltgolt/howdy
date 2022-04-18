@@ -1,36 +1,30 @@
 #ifndef MAIN_H_
 #define MAIN_H_
 
-#include <cstdint>
 #include <string>
 
-enum class Type { Howdy, Pam };
+enum class ConfirmationType { Unset, Howdy, Pam };
 
 enum class Workaround { Off, Input, Native };
 
-inline bool operator==(const std::string &l, const Workaround &r) {
-  switch (r) {
-  case Workaround::Off:
-    return (l == "off");
-  case Workaround::Input:
-    return (l == "input");
-  case Workaround::Native:
-    return (l == "native");
-  default:
-    return false;
+// Exit status codes returned by the compare process
+enum CompareError : int {
+  NO_FACE_MODEL = 10,
+  TIMEOUT_REACHED = 11,
+  ABORT = 12,
+  TOO_DARK = 13
+};
+
+inline auto get_workaround(const std::string &workaround) -> Workaround {
+  if (workaround == "input") {
+    return Workaround::Input;
   }
-}
 
-inline bool operator==(const Workaround &l, const std::string &r) {
-  return operator==(r, l);
-}
+  if (workaround == "native") {
+    return Workaround::Native;
+  }
 
-inline bool operator!=(const std::string &l, const Workaround &r) {
-  return !operator==(l, r);
-}
-
-inline bool operator!=(const Workaround &l, const std::string &r) {
-  return operator!=(r, l);
+  return Workaround::Off;
 }
 
 #endif // MAIN_H_
