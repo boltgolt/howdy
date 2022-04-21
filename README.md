@@ -108,7 +108,7 @@ If you encounter an error that hasn't been reported yet, don't be afraid to open
 
 ## A note on security
 
-This package is in no way as secure as a password and will never be. Although it's harder to fool than normal face recognition, a person who looks similar to you or well-printed photo of you could be enough to do it. Howdy is a more quick and convenient way of logging in, not a more secure one.
+This package is in no way as secure as a password and will never be. Although it's harder to fool than normal face recognition, a person who looks similar to you, or a well-printed photo of you could be enough to do it. Howdy is a more quick and convenient way of logging in, not a more secure one.
 
 To minimize the chance of this program being compromised, it's recommended to leave Howdy in `/lib/security` and to keep it read-only.
 
