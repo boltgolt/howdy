@@ -1,56 +1,56 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.18.3 -->
+<!-- Generated with glade 3.38.2 -->
 <interface>
   <requires lib="gtk+" version="3.12"/>
   <object class="GtkImage" id="iconcancel">
     <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="margin_right">4</property>
+    <property name="can-focus">False</property>
+    <property name="margin-right">4</property>
     <property name="stock">gtk-cancel</property>
   </object>
   <object class="GtkImage" id="iconfinish">
     <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="margin_right">5</property>
+    <property name="can-focus">False</property>
+    <property name="margin-right">5</property>
     <property name="stock">gtk-apply</property>
   </object>
   <object class="GtkImage" id="iconforward">
     <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="margin_left">4</property>
+    <property name="can-focus">False</property>
+    <property name="margin-left">4</property>
     <property name="stock">gtk-go-forward</property>
   </object>
   <object class="GtkImage" id="iconscan">
     <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="margin_left">5</property>
+    <property name="can-focus">False</property>
+    <property name="margin-left">5</property>
     <property name="stock">gtk-media-play</property>
   </object>
   <object class="GtkWindow" id="onboardingwindow">
-    <property name="width_request">500</property>
-    <property name="height_request">400</property>
-    <property name="can_focus">False</property>
+    <property name="width-request">500</property>
+    <property name="height-request">400</property>
+    <property name="can-focus">False</property>
     <property name="title" translatable="yes">Welcome to Howdy</property>
-    <property name="window_position">center</property>
+    <property name="window-position">center</property>
     <property name="icon">logo.png</property>
-    <property name="type_hint">menu</property>
+    <property name="type-hint">menu</property>
     <property name="gravity">center</property>
     <child>
       <object class="GtkBox" id="slidecontainer">
         <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="resize_mode">immediate</property>
+        <property name="can-focus">False</property>
+        <property name="resize-mode">immediate</property>
         <property name="orientation">vertical</property>
         <child>
-          <object class="GtkBox" id="slide5">
-            <property name="can_focus">False</property>
-            <property name="no_show_all">True</property>
+          <object class="GtkBox" id="slide6">
+            <property name="can-focus">False</property>
+            <property name="no-show-all">True</property>
             <property name="orientation">vertical</property>
             <child>
               <object class="GtkLabel" id="label9">
                 <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="margin_top">20</property>
+                <property name="can-focus">False</property>
+                <property name="margin-top">20</property>
                 <property name="label" translatable="yes">Setup is done!</property>
                 <attributes>
                   <attribute name="weight" value="bold"/>
@@ -65,11 +65,11 @@
             <child>
               <object class="GtkLabel" id="label10">
                 <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="margin_left">10</property>
-                <property name="margin_right">10</property>
-                <property name="margin_top">10</property>
-                <property name="margin_bottom">20</property>
+                <property name="can-focus">False</property>
+                <property name="margin-left">10</property>
+                <property name="margin-right">10</property>
+                <property name="margin-top">10</property>
+                <property name="margin-bottom">20</property>
                 <property name="label" translatable="yes">We're done! Howdy is now active on this computer. Try doing anything you would normally have to type your password for to authenticate, like running a command with sudo.
 
 You can open the Howdy Configurator later on to change more advanced settings or add additional models. Press Finish below to close this window and open the Howdy Configurator. </property>
@@ -90,15 +90,15 @@ You can open the Howdy Configurator later on to change more advanced settings or
           </packing>
         </child>
         <child>
-          <object class="GtkBox" id="slide4">
-            <property name="can_focus">False</property>
-            <property name="no_show_all">True</property>
+          <object class="GtkBox" id="slide5">
+            <property name="can-focus">False</property>
+            <property name="no-show-all">True</property>
             <property name="orientation">vertical</property>
             <child>
               <object class="GtkLabel" id="label11">
                 <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="margin_top">20</property>
+                <property name="can-focus">False</property>
+                <property name="margin-top">20</property>
                 <property name="label" translatable="yes">Setting a certainty policy</property>
                 <attributes>
                   <attribute name="weight" value="bold"/>
@@ -113,11 +113,11 @@ You can open the Howdy Configurator later on to change more advanced settings or
             <child>
               <object class="GtkLabel" id="label12">
                 <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="margin_left">10</property>
-                <property name="margin_right">10</property>
-                <property name="margin_top">10</property>
-                <property name="margin_bottom">40</property>
+                <property name="can-focus">False</property>
+                <property name="margin-left">10</property>
+                <property name="margin-right">10</property>
+                <property name="margin-top">10</property>
+                <property name="margin-bottom">40</property>
                 <property name="label" translatable="yes">Because of changes in angles, distance, and other factors a face match is never exactly the same as the stored face model. On this page you can set how strict Howdy should be.</property>
                 <property name="justify">center</property>
                 <property name="wrap">True</property>
@@ -131,31 +131,31 @@ You can open the Howdy Configurator later on to change more advanced settings or
             <child>
               <object class="GtkBox" id="box2">
                 <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="margin_left">60</property>
-                <property name="margin_right">60</property>
+                <property name="can-focus">False</property>
+                <property name="margin-left">60</property>
+                <property name="margin-right">60</property>
                 <property name="orientation">vertical</property>
                 <child>
                   <object class="GtkRadioButton" id="radiofast">
                     <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="receives_default">False</property>
-                    <property name="margin_bottom">10</property>
+                    <property name="can-focus">True</property>
+                    <property name="receives-default">False</property>
+                    <property name="margin-bottom">10</property>
                     <property name="xalign">0</property>
-                    <property name="yalign">0.50999999046325684</property>
+                    <property name="yalign">0.5099999904632568</property>
                     <property name="active">True</property>
-                    <property name="draw_indicator">True</property>
+                    <property name="draw-indicator">True</property>
                     <property name="group">radiobalanced</property>
                     <child>
                       <object class="GtkBox" id="box3">
                         <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="margin_left">5</property>
+                        <property name="can-focus">False</property>
+                        <property name="margin-left">5</property>
                         <property name="orientation">vertical</property>
                         <child>
                           <object class="GtkLabel" id="label13">
                             <property name="visible">True</property>
-                            <property name="can_focus">False</property>
+                            <property name="can-focus">False</property>
                             <property name="halign">start</property>
                             <property name="label" translatable="yes">Fast</property>
                             <attributes>
@@ -171,7 +171,7 @@ You can open the Howdy Configurator later on to change more advanced settings or
                         <child>
                           <object class="GtkLabel" id="label14">
                             <property name="visible">True</property>
-                            <property name="can_focus">False</property>
+                            <property name="can-focus">False</property>
                             <property name="halign">start</property>
                             <property name="label" translatable="yes">Allows more fuzzy matches, 
 but speeds up the scanning process greatly.</property>
@@ -195,22 +195,22 @@ but speeds up the scanning process greatly.</property>
                 <child>
                   <object class="GtkRadioButton" id="radiobalanced">
                     <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="receives_default">False</property>
-                    <property name="margin_bottom">10</property>
+                    <property name="can-focus">True</property>
+                    <property name="receives-default">False</property>
+                    <property name="margin-bottom">10</property>
                     <property name="xalign">0</property>
                     <property name="active">True</property>
-                    <property name="draw_indicator">True</property>
+                    <property name="draw-indicator">True</property>
                     <child>
                       <object class="GtkBox" id="box4">
                         <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="margin_left">5</property>
+                        <property name="can-focus">False</property>
+                        <property name="margin-left">5</property>
                         <property name="orientation">vertical</property>
                         <child>
                           <object class="GtkLabel" id="label15">
                             <property name="visible">True</property>
-                            <property name="can_focus">False</property>
+                            <property name="can-focus">False</property>
                             <property name="halign">start</property>
                             <property name="label" translatable="yes">Balanced</property>
                             <attributes>
@@ -226,7 +226,7 @@ but speeds up the scanning process greatly.</property>
                         <child>
                           <object class="GtkLabel" id="label16">
                             <property name="visible">True</property>
-                            <property name="can_focus">False</property>
+                            <property name="can-focus">False</property>
                             <property name="halign">start</property>
                             <property name="label" translatable="yes">Still relatively quick detection, 
 but might not log you in when further away.</property>
@@ -250,22 +250,22 @@ but might not log you in when further away.</property>
                 <child>
                   <object class="GtkRadioButton" id="radiosecure">
                     <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="receives_default">False</property>
+                    <property name="can-focus">True</property>
+                    <property name="receives-default">False</property>
                     <property name="xalign">0</property>
                     <property name="active">True</property>
-                    <property name="draw_indicator">True</property>
+                    <property name="draw-indicator">True</property>
                     <property name="group">radiobalanced</property>
                     <child>
                       <object class="GtkBox" id="box5">
                         <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="margin_left">5</property>
+                        <property name="can-focus">False</property>
+                        <property name="margin-left">5</property>
                         <property name="orientation">vertical</property>
                         <child>
                           <object class="GtkLabel" id="label17">
                             <property name="visible">True</property>
-                            <property name="can_focus">False</property>
+                            <property name="can-focus">False</property>
                             <property name="halign">start</property>
                             <property name="label" translatable="yes">Secure</property>
                             <attributes>
@@ -281,7 +281,7 @@ but might not log you in when further away.</property>
                         <child>
                           <object class="GtkLabel" id="label18">
                             <property name="visible">True</property>
-                            <property name="can_focus">False</property>
+                            <property name="can-focus">False</property>
                             <property name="halign">start</property>
                             <property name="label" translatable="yes">The slightly safer option, 
 but will take much longer to authenticate you</property>
@@ -317,15 +317,15 @@ but will take much longer to authenticate you</property>
           </packing>
         </child>
         <child>
-          <object class="GtkBox" id="slide3">
-            <property name="can_focus">False</property>
-            <property name="no_show_all">True</property>
+          <object class="GtkBox" id="slide4">
+            <property name="can-focus">False</property>
+            <property name="no-show-all">True</property>
             <property name="orientation">vertical</property>
             <child>
               <object class="GtkLabel" id="label4">
                 <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="margin_top">20</property>
+                <property name="can-focus">False</property>
+                <property name="margin-top">20</property>
                 <property name="label" translatable="yes">Adding a face model</property>
                 <attributes>
                   <attribute name="weight" value="bold"/>
@@ -340,11 +340,11 @@ but will take much longer to authenticate you</property>
             <child>
               <object class="GtkLabel" id="label5">
                 <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="margin_left">10</property>
-                <property name="margin_right">10</property>
-                <property name="margin_top">10</property>
-                <property name="margin_bottom">20</property>
+                <property name="can-focus">False</property>
+                <property name="margin-left">10</property>
+                <property name="margin-right">10</property>
+                <property name="margin-top">10</property>
+                <property name="margin-bottom">20</property>
                 <property name="label" translatable="yes">To authenticate you Howdy needs to save a model of your face to recognise you. Press the Scan button below to start the facial scan.</property>
                 <property name="justify">center</property>
                 <property name="wrap">True</property>
@@ -358,7 +358,7 @@ but will take much longer to authenticate you</property>
             <child>
               <object class="GtkBox" id="box1">
                 <property name="visible">True</property>
-                <property name="can_focus">False</property>
+                <property name="can-focus">False</property>
                 <child>
                   <placeholder/>
                 </child>
@@ -366,16 +366,16 @@ but will take much longer to authenticate you</property>
                   <object class="GtkButton" id="scanbutton">
                     <property name="label" translatable="yes">Start face scan</property>
                     <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="has_focus">True</property>
-                    <property name="is_focus">True</property>
-                    <property name="receives_default">True</property>
-                    <property name="margin_left">50</property>
-                    <property name="margin_right">50</property>
+                    <property name="can-focus">True</property>
+                    <property name="has-focus">True</property>
+                    <property name="is-focus">True</property>
+                    <property name="receives-default">True</property>
+                    <property name="margin-left">50</property>
+                    <property name="margin-right">50</property>
                     <property name="image">iconscan</property>
                     <property name="relief">none</property>
-                    <property name="image_position">right</property>
-                    <property name="always_show_image">True</property>
+                    <property name="image-position">right</property>
+                    <property name="always-show-image">True</property>
                     <signal name="clicked" handler="on_scanbutton_click" swapped="no"/>
                   </object>
                   <packing>
@@ -402,15 +402,100 @@ but will take much longer to authenticate you</property>
           </packing>
         </child>
         <child>
+          <object class="GtkBox" id="slide3">
+            <property name="can-focus">False</property>
+            <property name="no-show-all">True</property>
+            <property name="orientation">vertical</property>
+            <child>
+              <object class="GtkLabel" id="label19">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="margin-top">20</property>
+                <property name="label" translatable="yes">Configuring webcam</property>
+                <attributes>
+                  <attribute name="weight" value="bold"/>
+                </attributes>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="leiestatus">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="margin-top">10</property>
+                <property name="margin-bottom">20</property>
+                <property name="label" translatable="yes">Is the infrared emitter flashing ?</property>
+                <property name="justify">center</property>
+                <property name="wrap">True</property>
+                <property name="track-visited-links">False</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButtonBox">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="layout-style">spread</property>
+                <child>
+                  <object class="GtkButton" id="leieyesbutton">
+                    <property name="label" translatable="yes">yes</property>
+                    <property name="visible">True</property>
+                    <property name="can-focus">True</property>
+                    <property name="receives-default">True</property>
+                    <signal name="clicked" handler="slide3_button_yes" swapped="no"/>
+                  </object>
+                  <packing>
+                    <property name="expand">True</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkButton" id="leienobutton">
+                    <property name="label" translatable="yes">no</property>
+                    <property name="visible">True</property>
+                    <property name="can-focus">True</property>
+                    <property name="receives-default">True</property>
+                    <signal name="clicked" handler="slide3_button_no" swapped="no"/>
+                  </object>
+                  <packing>
+                    <property name="expand">True</property>
+                    <property name="fill">True</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">2</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">3</property>
+          </packing>
+        </child>
+        <child>
           <object class="GtkBox" id="slide2">
-            <property name="can_focus">False</property>
-            <property name="no_show_all">True</property>
+            <property name="can-focus">False</property>
+            <property name="no-show-all">True</property>
             <property name="orientation">vertical</property>
             <child>
               <object class="GtkLabel" id="label2">
                 <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="margin_top">20</property>
+                <property name="can-focus">False</property>
+                <property name="margin-top">20</property>
                 <property name="label" translatable="yes">Configuring webcam</property>
                 <attributes>
                   <attribute name="weight" value="bold"/>
@@ -425,11 +510,11 @@ but will take much longer to authenticate you</property>
             <child>
               <object class="GtkLabel" id="label3">
                 <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="margin_left">10</property>
-                <property name="margin_right">10</property>
-                <property name="margin_top">10</property>
-                <property name="margin_bottom">20</property>
+                <property name="can-focus">False</property>
+                <property name="margin-left">10</property>
+                <property name="margin-right">10</property>
+                <property name="margin-top">10</property>
+                <property name="margin-bottom">20</property>
                 <property name="label" translatable="yes">Howdy will search your system automatically for any available cameras, so make sure your webcam is connected. After detection a list of usable webcams will be shown. Pick the one you want to use and click Next.</property>
                 <property name="justify">center</property>
                 <property name="wrap">True</property>
@@ -443,16 +528,16 @@ but will take much longer to authenticate you</property>
             <child>
               <object class="GtkBox" id="devicelistbox">
                 <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="opacity">0.89000000000000001</property>
-                <property name="margin_left">10</property>
-                <property name="margin_right">10</property>
+                <property name="can-focus">False</property>
+                <property name="opacity">0.89</property>
+                <property name="margin-left">10</property>
+                <property name="margin-right">10</property>
                 <property name="orientation">vertical</property>
                 <child>
                   <object class="GtkLabel" id="loadinglabel">
                     <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <property name="margin_top">15</property>
+                    <property name="can-focus">False</property>
+                    <property name="margin-top">15</property>
                     <property name="label" translatable="yes">Testing your webcams, please wait...</property>
                     <attributes>
                       <attribute name="style" value="italic"/>
@@ -478,20 +563,20 @@ but will take much longer to authenticate you</property>
           <packing>
             <property name="expand">False</property>
             <property name="fill">True</property>
-            <property name="position">3</property>
+            <property name="position">4</property>
           </packing>
         </child>
         <child>
           <object class="GtkBox" id="slide1">
-            <property name="can_focus">False</property>
-            <property name="no_show_all">True</property>
-            <property name="margin_bottom">10</property>
+            <property name="can-focus">False</property>
+            <property name="no-show-all">True</property>
+            <property name="margin-bottom">10</property>
             <property name="orientation">vertical</property>
             <child>
               <object class="GtkLabel" id="label8">
                 <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="margin_top">20</property>
+                <property name="can-focus">False</property>
+                <property name="margin-top">20</property>
                 <property name="label" translatable="yes">Downloading data files</property>
                 <attributes>
                   <attribute name="weight" value="bold"/>
@@ -506,11 +591,11 @@ but will take much longer to authenticate you</property>
             <child>
               <object class="GtkLabel" id="label1">
                 <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="margin_left">10</property>
-                <property name="margin_right">10</property>
-                <property name="margin_top">10</property>
-                <property name="margin_bottom">20</property>
+                <property name="can-focus">False</property>
+                <property name="margin-left">10</property>
+                <property name="margin-right">10</property>
+                <property name="margin-top">10</property>
+                <property name="margin-bottom">20</property>
                 <property name="label" translatable="yes">Howdy needs three pre trained facial recognition datasets to be able to recognise you, which will be downloaded now. You can see the download progress below.</property>
                 <property name="justify">center</property>
                 <property name="wrap">True</property>
@@ -524,14 +609,14 @@ but will take much longer to authenticate you</property>
             <child>
               <object class="GtkEventBox" id="downloadeventbox">
                 <property name="visible">True</property>
-                <property name="can_focus">False</property>
+                <property name="can-focus">False</property>
                 <child>
                   <object class="GtkLabel" id="downloadoutputlabel">
                     <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <property name="margin_left">10</property>
-                    <property name="margin_right">10</property>
-                    <property name="margin_top">10</property>
+                    <property name="can-focus">False</property>
+                    <property name="margin-left">10</property>
+                    <property name="margin-right">10</property>
+                    <property name="margin-top">10</property>
                     <property name="label" translatable="yes">Starting download...</property>
                     <property name="justify">center</property>
                     <attributes>
@@ -551,19 +636,19 @@ but will take much longer to authenticate you</property>
           <packing>
             <property name="expand">True</property>
             <property name="fill">True</property>
-            <property name="position">4</property>
+            <property name="position">5</property>
           </packing>
         </child>
         <child>
           <object class="GtkBox" id="slide0">
             <property name="visible">True</property>
-            <property name="can_focus">False</property>
+            <property name="can-focus">False</property>
             <property name="orientation">vertical</property>
             <child>
               <object class="GtkImage" id="image2">
-                <property name="can_focus">False</property>
-                <property name="margin_top">20</property>
-                <property name="margin_bottom">10</property>
+                <property name="can-focus">False</property>
+                <property name="margin-top">20</property>
+                <property name="margin-bottom">10</property>
                 <property name="xpad">7</property>
                 <property name="ypad">13</property>
                 <property name="pixbuf">logo_about.png</property>
@@ -577,8 +662,8 @@ but will take much longer to authenticate you</property>
             <child>
               <object class="GtkLabel" id="label6">
                 <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="margin_top">5</property>
+                <property name="can-focus">False</property>
+                <property name="margin-top">5</property>
                 <property name="label" translatable="yes">Welcome to Howdy!</property>
                 <attributes>
                   <attribute name="scale" value="2"/>
@@ -592,14 +677,14 @@ but will take much longer to authenticate you</property>
             </child>
             <child>
               <object class="GtkLabel" id="label7">
-                <property name="width_request">100</property>
+                <property name="width-request">100</property>
                 <property name="visible">True</property>
-                <property name="can_focus">False</property>
+                <property name="can-focus">False</property>
                 <property name="halign">center</property>
                 <property name="valign">center</property>
-                <property name="margin_left">20</property>
-                <property name="margin_right">20</property>
-                <property name="margin_top">10</property>
+                <property name="margin-left">20</property>
+                <property name="margin-right">20</property>
+                <property name="margin-top">10</property>
                 <property name="label" translatable="yes">This wizard will walk you through the setup process and automatically configure Howdy for you. Press next to continue.</property>
                 <property name="justify">center</property>
                 <property name="wrap">True</property>
@@ -614,23 +699,23 @@ but will take much longer to authenticate you</property>
           <packing>
             <property name="expand">False</property>
             <property name="fill">True</property>
-            <property name="position">5</property>
+            <property name="position">6</property>
           </packing>
         </child>
         <child>
           <object class="GtkBox" id="navigationbar">
             <property name="visible">True</property>
-            <property name="can_focus">False</property>
-            <property name="margin_bottom">10</property>
+            <property name="can-focus">False</property>
+            <property name="margin-bottom">10</property>
             <child>
               <object class="GtkButton" id="cancelbutton">
                 <property name="label" translatable="yes">Cancel</property>
                 <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <property name="margin_left">10</property>
+                <property name="can-focus">True</property>
+                <property name="receives-default">True</property>
+                <property name="margin-left">10</property>
                 <property name="image">iconcancel</property>
-                <property name="always_show_image">True</property>
+                <property name="always-show-image">True</property>
                 <signal name="clicked" handler="exit" swapped="no"/>
               </object>
               <packing>
@@ -646,40 +731,40 @@ but will take much longer to authenticate you</property>
               <object class="GtkButton" id="nextbutton">
                 <property name="label" translatable="yes">Next</property>
                 <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="has_focus">True</property>
-                <property name="is_focus">True</property>
-                <property name="receives_default">True</property>
-                <property name="margin_right">10</property>
+                <property name="can-focus">True</property>
+                <property name="has-focus">True</property>
+                <property name="is-focus">True</property>
+                <property name="receives-default">True</property>
+                <property name="margin-right">10</property>
                 <property name="image">iconforward</property>
                 <property name="relief">none</property>
-                <property name="image_position">right</property>
-                <property name="always_show_image">True</property>
+                <property name="image-position">right</property>
+                <property name="always-show-image">True</property>
                 <signal name="clicked" handler="go_next_slide" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="pack_type">end</property>
+                <property name="pack-type">end</property>
                 <property name="position">2</property>
               </packing>
             </child>
             <child>
               <object class="GtkButton" id="finishbutton">
                 <property name="label" translatable="yes">Finish setup</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <property name="no_show_all">True</property>
-                <property name="margin_right">10</property>
+                <property name="can-focus">True</property>
+                <property name="receives-default">True</property>
+                <property name="no-show-all">True</property>
+                <property name="margin-right">10</property>
                 <property name="image">iconfinish</property>
                 <property name="relief">none</property>
-                <property name="always_show_image">True</property>
+                <property name="always-show-image">True</property>
                 <signal name="clicked" handler="exit" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="pack_type">end</property>
+                <property name="pack-type">end</property>
                 <property name="position">3</property>
               </packing>
             </child>
@@ -687,8 +772,8 @@ but will take much longer to authenticate you</property>
           <packing>
             <property name="expand">False</property>
             <property name="fill">True</property>
-            <property name="pack_type">end</property>
-            <property name="position">8</property>
+            <property name="pack-type">end</property>
+            <property name="position">9</property>
           </packing>
         </child>
       </object>
