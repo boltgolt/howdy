@@ -1,6 +1,5 @@
 import sys
 import os
-import glob
 import re
 import time
 import subprocess
@@ -128,18 +127,19 @@ class OnboardingWindow(gtk.Window):
 		except Exception:
 			self.show_error(_("Error while importing OpenCV2"), _("Try reinstalling cv2"))
 
-		device_ids = glob.glob("/dev/video*")
+		device_ids = os.listdir("/dev/v4l/by-path")
 		device_rows = []
 
 		if not device_ids:
 			self.show_error(_("No webcams found on system"), _("Please configure your camera yourself if you are sure a compatible camera is connected"))
 
 		# Loop though all devices
-		for device_path in device_ids:
+		for dev in device_ids:
 			time.sleep(.5)
 
 			# The full path to the device is the default name
-			device_name = device_path[:]
+			device_path = "/dev/v4l/by-path/" + dev
+			device_name = dev
 
 			# Get the udevadm details to try to get a better name
 			udevadm = subprocess.check_output(["udevadm info -r --query=all -n " + device_path], shell=True).decode("utf-8")
