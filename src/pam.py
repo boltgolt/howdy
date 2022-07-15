@@ -41,7 +41,7 @@ def doAuth(pamh):
 	syslog.syslog(syslog.LOG_INFO, "Attempting facial authentication for user " + pamh.get_user())
 
 	# Run compare as python3 subprocess to circumvent python version and import issues
-	status = subprocess.call(["/usr/bin/python3", os.path.dirname(os.path.abspath(__file__)) + "/compare.py", pamh.get_user()])
+	status = subprocess.call(["/usr/bin/python3 " + os.path.dirname(os.path.abspath(__file__)) + "/compare.py " + pamh.get_user() + " &> /dev/null"], shell=True)
 
 	# Status 10 means we couldn't find any face models
 	if status == 10:
