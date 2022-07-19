@@ -1,0 +1,5 @@
+post_intall() {
+    # set environement variable
+    sed "s|HOWDY_LIB=''|HOWDY_LIB=/usr/lib/security/howdy|" /etc/profile.d/howdy.sh
+    sed "s|HOWDY_LIB ''|HOWDY_LIB /usr/lib/security/howdy|" /etc/profile.d/howdy.csh
+}
