@@ -11,6 +11,11 @@ from gi.repository import Gdk as gdk
 from gi.repository import GObject as gobject
 from gi.repository import Pango as pango
 
+try:
+	LIB_PATH = os.environ['HOWDY_LIB']
+except KeyError:
+	LIB_PATH = ''
+
 
 class OnboardingWindow(gtk.Window):
 	def __init__(self):
@@ -68,22 +73,16 @@ class OnboardingWindow(gtk.Window):
 		eventbox = self.builder.get_object("downloadeventbox")
 		eventbox.modify_bg(gtk.StateType.NORMAL, gdk.Color(red=0, green=0, blue=0))
 
-		for lib_site in ("/lib", "/usr/lib", "/lib64", "/usr/lib64"):
-			if os.path.exists(lib_site + "/security/howdy/"):
-				break
-			else:
-				lib_site = None
-		
-		if lib_site is None:
+		if LIB_PATH == '':
 			self.downloadoutputlabel.set_text(_("Unable to find Howdy's installation location"))
 			return
 
-		if os.path.exists(lib_site + "/security/howdy/dlib-data/shape_predictor_5_face_landmarks.dat"):
+		if os.path.exists(LIB_PATH + "/dlib-data/shape_predictor_5_face_landmarks.dat"):
 			self.downloadoutputlabel.set_text(_("Datafiles have already been downloaded!\nClick Next to continue"))
 			self.enable_next()
 			return
 
-		self.proc = subprocess.Popen("./install.sh", stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True, cwd=lib_site + "/security/howdy/dlib-data")
+		self.proc = subprocess.Popen("./install.sh", stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True, cwd=LIB_PATH + "/dlib-data")
 
 		self.download_lines = []
 		self.read_download_line()

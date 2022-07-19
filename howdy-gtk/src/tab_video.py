@@ -1,4 +1,5 @@
 import configparser
+import os
 
 from i18n import _
 
@@ -10,6 +11,11 @@ from gi.repository import GObject as gobject
 MAX_HEIGHT = 300
 MAX_WIDTH = 300
 
+try:
+	LIB_PATH = os.environ['HOWDY_LIB']
+except KeyError:
+	LIB_PATH = ''
+
 
 def on_page_switch(self, notebook, page, page_num):
 	if page_num == 1:
@@ -17,7 +23,7 @@ def on_page_switch(self, notebook, page, page_num):
 
 		try:
 			self.config = configparser.ConfigParser()
-			self.config.read("/lib/security/howdy/config.ini")
+			self.config.read(LIB_PATH + "/config.ini")
 		except Exception:
 			print(_("Can't open camera"))
 

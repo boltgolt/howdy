@@ -46,7 +46,9 @@ const auto DEFAULT_TIMEOUT =
     std::chrono::duration<int, std::chrono::milliseconds::period>(100);
 const auto MAX_RETRIES = 5;
 const auto PYTHON_EXECUTABLE = "python3";
-const auto COMPARE_PROCESS_PATH = "/lib/security/howdy/compare.py";
+const auto LIB_PATH = getenv("HOWDY_LIB");
+const auto CONFIG_FILE = "/config.ini";
+const auto COMPARE_SCRIPT = "/compare.py";
 
 #define S(msg) gettext(msg)
 
@@ -193,7 +195,16 @@ auto check_enabled(const INIReader &config) -> int {
  */
 auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
               bool auth_tok) -> int {
-  INIReader config("/lib/security/howdy/config.ini");
+  if (!strlen(LIB_PATH) || LIB_PATH == NULL) {
+    syslog(LOG_ERR, "Unable to find Howdy's installation location");
+    return PAM_SYSTEM_ERR;
+  }
+
+  char CONFIG_PATH[strlen(LIB_PATH) + strlen(CONFIG_FILE) + 1]; // + 1 terminating \0
+  strcpy(CONFIG_PATH, LIB_PATH);
+  strcat(CONFIG_PATH, CONFIG_FILE);
+
+  INIReader config(CONFIG_PATH);
   openlog("pam_howdy", 0, LOG_AUTHPRIV);
 
   // Error out if we could not read the config file
@@ -256,8 +267,12 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
     return pam_res;
   }
 
+  char COMPARE_PATH[strlen(LIB_PATH) + strlen(COMPARE_SCRIPT) + 1]; // + 1 terminating \0
+  strcpy(COMPARE_PATH, LIB_PATH);
+  strcat(COMPARE_PATH, COMPARE_SCRIPT);
+
   const char *const args[] = {PYTHON_EXECUTABLE, // NOLINT
-                              COMPARE_PROCESS_PATH, username, nullptr};
+                              COMPARE_PATH, username, nullptr};
   pid_t child_pid;
 
   // Start the python subprocess

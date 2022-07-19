@@ -15,6 +15,11 @@ gi.require_version("Gdk", "3.0")
 # Import them
 from gi.repository import Gtk as gtk
 
+try:
+	LIB_PATH = os.environ['HOWDY_LIB']
+except KeyError:
+	LIB_PATH = ''
+
 
 class MainWindow(gtk.Window):
 	def __init__(self):
@@ -49,7 +54,7 @@ class MainWindow(gtk.Window):
 		# Add the treeview
 		self.modellistbox.add(self.treeview)
 
-		filelist = os.listdir("/lib/security/howdy/models")
+		filelist = os.listdir(LIB_PATH + "/models")
 		self.active_user = ""
 
 		self.userlist.items = 0
@@ -117,7 +122,7 @@ signal.signal(signal.SIGINT, signal.SIG_DFL)
 elevate.elevate()
 
 # If no models have been created yet or when it is forced, start the onboarding
-if "--force-onboarding" in sys.argv or not os.path.exists("/lib/security/howdy/models"):
+if "--force-onboarding" in sys.argv or not os.path.exists(LIB_PATH + "/models"):
 	import onboarding
 	onboarding.OnboardingWindow()
 
