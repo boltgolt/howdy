@@ -37,8 +37,13 @@ def col(id):
 	return "\033[0m"
 
 
+
 # Create shorthand for subprocess creation
 sc = subprocess.call
+
+# set environement variable
+sc(["sed \"s|HOWDY_LIB=''|HOWDY_LIB=/lib/security/howdy|\" /etc/profile.d/howdy.sh"], shell=True)
+sc(["sed \"s|HOWDY_LIB ''|HOWDY_LIB /lib/security/howdy|\" /etc/profile.d/howdy.csh"], shell=True)
 
 # If the package is being upgraded
 if "upgrade" in sys.argv:

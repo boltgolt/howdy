@@ -14,3 +14,4 @@ src/snapshot.py lib/security/howdy
 src/autocomplete/. usr/share/bash-completion/completions
 src/pam-config/.  /usr/share/pam-configs
 build/libpam_howdy.so lib/security/howdy
+src/shell/. /etc/profile.d
