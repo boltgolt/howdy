@@ -11,7 +11,7 @@ build:
 	# Create build dir
 	meson setup -Dinih:with_INIReader=true build src/pam
 	# Compile shared object
-	meson install -C build
+	ninja -C build
 
 clean:
 	# Delete mason build directory
