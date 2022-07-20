@@ -2,7 +2,7 @@ Source: howdy
 Section: misc
 Priority: optional
 Standards-Version: 3.9.7
-Build-Depends: python, devscripts, dh-make, debhelper, fakeroot, python3, python3-pip, python3-setuptools, python3-wheel, ninja-build, meson, libpam0g-dev, libboost-all-dev
+Build-Depends: devscripts, dh-make, debhelper, fakeroot, python3, python3-pip, python3-setuptools, python3-wheel, ninja-build, meson, libpam0g-dev, libinih-dev, libevdev-dev
 Maintainer: boltgolt <boltgolt@gmail.com>
 Vcs-Git: https://github.com/boltgolt/howdy
 
