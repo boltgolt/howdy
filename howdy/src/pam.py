@@ -19,24 +19,24 @@ def doAuth(pamh):
 
 	# Abort if Howdy is disabled
 	if config.getboolean("core", "disabled"):
+		pamh.conversation(pamh.Message(pamh.PAM_ERROR_MSG, "Howdy is disabled."))
 		return pamh.PAM_AUTHINFO_UNAVAIL
-
 	# Abort if we're in a remote SSH env
-	if config.getboolean("core", "ignore_ssh"):
+	if config.getboolean("core", "abort_if_ssh"):
 		if "SSH_CONNECTION" in os.environ or "SSH_CLIENT" in os.environ or "SSHD_OPTS" in os.environ:
+			pamh.conversation(pamh.Message(pamh.PAM_ERROR_MSG, "Howdy is disabled in ssh."))
 			return pamh.PAM_AUTHINFO_UNAVAIL
-
 	# Abort if lid is closed
-	if config.getboolean("core", "ignore_closed_lid"):
+	if config.getboolean("core", "abort_if_lid_closed"):
 		if any("closed" in open(f).read() for f in glob.glob("/proc/acpi/button/lid/*/state")):
+			pamh.conversation(pamh.Message(pamh.PAM_ERROR_MSG, "LID is closed."))
 			return pamh.PAM_AUTHINFO_UNAVAIL
-
 	# Abort if the video device does not exist
 	if not os.path.exists(config.get("video", "device_path")):
 		if config.getboolean("video", "warn_no_device"):
-			print("Camera path is not configured correctly, please edit the 'device_path' config value.")
+			pamh.conversation(pamh.Message(pamh.PAM_ERROR_MSG, "Camera path is not configured correctly, please edit the 'device_path' config value."))
 		return pamh.PAM_AUTHINFO_UNAVAIL
-
+	
 	# Set up syslog
 	syslog.openlog("[HOWDY]", 0, syslog.LOG_AUTH)
 
