@@ -83,12 +83,13 @@ class VideoCapture:
 		# Don't remove ret, it doesn't work without it
 		ret, frame = self.internal.read()
 		i = 0
-		while not ret and i<=4:
-			sleep(i*.5)
-			ret, frame = self.internal.read()
-			if i == 4:
+		while not ret and i<=5:
+			if i == 5:
 				print(_("Failed to read camera specified in the 'device_path' config option, aborting"))
 				sys.exit(1)
+			sleep(i*.5)
+			ret, frame = self.internal.read()
+			
 			i+=1
 		try:
 			# Convert from color to grayscale
