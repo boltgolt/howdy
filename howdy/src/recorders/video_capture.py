@@ -81,10 +81,13 @@ class VideoCapture:
 		# Grab a single frame of video
 		# Don't remove ret, it doesn't work without it
 		ret, frame = self.internal.read()
-		if not ret:
-			print(_("Failed to read camera specified in the 'device_path' config option, aborting"))
-			sys.exit(1)
-
+		i = 0
+		while not ret and i<=4:
+			ret, frame = self.internal.read()
+			if i == 4:
+				print(_("Failed to read camera specified in the 'device_path' config option, aborting"))
+				sys.exit(1)
+			i+=1
 		try:
 			# Convert from color to grayscale
 			# First processing of frame, so frame errors show up here
