@@ -3,6 +3,7 @@
 
 # Import required modules
 import configparser
+from time import sleep
 import cv2
 import os
 import sys
@@ -83,6 +84,7 @@ class VideoCapture:
 		ret, frame = self.internal.read()
 		i = 0
 		while not ret and i<=4:
+			sleep(i*.5)
 			ret, frame = self.internal.read()
 			if i == 4:
 				print(_("Failed to read camera specified in the 'device_path' config option, aborting"))
