@@ -3,6 +3,7 @@
 
 # Import required modules
 import configparser
+from time import sleep
 import cv2
 import os
 import sys
@@ -81,10 +82,15 @@ class VideoCapture:
 		# Grab a single frame of video
 		# Don't remove ret, it doesn't work without it
 		ret, frame = self.internal.read()
-		if not ret:
-			print(_("Failed to read camera specified in the 'device_path' config option, aborting"))
-			sys.exit(1)
-
+		i = 0
+		while not ret and i<=5:
+			if i == 5:
+				print(_("Failed to read camera specified in the 'device_path' config option, aborting"))
+				sys.exit(1)
+			sleep(i*.5)
+			ret, frame = self.internal.read()
+			
+			i+=1
 		try:
 			# Convert from color to grayscale
 			# First processing of frame, so frame errors show up here
