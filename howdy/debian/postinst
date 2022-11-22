@@ -88,6 +88,10 @@ if "upgrade" in sys.argv:
 					key = "abort_if_ssh"
 				if key == "ignore_closed_lid":
 					key = "abort_if_lid_closed"
+				if key == "capture_failed":
+					key = "save_failed"
+				if key == "capture_successful":
+					key = "save_successful"
 
 				try:
 					newConf.set(section, key, value)

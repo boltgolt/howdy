@@ -146,8 +146,8 @@ timeout = config.getint("video", "timeout", fallback=5)
 dark_threshold = config.getfloat("video", "dark_threshold", fallback=50.0)
 video_certainty = config.getfloat("video", "certainty", fallback=3.5) / 10
 end_report = config.getboolean("debug", "end_report", fallback=False)
-capture_failed = config.getboolean("snapshots", "capture_failed", fallback=False)
-capture_successful = config.getboolean("snapshots", "capture_successful", fallback=False)
+save_failed = config.getboolean("snapshots", "save_failed", fallback=False)
+save_successful = config.getboolean("snapshots", "save_successful", fallback=False)
 gtk_stdout = config.getboolean("debug", "gtk_stdout", fallback=False)
 rotate = config.getint("video", "rotate", fallback=0)
 
@@ -232,7 +232,7 @@ while True:
 	# Stop if we've exceded the time limit
 	if time.time() - timings["fr"] > timeout:
 		# Create a timeout snapshot if enabled
-		if capture_failed:
+		if save_failed:
 			make_snapshot(_("FAILED"))
 
 		if dark_tries == valid_frames:
@@ -247,7 +247,7 @@ while True:
 	gsframe = clahe.apply(gsframe)
 
 	# If snapshots have been turned on
-	if capture_failed or capture_successful:
+	if save_failed or save_successful:
 		# Start capturing frames for the snapshot
 		if len(snapframes) < 3:
 			snapframes.append(frame)
@@ -354,7 +354,7 @@ while True:
 				print(_("Winning model: %d (\"%s\")") % (match_index, models[match_index]["label"]))
 
 			# Make snapshot if enabled
-			if capture_successful:
+			if save_successful:
 				make_snapshot(_("SUCCESSFUL"))
 
 			# Run rubberstamps if enabled

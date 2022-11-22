@@ -40,7 +40,7 @@ def doAuth(pamh):
 		if config.getboolean("video", "warn_no_device"):
 			pamh.conversation(pamh.Message(pamh.PAM_ERROR_MSG, "Camera path is not configured correctly, please edit the 'device_path' config value."))
 		return pamh.PAM_AUTHINFO_UNAVAIL
-	
+
 	# Set up syslog
 	syslog.openlog("[HOWDY]", 0, syslog.LOG_AUTH)
 
