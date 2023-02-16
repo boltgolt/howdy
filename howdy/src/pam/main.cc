@@ -242,7 +242,7 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
 
   // If enabled, send a notice to the user that facial login is being attempted
   if (config.GetBoolean("core", "detection_notice", false)) {
-    if ((conv_function(PAM_TEXT_INFO, S("Attempting facial authentication"))) !=
+    if ((conv_function(PAM_TEXT_INFO, S("Attempting Facial Recognition"))) !=
         PAM_SUCCESS) {
       syslog(LOG_ERR, "Failed to send detection notice");
     }
