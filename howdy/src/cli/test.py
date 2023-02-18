@@ -2,11 +2,14 @@
 
 # Import required modules
 import configparser
+import builtins
 import os
+import json
 import sys
 import time
 import dlib
 import cv2
+import numpy as np
 from recorders.video_capture import VideoCapture
 
 from i18n import _
@@ -60,6 +63,22 @@ if use_cnn:
 else:
 	face_detector = dlib.get_frontal_face_detector()
 
+pose_predictor = dlib.shape_predictor(path + "/../dlib-data/shape_predictor_5_face_landmarks.dat")
+face_encoder = dlib.face_recognition_model_v1(path + "/../dlib-data/dlib_face_recognition_resnet_model_v1.dat")
+
+encodings = []
+models = None
+
+try:
+	user = builtins.howdy_user
+	models = json.load(open(path + "/../models/" + user + ".dat"))
+
+	for model in models:
+		encodings += model["data"]
+except FileNotFoundError:
+	print("No face model known for the user " + user + ", please run:")
+	print("\n\tsudo howdy -U " + user + " add\n")
+
 clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
 
 # Open the window and attach a a mouse listener
@@ -81,7 +100,7 @@ rec_tm = 0
 
 # Wrap everything in an keyboard interupt handler
 try:
-	while True:
+	while cv2.getWindowProperty("Howdy Test", cv2.WND_PROP_VISIBLE) > 0:
 		frame_tm = time.time()
 
 		# Increment the frames
@@ -98,7 +117,8 @@ try:
 			sec_frames = 0
 
 		# Grab a single frame of video
-		ret, frame = video_capture.read_frame()
+		orig_frame, frame = video_capture.read_frame()
+
 
 		frame = clahe.apply(frame)
 		# Make a frame to put overlays in
@@ -156,6 +176,23 @@ try:
 				if use_cnn:
 					loc = loc.rect
 
+				color = (0, 0, 230)
+				if models:
+					face_landmark = pose_predictor(orig_frame, loc)
+					face_encoding = np.array(face_encoder.compute_face_descriptor(orig_frame, face_landmark, 1))
+
+					# Match this found face against a known face
+					matches = np.linalg.norm(encodings - face_encoding, axis=1)
+
+					# Get best match
+					match_index = np.argmin(matches)
+					match = matches[match_index]
+
+					percent = match * 100
+					label = models[match_index]["label"]
+					color = (230, 0, 0)
+					cv2.putText(overlay, "{} {}(%)".format(label, percent), (width - 68, 32), cv2.FONT_HERSHEY_SIMPLEX, .3, (0, 255, 0), 0, cv2.LINE_AA)
+
 				# Get the center X and Y from the rectangular points
 				x = int((loc.right() - loc.left()) / 2) + loc.left()
 				y = int((loc.bottom() - loc.top()) / 2) + loc.top()
@@ -166,7 +203,7 @@ try:
 				r = int(r + (r * 0.2))
 
 				# Draw the Circle in green
-				cv2.circle(overlay, (x, y), r, (0, 0, 230), 2)
+				cv2.circle(overlay, (x, y), r, color, 2)
 
 		# Add the overlay to the frame with some transparency
 		alpha = 0.65
