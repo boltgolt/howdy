@@ -270,8 +270,8 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
 
   // NOTE: We should replace mutex and condition_variable by atomic wait, but
   // it's too recent (C++20)
-  std::mutex m;
-  std::condition_variable cv;
+  std::mutex mutx;
+  std::condition_variable convar;
   ConfirmationType confirmation_type(ConfirmationType::Unset);
 
   // This task wait for the status of the python subprocess (we don't want a
@@ -280,12 +280,12 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
     int status;
     wait(&status);
     {
-      std::unique_lock<std::mutex> lk(m);
+      std::unique_lock<std::mutex> lock(mutx);
       if (confirmation_type == ConfirmationType::Unset) {
         confirmation_type = ConfirmationType::Howdy;
       }
     }
-    cv.notify_one();
+    convar.notify_one();
 
     return status;
   });
@@ -297,12 +297,12 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
     int pam_res = pam_get_authtok(
         pamh, PAM_AUTHTOK, const_cast<const char **>(&auth_tok_ptr), nullptr);
     {
-      std::unique_lock<std::mutex> lk(m);
+      std::unique_lock<std::mutex> lock(mutx);
       if (confirmation_type == ConfirmationType::Unset) {
         confirmation_type = ConfirmationType::Pam;
       }
     }
-    cv.notify_one();
+    convar.notify_one();
 
     return std::tuple<int, char *>(pam_res, auth_tok_ptr);
   });
@@ -315,8 +315,8 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
 
   // Wait for the end either of the child or the password input
   {
-    std::unique_lock<std::mutex> lk(m);
-    cv.wait(lk, [&] { return confirmation_type != ConfirmationType::Unset; });
+    std::unique_lock<std::mutex> lock(mutx);
+    convar.wait(lock, [&] { return confirmation_type != ConfirmationType::Unset; });
   }
 
   // The password has been entered or an error has occurred

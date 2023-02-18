@@ -11,11 +11,11 @@ template <typename T> class optional_task {
   std::thread thread;
   std::packaged_task<T()> task;
   std::future<T> future;
-  bool spawned;
-  bool is_active;
+  bool spawned{false};
+  bool is_active{false};
 
 public:
-  explicit optional_task(std::function<T()> fn);
+  explicit optional_task(std::function<T()> func);
   void activate();
   template <typename R, typename P>
   auto wait(std::chrono::duration<R, P> dur) -> std::future_status;
@@ -25,8 +25,8 @@ public:
 };
 
 template <typename T>
-optional_task<T>::optional_task(std::function<T()> fn)
-    : task(std::packaged_task<T()>(std::move(fn))), future(task.get_future()),
+optional_task<T>::optional_task(std::function<T()> func)
+    : task(std::packaged_task<T()>(std::move(func))), future(task.get_future()),
       spawned(false), is_active(false) {}
 
 // Create a new thread and launch the task on it.
