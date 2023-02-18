@@ -10,16 +10,16 @@ import time
 import dlib
 import cv2
 import numpy as np
-from recorders.video_capture import VideoCapture
 
 from i18n import _
+from recorders.video_capture import VideoCapture
 
-# Get the absolute path to the current file
-path = os.path.dirname(os.path.abspath(__file__))
+# The absolute path to the config directory
+path = "/etc/howdy"
 
 # Read config from disk
 config = configparser.ConfigParser()
-config.read(path + "/../config.ini")
+config.read(path + "/config.ini")
 
 if config.get("video", "recording_plugin") != "opencv":
 	print(_("Howdy has been configured to use a recorder which doesn't support the test command yet, aborting"))
@@ -27,7 +27,8 @@ if config.get("video", "recording_plugin") != "opencv":
 
 video_capture = VideoCapture(config)
 
-# Read exposure and dark_thresholds from config to use in the main loop
+# Read config values to use in the main loop
+video_certainty = config.getfloat("video", "certainty", fallback=3.5) / 10
 exposure = config.getint("video", "exposure", fallback=-1)
 dark_threshold = config.getfloat("video", "dark_threshold")
 
@@ -58,26 +59,25 @@ use_cnn = config.getboolean('core', 'use_cnn', fallback=False)
 
 if use_cnn:
 	face_detector = dlib.cnn_face_detection_model_v1(
-		path + "/../dlib-data/mmod_human_face_detector.dat"
+		path + "/dlib-data/mmod_human_face_detector.dat"
 	)
 else:
 	face_detector = dlib.get_frontal_face_detector()
 
-pose_predictor = dlib.shape_predictor(path + "/../dlib-data/shape_predictor_5_face_landmarks.dat")
-face_encoder = dlib.face_recognition_model_v1(path + "/../dlib-data/dlib_face_recognition_resnet_model_v1.dat")
+pose_predictor = dlib.shape_predictor(path + "/dlib-data/shape_predictor_5_face_landmarks.dat")
+face_encoder = dlib.face_recognition_model_v1(path + "/dlib-data/dlib_face_recognition_resnet_model_v1.dat")
 
 encodings = []
 models = None
 
 try:
 	user = builtins.howdy_user
-	models = json.load(open(path + "/../models/" + user + ".dat"))
+	models = json.load(open(path + "/models/" + user + ".dat"))
 
 	for model in models:
 		encodings += model["data"]
 except FileNotFoundError:
-	print("No face model known for the user " + user + ", please run:")
-	print("\n\tsudo howdy -U " + user + " add\n")
+	pass
 
 clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
 
@@ -100,7 +100,7 @@ rec_tm = 0
 
 # Wrap everything in an keyboard interupt handler
 try:
-	while cv2.getWindowProperty("Howdy Test", cv2.WND_PROP_VISIBLE) > 0:
+	while True:
 		frame_tm = time.time()
 
 		# Increment the frames
@@ -118,7 +118,6 @@ try:
 
 		# Grab a single frame of video
 		orig_frame, frame = video_capture.read_frame()
-
 
 		frame = clahe.apply(frame)
 		# Make a frame to put overlays in
@@ -162,10 +161,11 @@ try:
 			# Show that this is an ignored frame in the top right
 			cv2.putText(overlay, _("DARK FRAME"), (width - 68, 16), cv2.FONT_HERSHEY_SIMPLEX, .3, (0, 0, 255), 0, cv2.LINE_AA)
 		else:
-			# SHow that this is an active frame
+			# Show that this is an active frame
 			cv2.putText(overlay, _("SCAN FRAME"), (width - 68, 16), cv2.FONT_HERSHEY_SIMPLEX, .3, (0, 255, 0), 0, cv2.LINE_AA)
 
 			rec_tm = time.time()
+
 			# Get the locations of all faces and their locations
 			# Upsample it once
 			face_locations = face_detector(frame, 1)
@@ -176,8 +176,21 @@ try:
 				if use_cnn:
 					loc = loc.rect
 
+				# By default the circle around the face is red for no match
 				color = (0, 0, 230)
+
+				# Get the center X and Y from the rectangular points
+				x = int((loc.right() - loc.left()) / 2) + loc.left()
+				y = int((loc.bottom() - loc.top()) / 2) + loc.top()
+
+				# Get the raduis from the with of the square
+				r = (loc.right() - loc.left()) / 2
+				# Add 20% padding
+				r = int(r + (r * 0.2))
+
+				# If we have models defined for the current user
 				if models:
+					# Get the encoding of the face in the frame
 					face_landmark = pose_predictor(orig_frame, loc)
 					face_encoding = np.array(face_encoder.compute_face_descriptor(orig_frame, face_landmark, 1))
 
@@ -188,19 +201,17 @@ try:
 					match_index = np.argmin(matches)
 					match = matches[match_index]
 
-					percent = match * 100
-					label = models[match_index]["label"]
-					color = (230, 0, 0)
-					cv2.putText(overlay, "{} {}(%)".format(label, percent), (width - 68, 32), cv2.FONT_HERSHEY_SIMPLEX, .3, (0, 255, 0), 0, cv2.LINE_AA)
+					# If a model matches
+					if 0 < match < video_certainty:
+						# Turn the circle green
+						color = (0, 230, 0)
 
-				# Get the center X and Y from the rectangular points
-				x = int((loc.right() - loc.left()) / 2) + loc.left()
-				y = int((loc.bottom() - loc.top()) / 2) + loc.top()
-
-				# Get the raduis from the with of the square
-				r = (loc.right() - loc.left()) / 2
-				# Add 20% padding
-				r = int(r + (r * 0.2))
+						# Print the name of the model next to the circle
+						circle_text = "{} (certainty: {})".format(models[match_index]["label"], round(match * 10, 3))
+						cv2.putText(overlay, circle_text, (int(x + r / 3), y - r), cv2.FONT_HERSHEY_SIMPLEX, .3, (0, 255, 0), 0, cv2.LINE_AA)
+					# If no approved matches, show red text
+					else:
+						cv2.putText(overlay, "no match", (int(x + r / 3), y - r), cv2.FONT_HERSHEY_SIMPLEX, .3, (0, 0, 255), 0, cv2.LINE_AA)
 
 				# Draw the Circle in green
 				cv2.circle(overlay, (x, y), r, color, 2)
