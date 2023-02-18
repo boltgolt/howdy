@@ -193,7 +193,7 @@ auto check_enabled(const INIReader &config) -> int {
  */
 auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
               bool auth_tok) -> int {
-  INIReader config("/lib/security/howdy/config.ini");
+  INIReader config("/etc/howdy/config.ini");
   openlog("pam_howdy", 0, LOG_AUTHPRIV);
 
   // Error out if we could not read the config file
@@ -343,6 +343,27 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
   // The compare process has finished its execution
   child_task.stop(false);
 
+  // Get python process status code
+  int status = child_task.get();
+
+  // If python process ran into a timeout
+  // Do not send enter presses or terminate the PAM function, as the user might still be typing their password
+  if (status == CompareError::TIMEOUT_ACTIVE) {
+    // Wait for the password to be typed
+    pass_task.stop(false);
+
+    char *password = nullptr;
+    std::tie(pam_res, password) = pass_task.get();
+
+    if (pam_res != PAM_SUCCESS) {
+      return pam_res;
+    }
+
+    // The password has been entered, we are passing it to PAM stack
+    return PAM_IGNORE;
+  }
+
+
   // We want to stop the password prompt, either by canceling the thread when
   // workaround is set to "native", or by emulating "Enter" input with
   // "input"
@@ -390,8 +411,6 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
     // input wasn't focused or if the uinput device failed to send keypress)
     pass_task.stop(false);
   }
-
-  int status = child_task.get();
 
   return howdy_status(username, status, config, conv_function);
 }

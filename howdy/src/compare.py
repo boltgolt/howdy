@@ -1,4 +1,5 @@
-# Compare incomming video with known faces
+#!/usr/bin/env python3
+# Compare incoming video with known faces
 # Running in a local python instance to get around PATH issues
 
 # Import time so we can start timing asap
@@ -23,11 +24,14 @@ import snapshot
 import numpy as np
 import _thread as thread
 
-from i18n import _
+# Allow imports from the local howdy folder
+sys.path.append('/lib/security/howdy')
+
 from recorders.video_capture import VideoCapture
+from i18n import _
 
 def exit(code=None):
-	"""Exit while closeing howdy-gtk properly"""
+	"""Exit while closing howdy-gtk properly"""
 	global gtk_proc
 
 	# Exit the auth ui process if there is one
@@ -99,8 +103,8 @@ def send_to_ui(type, message):
 if len(sys.argv) < 2:
 	exit(12)
 
-# Get the absolute path to the current directory
-PATH = os.path.abspath(__file__ + "/..")
+# Get the absolute path to the config directory
+PATH = "/etc/howdy"
 
 # The username of the user being authenticated
 user = sys.argv[1]
@@ -110,7 +114,7 @@ models = []
 encodings = []
 # Amount of ignored 100% black frames
 black_tries = 0
-# Amount of ingnored dark frames
+# Amount of ignored dark frames
 dark_tries = 0
 # Total amount of frames captured
 frames = 0
@@ -229,7 +233,7 @@ while True:
 	# Show it in the ui as subtext
 	send_to_ui("S", ui_subtext)
 
-	# Stop if we've exceded the time limit
+	# Stop if we've exceeded the time limit
 	if time.time() - timings["fr"] > timeout:
 		# Create a timeout snapshot if enabled
 		if capture_failed:
@@ -268,6 +272,7 @@ while True:
 
 	dark_running_total += darkness
 	valid_frames += 1
+
 	# If the image exceeds darkness threshold due to subject distance,
 	# skip to the next frame
 	if (darkness > dark_threshold):
@@ -279,6 +284,7 @@ while True:
 		# Apply that factor to the frame
 		frame = cv2.resize(frame, None, fx=scaling_factor, fy=scaling_factor, interpolation=cv2.INTER_AREA)
 		gsframe = cv2.resize(gsframe, None, fx=scaling_factor, fy=scaling_factor, interpolation=cv2.INTER_AREA)
+
 	# If camera is configured to rotate = 1, check portrait in addition to landscape
 	if rotate == 1:
 		if frames % 3 == 1:
@@ -287,6 +293,7 @@ while True:
 		if frames % 3 == 2:
 			frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
 			gsframe = cv2.rotate(gsframe, cv2.ROTATE_90_CLOCKWISE)
+
 	# If camera is configured to rotate = 2, check portrait orientation
 	elif rotate == 2:
 		if frames % 2 == 0:
@@ -295,6 +302,7 @@ while True:
 		else:
 			frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
 			gsframe = cv2.rotate(gsframe, cv2.ROTATE_90_CLOCKWISE)
+
 	# Get all faces from that frame as encodings
 	# Upsamples 1 time
 	face_locations = face_detector(gsframe, 1)

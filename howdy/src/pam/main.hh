@@ -12,7 +12,8 @@ enum CompareError : int {
   NO_FACE_MODEL = 10,
   TIMEOUT_REACHED = 11,
   ABORT = 12,
-  TOO_DARK = 13
+  TOO_DARK = 13,
+  TIMEOUT_ACTIVE = 2816,
 };
 
 inline auto get_workaround(const std::string &workaround) -> Workaround {
