@@ -37,7 +37,7 @@ class VideoCapture:
 				print(_("Howdy could not find a camera device at the path specified in the config file."))
 				print(_("It is very likely that the path is not configured correctly, please edit the 'device_path' config value by running:"))
 				print("\n\tsudo howdy config\n")
-			sys.exit(1)
+			sys.exit(14)
 
 		# Create reader
 		# The internal video recorder
@@ -83,7 +83,7 @@ class VideoCapture:
 		ret, frame = self.internal.read()
 		if not ret:
 			print(_("Failed to read camera specified in the 'device_path' config option, aborting"))
-			sys.exit(1)
+			sys.exit(14)
 
 		try:
 			# Convert from color to grayscale

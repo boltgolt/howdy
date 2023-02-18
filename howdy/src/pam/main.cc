@@ -79,6 +79,9 @@ auto howdy_error(int status,
       conv_function(PAM_ERROR_MSG, S("Face detection image too dark"));
       syslog(LOG_ERR, "Failure, image too dark");
       break;
+    case CompareError::INVALID_DEVICE:
+      syslog(LOG_ERR, "Failure, not possible to open camera at configured path");
+      break;
     default:
       conv_function(PAM_ERROR_MSG,
                     std::string(S("Unknown error: ") + status).c_str());
