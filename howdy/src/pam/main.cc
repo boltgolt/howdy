@@ -144,7 +144,7 @@ auto check_enabled(const INIReader &config) -> int {
   }
 
   // Stop if we're in a remote shell and configured to exit
-  if (config.GetBoolean("core", "ignore_ssh", true)) {
+  if (config.GetBoolean("core", "abort_if_ssh", true)) {
     if (getenv("SSH_CONNECTION") != nullptr ||
         getenv("SSH_CLIENT") != nullptr || getenv("SSHD_OPTS") != nullptr) {
       syslog(LOG_INFO, "Skipped authentication, SSH session detected");
@@ -153,7 +153,7 @@ auto check_enabled(const INIReader &config) -> int {
   }
 
   // Try to detect the laptop lid state and stop if it's closed
-  if (config.GetBoolean("core", "ignore_closed_lid", true)) {
+  if (config.GetBoolean("core", "abort_if_lid_closed", true)) {
     glob_t glob_result;
 
     // Get any files containing lid state
