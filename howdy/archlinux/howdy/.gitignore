@@ -5,3 +5,4 @@ src
 *.tar.xz
 *.patch
 *.dat.bz2
+.SRCINFO

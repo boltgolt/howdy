@@ -17,6 +17,7 @@ depends=(
 	'python3'
 	'python-dlib'
 	'python-numpy'
+	'python-opencv'
 )
 makedepends=(
 	'cmake'
