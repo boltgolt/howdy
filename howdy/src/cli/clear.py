@@ -30,7 +30,7 @@ if not builtins.howdy_args.y:
 
 	# Abort if they don't answer y or Y
 	if (ans.lower() != "y"):
-		print(_('\nInerpeting as a "NO", aborting'))
+		print(_('\nInterpreting as a "NO", aborting'))
 		sys.exit(1)
 
 # Delete otherwise

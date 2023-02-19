@@ -9,24 +9,17 @@ import sys
 if "upgrade" in sys.argv:
 	# Try to copy the config file as a backup
 	try:
-		if os.path.exists("/lib/security/howdy/config.ini") and not os.path.exists("/etc/howdy/config.ini"):
-			subprocess.call(["cp /lib/security/howdy/config.ini /tmp/howdy_config_backup_v" + sys.argv[2] + ".ini"], shell=True)
-		else os.path.exists("/etc/howdy/config.ini"):
+		# Try to copy the new location first
+		if os.path.exists("/etc/howdy/config.ini"):
 			subprocess.call(["cp /etc/howdy/config.ini /tmp/howdy_config_backup_v" + sys.argv[2] + ".ini"], shell=True)
+		# If that does not exist, try copying the old location
+		else:
+			subprocess.call(["cp /lib/security/howdy/config.ini /tmp/howdy_config_backup_v" + sys.argv[2] + ".ini"], shell=True)
 
 		# Let the user know so he knows where to look on a failed install
 		print("Backup of Howdy config file created in /tmp/howdy_config_backup_v" + sys.argv[2] + ".ini")
 	except subprocess.CalledProcessError:
-		try:
-			if os.path.exists("/lib/security/howdy/config.ini") and not os.path.exists("/etc/howdy/config.ini"):
-				subprocess.call(["cp /lib/security/howdy/config.ini /tmp/howdy_config_backup_v" + sys.argv[2] + ".ini"], shell=True)
-			else os.path.exists("/etc/howdy/config.ini"):
-				subprocess.call(["cp /etc/howdy/config.ini /tmp/howdy_config_backup_v" + sys.argv[2] + ".ini"], shell=True)
-
-			# Let the user know so he knows where to look on a failed install
-			print("Backup of Howdy config file created in /tmp/howdy_config_backup_v" + sys.argv[2] + ".ini")
-		except subprocess.CalledProcessError:
-			print("Could not make an backup of old Howdy config file")
+		print("Could not make an backup of old Howdy config file")
 
 	# Don't continue setup when we're just upgrading
 	sys.exit(0)

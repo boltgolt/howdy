@@ -64,6 +64,8 @@ class OnboardingWindow(gtk.Window):
 			self.execute_slide5()
 
 	def execute_slide1(self):
+		conf_path = "/etc/howdy"
+
 		self.downloadoutputlabel = self.builder.get_object("downloadoutputlabel")
 		eventbox = self.builder.get_object("downloadeventbox")
 		eventbox.modify_bg(gtk.StateType.NORMAL, gdk.Color(red=0, green=0, blue=0))
@@ -74,10 +76,10 @@ class OnboardingWindow(gtk.Window):
 			else:
 				lib_site = None
 
-                if lib_site:
-                        conf_path = lib_site + "/security/howdy"
-                else:
-                        conf_path = "/etc/howdy"
+		if lib_site is None:
+			self.downloadoutputlabel.set_text(_("Unable to find Howdy's installation location"))
+			return
+
 
 		if os.path.exists(conf_path + "/dlib-data/shape_predictor_5_face_landmarks.dat"):
 			self.downloadoutputlabel.set_text(_("Datafiles have already been downloaded!\nClick Next to continue"))

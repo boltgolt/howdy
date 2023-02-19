@@ -26,15 +26,13 @@ except ImportError as err:
 # OpenCV needs to be imported after dlib
 import cv2
 
-# Get the absolute path to the current directory
-path = os.path.abspath(__file__ + "/..")
+# Define the absolute path to the config directory
 config_path = "/etc/howdy"
-models_path = "/etc/howdy/models"
 
 # Test if at lest 1 of the data files is there and abort if it's not
-if not os.path.isfile(path + "/../dlib-data/shape_predictor_5_face_landmarks.dat"):
+if not os.path.isfile(config_path + "/dlib-data/shape_predictor_5_face_landmarks.dat"):
 	print(_("Data files have not been downloaded, please run the following commands:"))
-	print("\n\tcd " + os.path.realpath(path + "/../dlib-data"))
+	print("\n\tcd " + config_path + "/dlib-data")
 	print("\tsudo ./install.sh\n")
 	sys.exit(1)
 
@@ -44,23 +42,23 @@ config.read(config_path + "/config.ini")
 
 use_cnn = config.getboolean("core", "use_cnn", fallback=False)
 if use_cnn:
-	face_detector = dlib.cnn_face_detection_model_v1(path + "/../dlib-data/mmod_human_face_detector.dat")
+	face_detector = dlib.cnn_face_detection_model_v1(config_path + "/dlib-data/mmod_human_face_detector.dat")
 else:
 	face_detector = dlib.get_frontal_face_detector()
 
-pose_predictor = dlib.shape_predictor(path + "/../dlib-data/shape_predictor_5_face_landmarks.dat")
-face_encoder = dlib.face_recognition_model_v1(path + "/../dlib-data/dlib_face_recognition_resnet_model_v1.dat")
+pose_predictor = dlib.shape_predictor(config_path + "/dlib-data/shape_predictor_5_face_landmarks.dat")
+face_encoder = dlib.face_recognition_model_v1(config_path + "/dlib-data/dlib_face_recognition_resnet_model_v1.dat")
 
 user = builtins.howdy_user
 # The permanent file to store the encoded model in
-enc_file = models_path + "/" + user + ".dat"
+enc_file = config_path + "/models/" + user + ".dat"
 # Known encodings
 encodings = []
 
 # Make the ./models folder if it doesn't already exist
-if not os.path.exists(models_path):
+if not os.path.exists(config_path + "/models"):
 	print(_("No face model folder found, creating one"))
-	os.makedirs(models_path)
+	os.makedirs(config_path + "/models")
 
 # To try read a premade encodings file if it exists
 try:

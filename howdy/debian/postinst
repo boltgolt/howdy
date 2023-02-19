@@ -106,11 +106,6 @@ if "upgrade" in sys.argv:
 
 	sys.exit(0)
 
-log("Downloading and unpacking data files")
-
-# Run the bash script to download and unpack the .dat files needed
-handleStatus(subprocess.call(["./install.sh"], shell=True, cwd="/etc/howdy/dlib-data"))
-
 log("Downloading dlib")
 
 dlib_archive = "/tmp/v19.16.tar.gz"
