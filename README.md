@@ -1,9 +1,6 @@
 ![](https://boltgolt.nl/howdy/banner.png)
 
 <p align="center">
-	<a href="https://travis-ci.org/boltgolt/howdy">
-		<img src="https://img.shields.io/travis/boltgolt/howdy/master.svg">
-	</a>
 	<a href="https://github.com/boltgolt/howdy/releases">
 		<img src="https://img.shields.io/github/release/boltgolt/howdy.svg?colorB=4c1">
 	</a>
@@ -12,6 +9,12 @@
 	</a>
 	<a href="https://www.buymeacoffee.com/boltgolt">
 		<img src="https://img.shields.io/badge/endpoint.svg?url=https://boltgolt.nl/howdy/shield.json">
+	</a>
+	<a href="https://actions-badge.atrox.dev/boltgolt/howdy/goto?ref=beta">
+		<img src="https://img.shields.io/endpoint.svg?url=https%3A%2F%2Factions-badge.atrox.dev%2Fboltgolt%2Fhowdy%2Fbadge%3Fref%3Dbeta&style=flat&label=build&logo=none">
+	</a>
+	<a href="https://aur.archlinux.org/packages/howdy">
+		<img src="https://img.shields.io/aur/votes/howdy?color=4c1&label=aur%20votes">
 	</a>
 </p>
 

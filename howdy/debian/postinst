@@ -186,8 +186,8 @@ for line in fileinput.input(["/etc/howdy/config.ini"], inplace=1):
 print("Camera ID saved")
 
 # Secure the howdy folder
-handleStatus(sc(["chmod 744 -R /lib/security/howdy/"], shell=True))
-handleStatus(sc(["chmod 744 -R /etc/howdy/"], shell=True))
+handleStatus(sc(["chmod 755 -R /lib/security/howdy/"], shell=True))
+handleStatus(sc(["chmod 755 -R /etc/howdy/"], shell=True))
 
 # Allow anyone to execute the python CLI
 os.chmod("/lib/security/howdy", 0o755)

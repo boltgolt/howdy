@@ -19,7 +19,7 @@ it will be automatically pulled from git at the subproject's pinned version.
 
 ``` sh
 meson setup build
-meson compile -C build
+ninja -C build
 ```
 
 ## Install

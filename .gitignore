@@ -125,3 +125,6 @@ debian/howdy
 
 # Built Visual Studio Code Extensions
 *.vsix
+
+# Meson
+subprojects/
