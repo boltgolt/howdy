@@ -4,13 +4,17 @@
 import subprocess
 import os
 import glob
+import sys
 import syslog
 
-# pam-python is running python 2, so we use the old module here
-import ConfigParser
+if sys.version_info.major < 3:
+    import ConfigParser
+    config = ConfigParser.ConfigParser()
+else:
+    import configparser
+    config = configparser.ConfigParser()
 
 # Read config from disk
-config = ConfigParser.ConfigParser()
 config.read(os.path.dirname(os.path.abspath(__file__)) + "/config.ini")
 
 
