@@ -40,83 +40,71 @@ def col(id):
 # Create shorthand for subprocess creation
 sc = subprocess.call
 
-# We're not in fresh configuration mode so don't continue the setup
-if not os.path.exists("/tmp/howdy_picked_device"):
-	# Check if we have an older config we can restore
-	if len(sys.argv) > 2:
-		if os.path.exists("/tmp/howdy_config_backup_v" + sys.argv[2] + ".ini"):
-			# Get the config parser
-			import configparser
+# If the package is being upgraded
+if "upgrade" in sys.argv:
+	# If preinst has made a config backup
+	if os.path.exists("/tmp/howdy_config_backup_v" + sys.argv[2] + ".ini"):
+		# Get the config parser
+		import configparser
 
-			# Load th old and new config files
-			oldConf = configparser.ConfigParser()
-			oldConf.read("/tmp/howdy_config_backup_v" + sys.argv[2] + ".ini")
-			newConf = configparser.ConfigParser()
-			newConf.read("/etc/howdy/config.ini")
+		# Load th old and new config files
+		oldConf = configparser.ConfigParser()
+		oldConf.read("/tmp/howdy_config_backup_v" + sys.argv[2] + ".ini")
+		newConf = configparser.ConfigParser()
+		newConf.read("/etc/howdy/config.ini")
 
-			# Go through every setting in the old config and apply it to the new file
-			for section in oldConf.sections():
-				for (key, value) in oldConf.items(section):
+		# Go through every setting in the old config and apply it to the new file
+		for section in oldConf.sections():
+			for (key, value) in oldConf.items(section):
 
-					# MIGRATION 2.3.1 -> 2.4.0
-					# If config is still using the old device_id parameter, convert it to a path
-					if key == "device_id":
-						key = "device_path"
-						value = "/dev/video" + value
+				# MIGRATION 2.3.1 -> 2.4.0
+				# If config is still using the old device_id parameter, convert it to a path
+				if key == "device_id":
+					key = "device_path"
+					value = "/dev/video" + value
 
-					# MIGRATION 2.4.0 -> 2.5.0
-					# Finally correct typo in "timout" config value
-					if key == "timout":
-						key = "timeout"
+				# MIGRATION 2.4.0 -> 2.5.0
+				# Finally correct typo in "timout" config value
+				if key == "timout":
+					key = "timeout"
 
-					# MIGRATION 2.5.0 -> 2.5.1
-					# Remove unsafe automatic dismissal of lock screen
-					if key == "dismiss_lockscreen":
-						if value == "true":
-							print("DEPRECATION: Config value dismiss_lockscreen is no longer supported because of login loop issues.")
-						continue
+				# MIGRATION 2.5.0 -> 2.5.1
+				# Remove unsafe automatic dismissal of lock screen
+				if key == "dismiss_lockscreen":
+					if value == "true":
+						print("DEPRECATION: Config value dismiss_lockscreen is no longer supported because of login loop issues.")
+					continue
 
-					# MIGRATION 2.6.1 -> 3.0.0
-					# Fix capture being enabled by default
-					if key == "capture_failed" or key == "capture_successful":
-						if value == "true":
-							print("NOTICE: Howdy login image captures have been disabled by default, change the config to enable them again")
-							value = "false"
+				# MIGRATION 2.6.1 -> 3.0.0
+				# Fix capture being enabled by default
+				if key == "capture_failed" or key == "capture_successful":
+					if value == "true":
+						print("NOTICE: Howdy login image captures have been disabled by default, change the config to enable them again")
+						value = "false"
 
-					# MIGRATION 2.6.1 -> 3.0.0
-					# Rename config options so they don't do the opposite of what is commonly expected
-					if key == "ignore_ssh":
-						key = "abort_if_ssh"
-					if key == "ignore_closed_lid":
-						key = "abort_if_lid_closed"
+				# MIGRATION 2.6.1 -> 3.0.0
+				# Rename config options so they don't do the opposite of what is commonly expected
+				if key == "ignore_ssh":
+					key = "abort_if_ssh"
+				if key == "ignore_closed_lid":
+					key = "abort_if_lid_closed"
+				if key == "capture_failed":
+					key = "save_failed"
+				if key == "capture_successful":
+					key = "save_successful"
 
-					try:
-						newConf.set(section, key, value)
-					# Add a new section where needed
-					except configparser.NoSectionError:
-						newConf.add_section(section)
-						newConf.set(section, key, value)
+				try:
+					newConf.set(section, key, value)
+				# Add a new section where needed
+				except configparser.NoSectionError:
+					newConf.add_section(section)
+					newConf.set(section, key, value)
 
-			# Write it all to file
-			with open("/etc/howdy/config.ini", "w") as configfile:
-				newConf.write(configfile)
-
-		# Install dlib data files if needed
-		if not os.path.exists("/lib/security/howdy/dlib-data/shape_predictor_5_face_landmarks.dat") and not os.path.exists("/etc/howdy/dlib-data/shape_predictor_5_face_landmarks.dat"):
-			print("Attempting installation of missing data files")
-			handleStatus(subprocess.call(["./install.sh"], shell=True, cwd="/etc/howdy/dlib-data"))
+		# Write it all to file
+		with open("/etc/howdy/config.ini", "w") as configfile:
+			newConf.write(configfile)
 
 	sys.exit(0)
-
-log("Upgrading pip to the latest version")
-
-# Update pip
-handleStatus(sc(["pip3", "install", "--upgrade", "pip"]))
-
-log("Upgrading numpy to the latest version")
-
-# Update numpy
-handleStatus(subprocess.call(["pip3", "install", "--upgrade", "numpy"]))
 
 log("Downloading and unpacking data files")
 
@@ -192,10 +180,6 @@ del sp
 rmtree(DLIB_DIR)
 
 print("Temporary dlib files removed")
-
-log("Installing OpenCV")
-
-handleStatus(subprocess.call(["pip3", "install", "--no-cache-dir", "opencv-python"]))
 
 log("Configuring howdy")
 

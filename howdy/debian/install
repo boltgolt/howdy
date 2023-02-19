@@ -1,16 +1,17 @@
 src/cli/. lib/security/howdy/cli
-src/dlib-data/. lib/security/howdy/dlib-data
 src/locales/. lib/security/howdy/locales
 src/recorders/. lib/security/howdy/recorders
 src/rubberstamps/. lib/security/howdy/rubberstamps
 src/cli.py lib/security/howdy
 src/compare.py lib/security/howdy
-src/config.ini lib/security/howdy
 src/i18n.py lib/security/howdy
 src/logo.png lib/security/howdy
-src/pam.py lib/security/howdy
 src/snapshot.py lib/security/howdy
+
+build/pam_howdy.so lib/security/howdy
+
+src/dlib-data/. etc/howdy/dlib-data
+src/config.ini etc/howdy
 
 src/autocomplete/. usr/share/bash-completion/completions
 src/pam-config/.  /usr/share/pam-configs
-build/libpam_howdy.so lib/security/howdy
