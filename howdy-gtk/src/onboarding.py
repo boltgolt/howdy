@@ -34,7 +34,8 @@ class OnboardingWindow(gtk.Window):
 			self.builder.get_object("slide2"),
 			self.builder.get_object("slide3"),
 			self.builder.get_object("slide4"),
-			self.builder.get_object("slide5")
+			self.builder.get_object("slide5"),
+			self.builder.get_object("slide6")
 		]
 
 		self.window.show_all()
@@ -62,6 +63,8 @@ class OnboardingWindow(gtk.Window):
 			self.execute_slide4()
 		elif self.window.current_slide == 5:
 			self.execute_slide5()
+		elif self.window.current_slide == 6:
+			self.execute_slide6()
 
 	def execute_slide1(self):
 		conf_path = "/etc/howdy"
@@ -187,10 +190,11 @@ class OnboardingWindow(gtk.Window):
 		self.devicelistbox.add(self.treeview)
 
 		# Create a datamodel
-		self.listmodel = gtk.ListStore(str, str, str)
+		self.listmodel = gtk.ListStore(str, str, str, bool)
 
 		for device in device_rows:
-			self.listmodel.append([device[0], device[3], device[1]])
+			is_gray = device[2] == 5
+			self.listmodel.append([device[0], device[3], device[1], is_gray])
 
 		self.treeview.set_model(self.listmodel)
 		self.treeview.set_cursor(0)
@@ -200,6 +204,42 @@ class OnboardingWindow(gtk.Window):
 		self.enable_next()
 
 	def execute_slide3(self):
+		try:
+			import cv2
+		except Exception:
+			self.show_error(_("Error while importing OpenCV2"), _("Try reinstalling cv2"))
+
+		selection = self.treeview.get_selection()
+		(listmodel, rowlist) = selection.get_selected_rows()
+		
+		if len(rowlist) != 1:
+			self.show_error(_("Error selecting camera"))
+   
+		device_path = listmodel.get_value(listmodel.get_iter(rowlist[0]), 2)
+		is_gray = listmodel.get_value(listmodel.get_iter(rowlist[0]), 3)
+
+		if is_gray:
+			# test if linux-enable-ir-emitter help should be displayed, 
+			# the user must click on the yes/no button which calls the method slide3_button_yes|no
+			self.capture = cv2.VideoCapture(device_path)
+			if not self.capture.isOpened():
+				self.show_error(_("The selected camera cannot be opened"), _("Try to select another one"))
+			self.capture.read()
+		else:  
+			# skip, the selected camera is not infrared
+			self.go_next_slide()
+
+	def slide3_button_yes(self, button):
+		self.capture.release()
+		self.go_next_slide()
+
+	def slide3_button_no(self, button):
+		self.capture.release()
+		self.builder.get_object("leiestatus").set_markup(_("Please visit\n<a href=\"https://github.com/EmixamPP/linux-enable-ir-emitter\">https://github.com/EmixamPP/linux-enable-ir-emitter</a>\nto enable your ir emitter"))
+		self.builder.get_object("leieyesbutton").hide()
+		self.builder.get_object("leienobutton").hide()
+
+	def execute_slide4(self):
 		selection = self.treeview.get_selection()
 		(listmodel, rowlist) = selection.get_selected_rows()
 
@@ -238,10 +278,10 @@ class OnboardingWindow(gtk.Window):
 
 		gobject.timeout_add(10, self.go_next_slide)
 
-	def execute_slide4(self):
+	def execute_slide5(self):
 		self.enable_next()
 
-	def execute_slide5(self):
+	def execute_slide6(self):
 		radio_buttons = self.builder.get_object("radiobalanced").get_group()
 		radio_selected = False
 		radio_certanty = 5.0
