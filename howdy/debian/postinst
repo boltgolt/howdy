@@ -51,7 +51,7 @@ if "upgrade" in sys.argv:
 		oldConf = configparser.ConfigParser()
 		oldConf.read("/tmp/howdy_config_backup_v" + sys.argv[2] + ".ini")
 		newConf = configparser.ConfigParser()
-		newConf.read("/lib/security/howdy/config.ini")
+		newConf.read("/etc/howdy/config.ini")
 
 		# Go through every setting in the old config and apply it to the new file
 		for section in oldConf.sections():
@@ -101,15 +101,10 @@ if "upgrade" in sys.argv:
 					newConf.set(section, key, value)
 
 		# Write it all to file
-		with open("/lib/security/howdy/config.ini", "w") as configfile:
+		with open("/etc/howdy/config.ini", "w") as configfile:
 			newConf.write(configfile)
 
 	sys.exit(0)
-
-log("Downloading and unpacking data files")
-
-# Run the bash script to download and unpack the .dat files needed
-handleStatus(subprocess.call(["./install.sh"], shell=True, cwd="/lib/security/howdy/dlib-data"))
 
 log("Downloading dlib")
 
@@ -184,7 +179,7 @@ print("Temporary dlib files removed")
 log("Configuring howdy")
 
 # Manually change the camera id to the one picked
-for line in fileinput.input(["/lib/security/howdy/config.ini"], inplace=1):
+for line in fileinput.input(["/etc/howdy/config.ini"], inplace=1):
 	line = line.replace("use_cnn = false", "use_cnn = " + str(cuda_used).lower())
 	print(line, end="")
 
@@ -192,6 +187,7 @@ print("Camera ID saved")
 
 # Secure the howdy folder
 handleStatus(sc(["chmod 744 -R /lib/security/howdy/"], shell=True))
+handleStatus(sc(["chmod 744 -R /etc/howdy/"], shell=True))
 
 # Allow anyone to execute the python CLI
 os.chmod("/lib/security/howdy", 0o755)

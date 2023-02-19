@@ -18,5 +18,6 @@ if "EDITOR" in os.environ:
 elif os.path.isfile("/etc/alternatives/editor"):
 	editor = "/etc/alternatives/editor"
 
+config_path = "/etc/howdy"
 # Open the editor as a subprocess and fork it
-subprocess.call([editor, os.path.dirname(os.path.realpath(__file__)) + "/../config.ini"])
+subprocess.call([editor, os.path.dirname(config_path) + "/config.ini"])

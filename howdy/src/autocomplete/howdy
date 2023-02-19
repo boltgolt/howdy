@@ -20,7 +20,7 @@ _howdy() {
 			;;
 		# For disable, grab the current "disabled" config option and give the reverse
 		"disable")
-			local status=$(cut -d'=' -f2 <<< $(cat /lib/security/howdy/config.ini | grep 'disabled =') | xargs echo -n)
+			local status=$(cut -d'=' -f2 <<< $(cat /etc/howdy/config.ini | grep 'disabled =') | xargs echo -n)
 
 			[ "$status" == "false" ] && COMPREPLY="true" || COMPREPLY="false"
 			return 0

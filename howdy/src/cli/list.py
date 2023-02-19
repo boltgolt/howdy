@@ -10,7 +10,7 @@ import builtins
 from i18n import _
 
 # Get the absolute path and the username
-path = os.path.dirname(os.path.realpath(__file__)) + "/.."
+path = "/etc/howdy"
 user = builtins.howdy_user
 
 # Check if the models file has been created yet
@@ -50,7 +50,7 @@ for enc in encodings:
 	# Format the time as ISO in the local timezone
 	print(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(enc["time"])), end="")
 
-	# Seperate with commas again for machines, spaces otherwise
+	# Separate with commas again for machines, spaces otherwise
 	print("," if builtins.howdy_args.plain else "  ", end="")
 
 	# End with the label
