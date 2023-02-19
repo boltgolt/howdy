@@ -14,7 +14,7 @@ enum CompareError : int {
   ABORT = 12,
   TOO_DARK = 13,
   INVALID_DEVICE = 14,
-  TIMEOUT_ACTIVE = 2816
+  RUBBERSTAMP = 15
 };
 
 inline auto get_workaround(const std::string &workaround) -> Workaround {

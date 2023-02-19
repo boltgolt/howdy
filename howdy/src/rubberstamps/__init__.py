@@ -170,7 +170,7 @@ def execute(config, gtk_proc, opencv):
 		# Abort authentication if the stamp returned false
 		if result is False:
 			if verbose: print("Authentication aborted by rubber stamp")
-			sys.exit(14)
+			sys.exit(15)
 
 	# This is outside the for loop, so we've run all the rules
 	if verbose: print("All rubberstamps processed, authentication successful")

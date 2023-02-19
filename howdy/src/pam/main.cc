@@ -351,7 +351,7 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
 
   // If python process ran into a timeout
   // Do not send enter presses or terminate the PAM function, as the user might still be typing their password
-  if (status == CompareError::TIMEOUT_ACTIVE) {
+  if (WEXITSTATUS(status) == CompareError::TIMEOUT_REACHED && WIFEXITED(status)) {
     // Wait for the password to be typed
     pass_task.stop(false);
 
