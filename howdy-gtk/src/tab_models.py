@@ -68,27 +68,30 @@ def on_model_add(self, button):
 	dialog.destroy()
 
 	if response == gtk.ResponseType.OK:
-		dialog = gtk.MessageDialog(parent=self, flags=gtk.DialogFlags.MODAL)
+		dialog = gtk.MessageDialog(parent=self, flags=gtk.DialogFlags.MODAL, buttons=gtk.ButtonsType.NONE)
 		dialog.set_title(_("Creating Model"))
 		dialog.props.text = _("Please look directly into the camera")
+		dialog.get_child().connect("map", lambda w: execute_add(self, dialog, entered_name, self.active_user))
 		dialog.show_all()
 
-		time.sleep(1)
 
-		status, output = subprocess.getstatusoutput(["howdy add -y -U " + self.active_user + " '" + entered_name + "'"])
+def execute_add(box, dialog, entered_name, user):
 
+	time.sleep(1)
+
+	status, output = subprocess.getstatusoutput(["howdy add '" + entered_name + "' -y -U " + box.active_user])
+
+	dialog.destroy()
+
+	if status != 0:
+		dialog = gtk.MessageDialog(parent=box, flags=gtk.DialogFlags.MODAL, type=gtk.MessageType.ERROR, buttons=gtk.ButtonsType.CLOSE)
+		dialog.set_title(_("Howdy Error"))
+		dialog.props.text = _("Error while adding model, error code {}: \n\n").format(str(status))
+		dialog.format_secondary_text(output)
+		dialog.run()
 		dialog.destroy()
 
-		if status != 0:
-			dialog = gtk.MessageDialog(parent=self, flags=gtk.DialogFlags.MODAL, type=gtk.MessageType.ERROR, buttons=gtk.ButtonsType.CLOSE)
-			dialog.set_title(_("Howdy Error"))
-			dialog.props.text = _("Error while adding model, error code {}: \n\n").format(str(status))
-			dialog.format_secondary_text(output)
-			dialog.run()
-			dialog.destroy()
-
-		self.load_model_list()
-
+	box.load_model_list()
 
 def on_model_delete(self, button):
 	selection = self.treeview.get_selection()

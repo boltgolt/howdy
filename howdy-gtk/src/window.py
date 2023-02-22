@@ -71,10 +71,12 @@ class MainWindow(gtk.Window):
 	def load_model_list(self):
 		"""(Re)load the model list"""
 
+		# Get username and default to none if there are no models at all yet
+		user = 'none'
+		if self.active_user: user = self.active_user
+
 		# Execute the list commond to get the models
-		# status, output = subprocess.getstatusoutput(["howdy list --plain -U " + self.active_user])
-		status = 0
-		output = "1,2020-12-05 14:10:22,sd\n2,2020-12-05 14:22:41,\n3,2020-12-05 14:57:37,Model #3" + self.active_user
+		status, output = subprocess.getstatusoutput(["howdy list --plain -U " + user])
 
 		# Create a datamodel
 		self.listmodel = gtk.ListStore(str, str, str)
@@ -82,12 +84,13 @@ class MainWindow(gtk.Window):
 		# If there was no error
 		if status == 0:
 			# Split the output per line
-			# lines = output.decode("utf-8").split("\n")
 			lines = output.split("\n")
 
 			# Add the models to the datamodel
 			for i in range(len(lines)):
-				self.listmodel.append(lines[i].split(","))
+				items = lines[i].split(",")
+				if len(items) < 3: continue
+				self.listmodel.append(items)
 
 		self.treeview.set_model(self.listmodel)
 

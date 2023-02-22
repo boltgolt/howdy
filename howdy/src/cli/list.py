@@ -26,8 +26,9 @@ enc_file = path + "/models/" + user + ".dat"
 try:
 	encodings = json.load(open(enc_file))
 except FileNotFoundError:
-	print(_("No face model known for the user {}, please run:").format(user))
-	print("\n\tsudo howdy -U " + user + " add\n")
+	if not builtins.howdy_args.plain:
+		print(_("No face model known for the user {}, please run:").format(user))
+		print("\n\tsudo howdy -U " + user + " add\n")
 	sys.exit(1)
 
 # Print a header if we're not in plain mode
