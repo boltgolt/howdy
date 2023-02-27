@@ -105,7 +105,7 @@ class StickyWindow(gtk.Window):
 		ctx.set_source_surface(self.logo_surface)
 		ctx.paint()
 
-		# Calculate main message positioning, as the text is heigher if there's a subtext
+		# Calculate main message positioning, as the text is higher if there's a subtext
 		if self.subtext:
 			ctx.move_to(380, 145)
 		else:

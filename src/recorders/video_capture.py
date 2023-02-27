@@ -24,7 +24,7 @@ class VideoCapture:
 		Config can either be a string to the path, or a pre-setup configparser.
 		"""
 
-		# Parse config from string if nedded
+		# Parse config from string if needed
 		if isinstance(config, str):
 			self.config = configparser.ConfigParser()
 			self.config.read(config)

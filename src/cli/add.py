@@ -186,7 +186,7 @@ if face_locations is None or not face_locations:
 		print(_("No face detected, aborting"))
 	sys.exit(1)
 
-# If more than 1 faces are detected we can't know wich one belongs to the user
+# If more than 1 faces are detected we can't know which one belongs to the user
 elif len(face_locations) > 1:
 	print(_("Multiple faces detected, aborting"))
 	sys.exit(1)

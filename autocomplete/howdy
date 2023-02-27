@@ -25,7 +25,7 @@ _howdy() {
 			[ "$status" == "false" ] && COMPREPLY="true" || COMPREPLY="false"
 			return 0
 			;;
-		# List the users availible
+		# List the users available
 		"-U")
 			COMPREPLY=( $(compgen -u -- ${cur}) )
 			return 0

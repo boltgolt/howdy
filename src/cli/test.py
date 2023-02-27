@@ -79,7 +79,7 @@ sec = int(time.time())
 # recognition time
 rec_tm = 0
 
-# Wrap everything in an keyboard interupt handler
+# Wrap everything in an keyboard interrupt handler
 try:
 	while True:
 		frame_tm = time.time()
@@ -112,7 +112,7 @@ try:
 		hist = cv2.calcHist([frame], [0], None, [8], [0, 256])
 		# All values combined for percentage calculation
 		hist_total = int(sum(hist)[0])
-		# Fill with the overal containing percentage
+		# Fill with the overall containing percentage
 		hist_perc = []
 
 		# Loop though all values to calculate a percentage and add it to the overlay
@@ -120,7 +120,7 @@ try:
 			value_perc = float(value[0]) / hist_total * 100
 			hist_perc.append(value_perc)
 
-			# Top left pont, 10px margins
+			# Top left point, 10px margins
 			p1 = (20 + (10 * index), 10)
 			# Bottom right point makes the bar 10px thick, with an height of half the percentage
 			p2 = (10 + (10 * index), int(value_perc / 2 + 10))

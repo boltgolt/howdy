@@ -41,7 +41,7 @@ class MainWindow(gtk.Window):
 		self.treeview = gtk.TreeView()
 		self.treeview.set_vexpand(True)
 
-		# Set the coloums
+		# Set the columns
 		for i, column in enumerate([_("ID"), _("Created"), _("Label")]):
 			col = gtk.TreeViewColumn(column, gtk.CellRendererText(), text=i)
 			self.treeview.append_column(col)
@@ -71,7 +71,7 @@ class MainWindow(gtk.Window):
 	def load_model_list(self):
 		"""(Re)load the model list"""
 
-		# Execute the list commond to get the models
+		# Execute the list command to get the models
 		# status, output = subprocess.getstatusoutput(["howdy list --plain -U " + self.active_user])
 		status = 0
 		output = "1,2020-12-05 14:10:22,sd\n2,2020-12-05 14:22:41,\n3,2020-12-05 14:57:37,Model #3" + self.active_user

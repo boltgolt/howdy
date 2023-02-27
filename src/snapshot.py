@@ -8,7 +8,7 @@ import numpy as np
 
 
 def generate(frames, text_lines):
-	"""Generate a shapshot from given frames"""
+	"""Generate a snapshot from given frames"""
 
 	# Don't execute if no frames were given
 	if len(frames) == 0:

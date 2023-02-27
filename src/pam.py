@@ -19,7 +19,7 @@ config.read(os.path.dirname(os.path.abspath(__file__)) + "/config.ini")
 
 
 def doAuth(pamh):
-	"""Starts authentication in a seperate process"""
+	"""Starts authentication in a separate process"""
 
 	# Abort is Howdy is disabled
 	if config.getboolean("core", "disabled"):
@@ -62,7 +62,7 @@ def doAuth(pamh):
 		syslog.closelog()
 		return pamh.PAM_USER_UNKNOWN
 
-	# Status 11 means we exceded the maximum retry count
+	# Status 11 means we exceeded the maximum retry count
 	elif status == 11:
 		if config.getboolean("core", "timeout_notice"):
 			pamh.conversation(pamh.Message(pamh.PAM_ERROR_MSG, "Face detection timeout reached"))
@@ -107,7 +107,7 @@ def doAuth(pamh):
 		syslog.closelog()
 		return pamh.PAM_SUCCESS
 
-	# Otherwise, we can't discribe what happend but it wasn't successful
+	# Otherwise, we can't describe what happened but it wasn't successful
 	pamh.conversation(pamh.Message(pamh.PAM_ERROR_MSG, "Unknown error: " + str(status)))
 	syslog.syslog(syslog.LOG_INFO, "Failure, unknown error" + str(status))
 	syslog.closelog()
@@ -125,7 +125,7 @@ def pam_sm_open_session(pamh, flags, args):
 
 
 def pam_sm_close_session(pamh, flags, argv):
-	"""We don't need to clean anyting up at the end of a session, so returns true"""
+	"""We don't need to clean anything up at the end of a session, so returns true"""
 	return pamh.PAM_SUCCESS
 
 

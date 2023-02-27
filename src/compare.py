@@ -1,4 +1,4 @@
-# Compare incomming video with known faces
+# Compare incoming video with known faces
 # Running in a local python instance to get around PATH issues
 
 # Import time so we can start timing asap
@@ -28,7 +28,7 @@ from recorders.video_capture import VideoCapture
 
 
 def exit(code=None):
-	"""Exit while closeing howdy-gtk properly"""
+	"""Exit while closing howdy-gtk properly"""
 	global gtk_proc
 
 	# Exit the auth ui process if there is one
@@ -83,7 +83,7 @@ def send_to_ui(type, message):
 	"""Send message to the auth ui"""
 	global gtk_proc
 
-	# Only execute of the proccess started
+	# Only execute of the process started
 	if "gtk_proc" in globals():
 		# Format message so the ui can parse it
 		message = type + "=" + message + " \n"
@@ -96,7 +96,7 @@ def send_to_ui(type, message):
 			pass
 
 
-# Make sure we were given an username to tast against
+# Make sure we were given an username to test against
 if len(sys.argv) < 2:
 	exit(12)
 
@@ -111,7 +111,7 @@ models = []
 encodings = []
 # Amount of ignored 100% black frames
 black_tries = 0
-# Amount of ingnored dark frames
+# Amount of ignored dark frames
 dark_tries = 0
 # Total amount of frames captured
 frames = 0
@@ -151,7 +151,7 @@ capture_failed = config.getboolean("snapshots", "capture_failed", fallback=False
 capture_successful = config.getboolean("snapshots", "capture_successful", fallback=False)
 gtk_stdout = config.getboolean("debug", "gtk_stdout", fallback=False)
 
-# Send the gtk outupt to the terminal if enabled in the config
+# Send the gtk output to the terminal if enabled in the config
 gtk_pipe = sys.stdout if gtk_stdout else subprocess.DEVNULL
 
 # Start the auth ui, register it to be always be closed on exit
@@ -227,7 +227,7 @@ while True:
 	# Show it in the ui as subtext
 	send_to_ui("S", ui_subtext)
 
-	# Stop if we've exceded the time limit
+	# Stop if we've exceeded the time limit
 	if time.time() - timings["fr"] > timeout:
 		# Create a timeout snapshot if enabled
 		if capture_failed:
@@ -272,7 +272,7 @@ while True:
 		dark_tries += 1
 		continue
 
-	# If the hight is too high
+	# If the height is too high
 	if scaling_factor != 1:
 		# Apply that factor to the frame
 		frame = cv2.resize(frame, None, fx=scaling_factor, fy=scaling_factor, interpolation=cv2.INTER_AREA)
@@ -329,7 +329,7 @@ while True:
 				scale_height, scale_width = frame.shape[:2]
 				print(_("  Used: %dx%d") % (scale_height, scale_width))
 
-				# Show the total number of frames and calculate the FPS by deviding it by the total scan time
+				# Show the total number of frames and calculate the FPS by dividing it by the total scan time
 				print(_("\nFrames searched: %d (%.2f fps)") % (frames, frames / timings["fl"]))
 				print(_("Black frames ignored: %d ") % (black_tries, ))
 				print(_("Dark frames ignored: %d ") % (dark_tries, ))
