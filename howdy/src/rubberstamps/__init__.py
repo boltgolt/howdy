@@ -136,7 +136,7 @@ def execute(config, gtk_proc, opencv):
 
 			# Error out if a key has been set that was not declared by the module before
 			if key not in instance.options:
-				print("Unknow config option for rubberstamp " + type + ": " + key)
+				print("Unknown config option for rubberstamp " + type + ": " + key)
 				continue
 
 			# Convert the argument string to an int or float if the declared option has that type

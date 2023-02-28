@@ -44,7 +44,7 @@ auto optional_task<T>::wait(std::chrono::duration<R, P> dur)
 }
 
 // Get the value.
-// WARNING: The function hould be run only if the task has successfully been
+// WARNING: The function should be run only if the task has successfully been
 // stopped.
 template <typename T> auto optional_task<T>::get() -> T {
   assert(!is_active && spawned);

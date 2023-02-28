@@ -41,7 +41,7 @@ class MainWindow(gtk.Window):
 		self.treeview = gtk.TreeView()
 		self.treeview.set_vexpand(True)
 
-		# Set the coloums
+		# Set the columns
 		for i, column in enumerate([_("ID"), _("Created"), _("Label")]):
 			col = gtk.TreeViewColumn(column, gtk.CellRendererText(), text=i)
 			self.treeview.append_column(col)
@@ -75,7 +75,7 @@ class MainWindow(gtk.Window):
 		user = 'none'
 		if self.active_user: user = self.active_user
 
-		# Execute the list commond to get the models
+		# Execute the list command to get the models
 		status, output = subprocess.getstatusoutput(["howdy list --plain -U " + user])
 
 		# Create a datamodel

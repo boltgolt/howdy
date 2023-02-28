@@ -209,7 +209,7 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
   // Will contain the responses from PAM functions
   int pam_res = PAM_IGNORE;
 
-  // Check if we shoud continue
+  // Check if we should continue
   if ((pam_res = check_enabled(config)) != PAM_SUCCESS) {
     return pam_res;
   }

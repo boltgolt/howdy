@@ -97,7 +97,7 @@ class ffmpeg_reader:
 		)
 
 	def read(self):
-		""" Read a sigle frame from the self.video array. Will record a video if array is empty. """
+		""" Read a single frame from the self.video array. Will record a video if array is empty. """
 
 		# First time we are called, we want to initialize the camera by probing it, to ensure we have height/width
 		# and then take numframes of video to fill the buffer for faster recognition.

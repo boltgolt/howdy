@@ -22,7 +22,7 @@ class nod(RubberStamp):
 		last_reldist = -1
 		# Last point the nose was at
 		last_nosepoint = {"x": -1, "y": -1}
-		# Contans booleans recording successful nods and their directions
+		# Contains booleans recording successful nods and their directions
 		recorded_nods = {"x": [], "y": []}
 
 		starttime = time.time()
@@ -38,7 +38,7 @@ class nod(RubberStamp):
 			# Detect all faces in the frame
 			face_locations = self.face_detector(frame, 1)
 
-			# Only continue if exacty 1 face is visible in the frame
+			# Only continue if exactly 1 face is visible in the frame
 			if len(face_locations) != 1:
 				continue
 
@@ -47,10 +47,10 @@ class nod(RubberStamp):
 
 			# Calculate the relative distance between the 2 eyes
 			reldist = face_landmarks.part(0).x - face_landmarks.part(2).x
-			# Avarage this out with the distance found in the last frame to smooth it out
+			# Average this out with the distance found in the last frame to smooth it out
 			avg_reldist = (last_reldist + reldist) / 2
 
-			# Calulate horizontal movement (shaking head) and vertical movement (nodding)
+			# Calculate horizontal movement (shaking head) and vertical movement (nodding)
 			for axis in ["x", "y"]:
 				# Get the location of the nose on the active axis
 				nosepoint = getattr(face_landmarks.part(4), axis)
@@ -61,7 +61,7 @@ class nod(RubberStamp):
 					last_reldist = reldist
 
 				mindist = self.options["min_distance"]
-				# Get the relative movement by taking the distance traveled and deviding it by eye distance
+				# Get the relative movement by taking the distance traveled and dividing it by eye distance
 				movement = (nosepoint - last_nosepoint[axis]) * 100 / max(avg_reldist, 1)
 
 				# If the movement is over the minimal distance threshold
