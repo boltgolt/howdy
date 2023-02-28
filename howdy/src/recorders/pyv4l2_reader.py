@@ -72,11 +72,11 @@ class pyv4l2_reader:
 		self.frame = Frame(self.device_name)
 
 	def grab(self):
-		""" Read a sigle frame from the IR camera. """
+		""" Read a single frame from the IR camera. """
 		self.read()
 
 	def read(self):
-		""" Read a sigle frame from the IR camera. """
+		""" Read a single frame from the IR camera. """
 
 		if not self.frame:
 			self.record()

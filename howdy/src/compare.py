@@ -86,7 +86,7 @@ def send_to_ui(type, message):
 	"""Send message to the auth ui"""
 	global gtk_proc
 
-	# Only execute of the proccess started
+	# Only execute of the process started
 	if "gtk_proc" in globals():
 		# Format message so the ui can parse it
 		message = type + "=" + message + " \n"
@@ -155,7 +155,7 @@ save_successful = config.getboolean("snapshots", "save_successful", fallback=Fal
 gtk_stdout = config.getboolean("debug", "gtk_stdout", fallback=False)
 rotate = config.getint("video", "rotate", fallback=0)
 
-# Send the gtk outupt to the terminal if enabled in the config
+# Send the gtk output to the terminal if enabled in the config
 gtk_pipe = sys.stdout if gtk_stdout else subprocess.DEVNULL
 
 # Start the auth ui, register it to be always be closed on exit
@@ -353,7 +353,7 @@ while True:
 				scale_height, scale_width = frame.shape[:2]
 				print(_("  Used: %dx%d") % (scale_height, scale_width))
 
-				# Show the total number of frames and calculate the FPS by deviding it by the total scan time
+				# Show the total number of frames and calculate the FPS by dividing it by the total scan time
 				print(_("\nFrames searched: %d (%.2f fps)") % (frames, frames / timings["fl"]))
 				print(_("Black frames ignored: %d ") % (black_tries, ))
 				print(_("Dark frames ignored: %d ") % (dark_tries, ))

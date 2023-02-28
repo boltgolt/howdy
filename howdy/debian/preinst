@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-# Used to check cameras before commiting to install
+# Used to check cameras before committing to install
 # Executed before primary apt install of files
 
 import subprocess

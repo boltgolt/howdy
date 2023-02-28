@@ -43,7 +43,7 @@ parser.add_argument(
 	metavar="command",
 	choices=["add", "clear", "config", "disable", "list", "remove", "set", "snapshot", "test", "version"])
 
-# Add an argument for the extra arguments of diable and remove
+# Add an argument for the extra arguments of disable and remove
 parser.add_argument(
 	_("arguments"),
 	help=_("Optional arguments for the add, disable, remove and set commands."),
@@ -94,7 +94,7 @@ if os.geteuid() != 0:
 	print("\tsudo howdy " + " ".join(sys.argv[1:]))
 	sys.exit(1)
 
-# Beond this point the user can't change anymore, if we still have root as user we need to abort
+# Beyond this point the user can't change anymore, if we still have root as user we need to abort
 if args.user == "root":
 	print(_("Can't run howdy commands as root, please run this command with the --user flag"))
 	sys.exit(1)

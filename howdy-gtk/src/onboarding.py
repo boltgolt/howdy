@@ -179,7 +179,7 @@ class OnboardingWindow(gtk.Window):
 		self.treeview = gtk.TreeView()
 		self.treeview.set_vexpand(True)
 
-		# Set the coloums
+		# Set the columns
 		for i, column in enumerate([_("Camera identifier or path"), _("Recommended")]):
 			cell = gtk.CellRendererText()
 			cell.set_property("ellipsize", pango.EllipsizeMode.END)
