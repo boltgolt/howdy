@@ -21,7 +21,7 @@ path = "/etc/howdy"
 config = configparser.ConfigParser()
 config.read(path + "/config.ini")
 
-if config.get("video", "recording_plugin") != "opencv":
+if config.get("video", "recording_plugin", fallback="opencv") != "opencv":
 	print(_("Howdy has been configured to use a recorder which doesn't support the test command yet, aborting"))
 	sys.exit(12)
 
@@ -30,7 +30,7 @@ video_capture = VideoCapture(config)
 # Read config values to use in the main loop
 video_certainty = config.getfloat("video", "certainty", fallback=3.5) / 10
 exposure = config.getint("video", "exposure", fallback=-1)
-dark_threshold = config.getfloat("video", "dark_threshold")
+dark_threshold = config.getfloat("video", "dark_threshold", fallback=60)
 
 # Let the user know what's up
 print(_("""

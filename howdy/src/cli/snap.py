@@ -23,7 +23,7 @@ video_capture.read_frame()
 
 # Read exposure and dark_thresholds from config to use in the main loop
 exposure = config.getint("video", "exposure", fallback=-1)
-dark_threshold = config.getfloat("video", "dark_threshold")
+dark_threshold = config.getfloat("video", "dark_threshold", fallback=60)
 
 # COllection of recorded frames
 frames = []
@@ -43,7 +43,7 @@ while True:
 file = snapshot.generate(frames, [
 	_("GENERATED SNAPSHOT"),
 	_("Date: ") + datetime.datetime.utcnow().strftime("%Y/%m/%d %H:%M:%S UTC"),
-	_("Dark threshold config: ") + str(config.getfloat("video", "dark_threshold", fallback=50.0)),
+	_("Dark threshold config: ") + str(config.getfloat("video", "dark_threshold", fallback=60.0)),
 	_("Certainty config: ") + str(config.getfloat("video", "certainty", fallback=3.5))
 ])
 
