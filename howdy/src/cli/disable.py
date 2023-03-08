@@ -35,13 +35,13 @@ else:
 	sys.exit(1)
 
 # Don't do anything when the state is already the requested one
-if out_value == config.get("core", "disabled"):
+if out_value == config.get("core", "disabled", fallback=True):
 	print(_("The disable option has already been set to ") + out_value)
 	sys.exit(1)
 
 # Loop though the config file and only replace the line containing the disable config
 for line in fileinput.input([config_path], inplace=1):
-	print(line.replace("disabled = " + config.get("core", "disabled"), "disabled = " + out_value), end="")
+	print(line.replace("disabled = " + config.get("core", "disabled", fallback=True), "disabled = " + out_value), end="")
 
 # Print what we just did
 if out_value == "true":

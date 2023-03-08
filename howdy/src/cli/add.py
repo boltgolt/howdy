@@ -131,7 +131,7 @@ dark_tries = 0
 dark_running_total = 0
 face_locations = None
 
-dark_threshold = config.getfloat("video", "dark_threshold")
+dark_threshold = config.getfloat("video", "dark_threshold", fallback=60)
 
 clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
 

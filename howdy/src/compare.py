@@ -146,7 +146,7 @@ config.read(PATH + "/config.ini")
 
 # Get all config values needed
 use_cnn = config.getboolean("core", "use_cnn", fallback=False)
-timeout = config.getint("video", "timeout", fallback=5)
+timeout = config.getint("video", "timeout", fallback=4)
 dark_threshold = config.getfloat("video", "dark_threshold", fallback=50.0)
 video_certainty = config.getfloat("video", "certainty", fallback=3.5) / 10
 end_report = config.getboolean("debug", "end_report", fallback=False)
@@ -196,7 +196,7 @@ lock.release()
 del lock
 
 # Fetch the max frame height
-max_height = config.getfloat("video", "max_height", fallback=0.0)
+max_height = config.getfloat("video", "max_height", fallback=320.0)
 
 # Get the height of the image (which would be the width if screen is portrait oriented)
 height = video_capture.internal.get(cv2.CAP_PROP_FRAME_HEIGHT) or 1
@@ -206,9 +206,9 @@ if rotate == 2:
 scaling_factor = (max_height / height) or 1
 
 # Fetch config settings out of the loop
-timeout = config.getint("video", "timeout")
-dark_threshold = config.getfloat("video", "dark_threshold")
-end_report = config.getboolean("debug", "end_report")
+timeout = config.getint("video", "timeout", fallback=4)
+dark_threshold = config.getfloat("video", "dark_threshold", fallback=60)
+end_report = config.getboolean("debug", "end_report", fallback=False)
 
 # Initiate histogram equalization
 clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))

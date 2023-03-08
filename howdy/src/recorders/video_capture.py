@@ -33,7 +33,7 @@ class VideoCapture:
 
 		# Check device path
 		if not os.path.exists(self.config.get("video", "device_path")):
-			if self.config.getboolean("video", "warn_no_device"):
+			if self.config.getboolean("video", "warn_no_device", fallback=True):
 				print(_("Howdy could not find a camera device at the path specified in the config file."))
 				print(_("It is very likely that the path is not configured correctly, please edit the 'device_path' config value by running:"))
 				print("\n\tsudo howdy config\n")
@@ -100,21 +100,22 @@ class VideoCapture:
 		"""
 		Sets up the video reader instance
 		"""
+		recording_plugin = self.config.get("video", "recording_plugin", fallback="opencv")
 
-		if self.config.get("video", "recording_plugin") == "ffmpeg":
+		if recording_plugin == "ffmpeg":
 			# Set the capture source for ffmpeg
 			from recorders.ffmpeg_reader import ffmpeg_reader
 			self.internal = ffmpeg_reader(
 				self.config.get("video", "device_path"),
-				self.config.get("video", "device_format")
+				self.config.get("video", "device_format", fallback="v4l2")
 			)
 
-		elif self.config.get("video", "recording_plugin") == "pyv4l2":
+		elif recording_plugin == "pyv4l2":
 			# Set the capture source for pyv4l2
 			from recorders.pyv4l2_reader import pyv4l2_reader
 			self.internal = pyv4l2_reader(
 				self.config.get("video", "device_path"),
-				self.config.get("video", "device_format")
+				self.config.get("video", "device_format", fallback="v4l2")
 			)
 
 		else:
