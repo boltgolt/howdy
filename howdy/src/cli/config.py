@@ -3,6 +3,7 @@
 # Import required modules
 import os
 import subprocess
+import paths
 
 from i18n import _
 
@@ -19,4 +20,4 @@ elif os.path.isfile("/etc/alternatives/editor"):
 	editor = "/etc/alternatives/editor"
 
 # Open the editor as a subprocess and fork it
-subprocess.call([editor, "/etc/howdy/config.ini"])
+subprocess.call([editor, paths.config_dir + "config.ini"])

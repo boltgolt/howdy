@@ -5,15 +5,14 @@ import os
 import configparser
 import datetime
 import snapshot
+import paths
 from recorders.video_capture import VideoCapture
 
 from i18n import _
 
-path = "/etc/howdy"
-
 # Read the config
 config = configparser.ConfigParser()
-config.read(path + "/config.ini")
+config.read(paths.config_dir + "config.ini")
 
 # Start video capture
 video_capture = VideoCapture(config)

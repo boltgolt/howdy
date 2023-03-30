@@ -6,11 +6,12 @@ import os
 import builtins
 import fileinput
 import configparser
+import paths
 
 from i18n import _
 
 # Get the absolute filepath
-config_path = os.path.dirname("/etc/howdy") + "/config.ini"
+config_path = os.path.dirname(paths.config_dir) + "/config.ini"
 
 # Read config from disk
 config = configparser.ConfigParser()
