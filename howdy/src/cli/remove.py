@@ -5,11 +5,10 @@ import sys
 import os
 import json
 import builtins
+import paths
 
 from i18n import _
 
-# Get the absolute path and the username
-path = "/etc/howdy"
 user = builtins.howdy_user
 
 # Check if enough arguments have been passed
@@ -22,13 +21,13 @@ if not builtins.howdy_args.arguments:
 	sys.exit(1)
 
 # Check if the models file has been created yet
-if not os.path.exists(path + "/models"):
+if not os.path.exists(paths.user_models_dir):
 	print(_("Face models have not been initialized yet, please run:"))
 	print("\n\thowdy add\n")
 	sys.exit(1)
 
 # Path to the models file
-enc_file = path + "/models/" + user + ".dat"
+enc_file = paths.user_models_dir + user + ".dat"
 
 # Try to load the models file and abort if the user does not have it yet
 try:
@@ -72,7 +71,7 @@ if not found:
 
 # Remove the entire file if this encoding is the only one
 if len(encodings) == 1:
-	os.remove(path + "/models/" + user + ".dat")
+	os.remove(paths.user_models_dir + user + ".dat")
 	print(_("Removed last model, howdy disabled for user"))
 else:
 	# A place holder to contain the encodings that will remain

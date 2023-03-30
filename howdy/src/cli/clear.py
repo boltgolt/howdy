@@ -4,21 +4,20 @@
 import os
 import sys
 import builtins
+import paths
 
 from i18n import _
 
-# Get the full path to this file
-path = "/etc/howdy/models"
 # Get the passed user
 user = builtins.howdy_user
 
 # Check if the models folder is there
-if not os.path.exists(path):
+if not os.path.exists(paths.user_models_dir):
 	print(_("No models created yet, can't clear them if they don't exist"))
 	sys.exit(1)
 
 # Check if the user has a models file to delete
-if not os.path.isfile(path + "/" + user + ".dat"):
+if not os.path.isfile(paths.user_models_dir + user + ".dat"):
 	print(_("{} has no models or they have been cleared already").format(user))
 	sys.exit(1)
 
@@ -34,5 +33,5 @@ if not builtins.howdy_args.y:
 		sys.exit(1)
 
 # Delete otherwise
-os.remove(path + "/" + user + ".dat")
+os.remove(paths.user_models_dir + user + ".dat")
 print(_("\nModels cleared"))
