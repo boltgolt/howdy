@@ -11,21 +11,15 @@ import builtins
 from i18n import _
 
 # Try to get the original username (not "root") from shell
-try:
-	user = os.getlogin()
-except Exception:
-	user = os.environ.get("SUDO_USER")
+sudo_user = os.environ.get("SUDO_USER")
+doas_user = os.environ.get("DOAS_USER")
+env_user = getpass.getuser()
+user = next((u for u in [sudo_user, doas_user, env_user] if u), "")
 
-# If that fails, try to get the direct user
-if user == "root" or user is None:
-	env_user = getpass.getuser().strip()
-
-	# If even that fails, error out
-	if env_user == "":
-		print(_("Could not determine user, please use the --user flag"))
-		sys.exit(1)
-	else:
-		user = env_user
+# If that fails, error out
+if user == "":
+    print(_("Could not determine user, please use the --user flag"))
+    sys.exit(1)
 
 # Basic command setup
 parser = argparse.ArgumentParser(
