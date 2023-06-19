@@ -1,12 +1,13 @@
+from pathlib import PurePath
 
 # Define the absolute path to the config directory
-config_dir = "/etc/howdy/"
+config_dir = PurePath("@config_dir@")
 
 # Define the absolute path to the DLib models data directory
-dlib_data_dir = config_dir + "/dlib-data/"
+dlib_data_dir = PurePath("@dlib_data_dir@")
 
 # Define the absolute path to the Howdy user models directory
-user_models_dir = config_dir + "/models/"
+user_models_dir = PurePath("@user_models_dir@")
 
 # Define path to any howdy logs
-log_path = "/var/log/howdy"
+log_path = PurePath("@log_path@")

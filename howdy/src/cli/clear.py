@@ -17,7 +17,7 @@ if not os.path.exists(paths.user_models_dir):
 	sys.exit(1)
 
 # Check if the user has a models file to delete
-if not os.path.isfile(paths.user_models_dir + user + ".dat"):
+if not os.path.isfile(paths.user_models_dir / f"{user}.dat"):
 	print(_("{} has no models or they have been cleared already").format(user))
 	sys.exit(1)
 
@@ -33,5 +33,5 @@ if not builtins.howdy_args.y:
 		sys.exit(1)
 
 # Delete otherwise
-os.remove(paths.user_models_dir + user + ".dat")
+os.remove(paths.user_models_dir / f"{user}.dat")
 print(_("\nModels cleared"))

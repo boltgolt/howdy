@@ -11,7 +11,7 @@ import paths
 from i18n import _
 
 # Get the absolute filepath
-config_path = os.path.dirname(paths.config_dir) + "/config.ini"
+config_path = paths.config_dir.parent / "config.ini"
 
 # Read config from disk
 config = configparser.ConfigParser()

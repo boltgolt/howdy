@@ -28,7 +28,7 @@ except ImportError as err:
 import cv2
 
 # Test if at lest 1 of the data files is there and abort if it's not
-if not os.path.isfile(paths.dlib_data_dir + "shape_predictor_5_face_landmarks.dat"):
+if not os.path.isfile(paths.dlib_data_dir / "shape_predictor_5_face_landmarks.dat"):
 	print(_("Data files have not been downloaded, please run the following commands:"))
 	print("\n\tcd " + paths.dlib_data_dir)
 	print("\tsudo ./install.sh\n")
@@ -36,20 +36,20 @@ if not os.path.isfile(paths.dlib_data_dir + "shape_predictor_5_face_landmarks.da
 
 # Read config from disk
 config = configparser.ConfigParser()
-config.read(paths.config_dir + "/config.ini")
+config.read(paths.config_dir / "config.ini")
 
 use_cnn = config.getboolean("core", "use_cnn", fallback=False)
 if use_cnn:
-	face_detector = dlib.cnn_face_detection_model_v1(paths.dlib_data_dir + "mmod_human_face_detector.dat")
+	face_detector = dlib.cnn_face_detection_model_v1(paths.dlib_data_dir / "mmod_human_face_detector.dat")
 else:
 	face_detector = dlib.get_frontal_face_detector()
 
-pose_predictor = dlib.shape_predictor(paths.dlib_data_dir + "shape_predictor_5_face_landmarks.dat")
-face_encoder = dlib.face_recognition_model_v1(paths.dlib_data_dir + "dlib_face_recognition_resnet_model_v1.dat")
+pose_predictor = dlib.shape_predictor(paths.dlib_data_dir / "shape_predictor_5_face_landmarks.dat")
+face_encoder = dlib.face_recognition_model_v1(paths.dlib_data_dir / "dlib_face_recognition_resnet_model_v1.dat")
 
 user = builtins.howdy_user
 # The permanent file to store the encoded model in
-enc_file = paths.user_models_dir + user + ".dat"
+enc_file = paths.user_models_dir / f"{user}.dat"
 # Known encodings
 encodings = []
 

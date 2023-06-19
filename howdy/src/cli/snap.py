@@ -12,7 +12,7 @@ from i18n import _
 
 # Read the config
 config = configparser.ConfigParser()
-config.read(paths.config_dir + "config.ini")
+config.read(paths.config_dir / "config.ini")
 
 # Start video capture
 video_capture = VideoCapture(config)

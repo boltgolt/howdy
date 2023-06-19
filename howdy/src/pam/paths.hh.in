@@ -1,0 +1,1 @@
+const auto COMPARE_PROCESS_PATH = "@compare_script_path@";

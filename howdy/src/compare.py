@@ -49,7 +49,7 @@ def init_detector(lock):
 	global face_detector, pose_predictor, face_encoder
 
 	# Test if at lest 1 of the data files is there and abort if it's not
-	if not os.path.isfile(paths.dlib_data_dir + "shape_predictor_5_face_landmarks.dat"):
+	if not os.path.isfile(paths.dlib_data_dir / "shape_predictor_5_face_landmarks.dat"):
 		print(_("Data files have not been downloaded, please run the following commands:"))
 		print("\n\tcd " + paths.dlib_data_dir)
 		print("\tsudo ./install.sh\n")
@@ -58,13 +58,13 @@ def init_detector(lock):
 
 	# Use the CNN detector if enabled
 	if use_cnn:
-		face_detector = dlib.cnn_face_detection_model_v1(paths.dlib_data_dir + "mmod_human_face_detector.dat")
+		face_detector = dlib.cnn_face_detection_model_v1(paths.dlib_data_dir / "mmod_human_face_detector.dat")
 	else:
 		face_detector = dlib.get_frontal_face_detector()
 
 	# Start the others regardless
-	pose_predictor = dlib.shape_predictor(paths.dlib_data_dir + "shape_predictor_5_face_landmarks.dat")
-	face_encoder = dlib.face_recognition_model_v1(paths.dlib_data_dir + "dlib_face_recognition_resnet_model_v1.dat")
+	pose_predictor = dlib.shape_predictor(paths.dlib_data_dir / "shape_predictor_5_face_landmarks.dat")
+	face_encoder = dlib.face_recognition_model_v1(paths.dlib_data_dir / "dlib_face_recognition_resnet_model_v1.dat")
 
 	# Note the time it took to initialize detectors
 	timings["ll"] = time.time() - timings["ll"]
@@ -127,7 +127,7 @@ face_encoder = None
 
 # Try to load the face model from the models folder
 try:
-	models = json.load(open(paths.user_models_dir + user + ".dat"))
+	models = json.load(open(paths.user_models_dir / f"{user}.dat"))
 
 	for model in models:
 		encodings += model["data"]
@@ -140,7 +140,7 @@ if len(models) < 1:
 
 # Read config from disk
 config = configparser.ConfigParser()
-config.read(paths.config_dir + "config.ini")
+config.read(paths.config_dir / "config.ini")
 
 # Get all config values needed
 use_cnn = config.getboolean("core", "use_cnn", fallback=False)

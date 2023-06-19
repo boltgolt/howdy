@@ -10,7 +10,7 @@ import paths
 from i18n import _
 
 # Get the absolute filepath
-config_path = os.path.dirname(paths.config_dir) + "/config.ini"
+config_path = paths.config_dir / "/config.ini"
 
 # Check if enough arguments have been passed
 if len(builtins.howdy_args.arguments) < 2:

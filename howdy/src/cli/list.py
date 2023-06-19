@@ -19,7 +19,7 @@ if not os.path.exists(paths.user_models_dir):
 	sys.exit(1)
 
 # Path to the models file
-enc_file = paths.user_models_dir + user + ".dat"
+enc_file = paths.user_models_dir / f"{user}.dat"
 
 # Try to load the models file and abort if the user does not have it yet
 try:

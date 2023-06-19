@@ -27,7 +27,7 @@ if not os.path.exists(paths.user_models_dir):
 	sys.exit(1)
 
 # Path to the models file
-enc_file = paths.user_models_dir + user + ".dat"
+enc_file = paths.user_models_dir / f"{user}.dat"
 
 # Try to load the models file and abort if the user does not have it yet
 try:
@@ -71,7 +71,7 @@ if not found:
 
 # Remove the entire file if this encoding is the only one
 if len(encodings) == 1:
-	os.remove(paths.user_models_dir + user + ".dat")
+	os.remove(paths.user_models_dir / f"{user}.dat")
 	print(_("Removed last model, howdy disabled for user"))
 else:
 	# A place holder to contain the encodings that will remain

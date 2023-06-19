@@ -1,0 +1,2 @@
+option('pam_dir', type: 'string', value: '/lib/security', description: 'Set the pam_howdy destination directory')
+#option('fetch_dlib_data', type: 'boolean', value: false, description: 'Download dlib data files')

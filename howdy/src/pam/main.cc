@@ -41,12 +41,12 @@
 #include "enter_device.hh"
 #include "main.hh"
 #include "optional_task.hh"
+#include "paths.hh"
 
 const auto DEFAULT_TIMEOUT =
     std::chrono::duration<int, std::chrono::milliseconds::period>(100);
 const auto MAX_RETRIES = 5;
 const auto PYTHON_EXECUTABLE = "python3";
-const auto COMPARE_PROCESS_PATH = "/lib/security/howdy/compare.py";
 
 #define S(msg) gettext(msg)
 
@@ -80,7 +80,8 @@ auto howdy_error(int status,
       syslog(LOG_ERR, "Failure, image too dark");
       break;
     case CompareError::INVALID_DEVICE:
-      syslog(LOG_ERR, "Failure, not possible to open camera at configured path");
+      syslog(LOG_ERR,
+             "Failure, not possible to open camera at configured path");
       break;
     default:
       conv_function(PAM_ERROR_MSG,
@@ -321,7 +322,8 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
   // Wait for the end either of the child or the password input
   {
     std::unique_lock<std::mutex> lock(mutx);
-    convar.wait(lock, [&] { return confirmation_type != ConfirmationType::Unset; });
+    convar.wait(lock,
+                [&] { return confirmation_type != ConfirmationType::Unset; });
   }
 
   // The password has been entered or an error has occurred
