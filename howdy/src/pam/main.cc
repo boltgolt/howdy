@@ -310,9 +310,11 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
     return std::tuple<int, char *>(pam_res, auth_tok_ptr);
   });
 
+  auto ask_pass = auth_tok && workaround != Workaround::Off;
+
   // We ask for the password if the function requires it and if a workaround is
   // set
-  if (auth_tok && workaround != Workaround::Off) {
+  if (ask_pass) {
     pass_task.activate();
   }
 
@@ -350,8 +352,9 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
   int status = child_task.get();
 
   // If python process ran into a timeout
-  // Do not send enter presses or terminate the PAM function, as the user might still be typing their password
-  if (WEXITSTATUS(status) == CompareError::TIMEOUT_REACHED && WIFEXITED(status)) {
+  // Do not send enter presses or terminate the PAM function, as the user might
+  // still be typing their password
+  if (WIFEXITED(status) && WEXITSTATUS(status) != EXIT_SUCCESS && ask_pass) {
     // Wait for the password to be typed
     pass_task.stop(false);
 
@@ -359,13 +362,12 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
     std::tie(pam_res, password) = pass_task.get();
 
     if (pam_res != PAM_SUCCESS) {
-      return pam_res;
+      return howdy_status(username, status, config, conv_function);
     }
 
     // The password has been entered, we are passing it to PAM stack
     return PAM_IGNORE;
   }
-
 
   // We want to stop the password prompt, either by canceling the thread when
   // workaround is set to "native", or by emulating "Enter" input with
