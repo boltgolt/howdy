@@ -5,6 +5,7 @@ import cv2
 import os
 import datetime
 import numpy as np
+import paths_factory
 
 
 def generate(frames, text_lines):
@@ -50,15 +51,13 @@ def generate(frames, text_lines):
 		line_number += 1
 
 	# Made sure a snapshot folder exist
-	if not os.path.exists(paths.log_path):
-		os.makedirs(paths.log_path)
-	if not os.path.exists(paths.log_path / "snapshots"):
-		os.makedirs(paths.log_path / "snapshots")
+	if not os.path.exists(paths_factory.snapshots_dir_path()):
+		os.makedirs(paths_factory.snapshots_dir_path())
 
 	# Generate a filename based on the current time
 	filename = datetime.datetime.utcnow().strftime("%Y%m%dT%H%M%S.jpg")
 	# Write the image to that file
-	cv2.imwrite(paths.log_path / "snapshots" / filename, snap)
+	cv2.imwrite(paths_factory.snapshot_path(filename), snap)
 
 	# Return the saved file location
-	return paths.log_path / "/snapshots/" / filename
+	return paths_factory.snapshot_path(filename)

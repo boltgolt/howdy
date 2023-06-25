@@ -7,11 +7,12 @@ import builtins
 import fileinput
 import configparser
 import paths
+import paths_factory
 
 from i18n import _
 
 # Get the absolute filepath
-config_path = paths.config_dir.parent / "config.ini"
+config_path = paths_factory.config_file_path()
 
 # Read config from disk
 config = configparser.ConfigParser()

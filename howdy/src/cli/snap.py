@@ -6,13 +6,14 @@ import configparser
 import datetime
 import snapshot
 import paths
+import paths_factory
 from recorders.video_capture import VideoCapture
 
 from i18n import _
 
 # Read the config
 config = configparser.ConfigParser()
-config.read(paths.config_dir / "config.ini")
+config.read(paths_factory.config_file_path())
 
 # Start video capture
 video_capture = VideoCapture(config)

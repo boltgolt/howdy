@@ -5,6 +5,7 @@ import os
 import sys
 import builtins
 import paths
+import paths_factory
 
 from i18n import _
 
@@ -17,7 +18,7 @@ if not os.path.exists(paths.user_models_dir):
 	sys.exit(1)
 
 # Check if the user has a models file to delete
-if not os.path.isfile(paths.user_models_dir / f"{user}.dat"):
+if not os.path.isfile(paths_factory.user_model_path(user)):
 	print(_("{} has no models or they have been cleared already").format(user))
 	sys.exit(1)
 
@@ -33,5 +34,5 @@ if not builtins.howdy_args.y:
 		sys.exit(1)
 
 # Delete otherwise
-os.remove(paths.user_models_dir / f"{user}.dat")
+os.remove(paths_factory.user_model_path(user))
 print(_("\nModels cleared"))
