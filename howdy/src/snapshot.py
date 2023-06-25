@@ -30,7 +30,7 @@ def generate(frames, text_lines):
 	# Add the Howdy logo if there's space to do so
 	if len(frames) > 1:
 		# Load the logo from file
-		logo = cv2.imread(core_path + "/logo.png")
+		logo = cv2.imread(str(paths_factory.logo_path()))
 		# Calculate the position of the logo
 		logo_y = frame_height + 20
 		logo_x = frame_width * len(frames) - 210

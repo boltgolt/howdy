@@ -34,3 +34,6 @@ def snapshots_dir_path() -> PurePath:
 
 def snapshot_path(snapshot: str) -> PurePath:
     return snapshots_dir_path() / snapshot
+
+def logo_path() -> PurePath:
+    return paths.data_dir / "logo.png"
