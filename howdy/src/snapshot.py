@@ -15,8 +15,6 @@ def generate(frames, text_lines):
 	if len(frames) == 0:
 		return
 
-	# Get the path to the containing folder
-	core_path = os.path.dirname(os.path.abspath(__file__))
 	# Get frame dimensions
 	frame_height, frame_width, cc = frames[0].shape
 	# Spread the given frames out horizontally
@@ -56,8 +54,9 @@ def generate(frames, text_lines):
 
 	# Generate a filename based on the current time
 	filename = datetime.datetime.utcnow().strftime("%Y%m%dT%H%M%S.jpg")
+	filepath = str(paths_factory.snapshot_path(filename))
 	# Write the image to that file
-	cv2.imwrite(paths_factory.snapshot_path(filename), snap)
+	cv2.imwrite(filepath, snap)
 
 	# Return the saved file location
-	return paths_factory.snapshot_path(filename)
+	return filepath

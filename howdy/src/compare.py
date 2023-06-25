@@ -25,10 +25,6 @@ import numpy as np
 import _thread as thread
 import paths
 import paths_factory
-
-# Allow imports from the local howdy folder
-sys.path.append('/lib/security/howdy')
-
 from recorders.video_capture import VideoCapture
 from i18n import _
 

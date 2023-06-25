@@ -72,7 +72,7 @@ if not found:
 
 # Remove the entire file if this encoding is the only one
 if len(encodings) == 1:
-	os.remove(paths.user_models_dir / f"{user}.dat")
+	os.remove(paths_factory.user_model_path(user))
 	print(_("Removed last model, howdy disabled for user"))
 else:
 	# A place holder to contain the encodings that will remain

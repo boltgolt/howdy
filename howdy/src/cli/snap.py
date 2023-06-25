@@ -5,7 +5,6 @@ import os
 import configparser
 import datetime
 import snapshot
-import paths
 import paths_factory
 from recorders.video_capture import VideoCapture
 

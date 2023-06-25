@@ -3,7 +3,6 @@
 # Import required modules
 import os
 import subprocess
-import paths
 import paths_factory
 
 from i18n import _

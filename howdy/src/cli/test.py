@@ -10,7 +10,6 @@ import time
 import dlib
 import cv2
 import numpy as np
-import paths
 import paths_factory
 
 from i18n import _

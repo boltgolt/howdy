@@ -5,7 +5,6 @@ import sys
 import os
 import builtins
 import fileinput
-import paths
 import paths_factory
 
 from i18n import _

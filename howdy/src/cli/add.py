@@ -31,7 +31,7 @@ import cv2
 # Test if at lest 1 of the data files is there and abort if it's not
 if not os.path.isfile(paths_factory.shape_predictor_5_face_landmarks_path()):
 	print(_("Data files have not been downloaded, please run the following commands:"))
-	print("\n\tcd " + paths.dlib_data_dir)
+	print("\n\tcd " + str(paths.dlib_data_dir))
 	print("\tsudo ./install.sh\n")
 	sys.exit(1)
 
@@ -50,7 +50,7 @@ face_encoder = dlib.face_recognition_model_v1(str(paths_factory.dlib_face_recogn
 
 user = builtins.howdy_user
 # The permanent file to store the encoded model in
-enc_file = paths_factory.user_model_path(user)
+enc_file = str(paths_factory.user_model_path(user))
 # Known encodings
 encodings = []
 

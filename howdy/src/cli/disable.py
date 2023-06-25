@@ -6,7 +6,6 @@ import os
 import builtins
 import fileinput
 import configparser
-import paths
 import paths_factory
 
 from i18n import _
