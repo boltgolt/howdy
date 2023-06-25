@@ -48,7 +48,7 @@ def init_detector(lock):
 	# Test if at lest 1 of the data files is there and abort if it's not
 	if not os.path.isfile(str(paths_factory.shape_predictor_5_face_landmarks_path())):
 		print(_("Data files have not been downloaded, please run the following commands:"))
-		print("\n\tcd " + paths.dlib_data_dir)
+		print("\n\tcd " + str(paths.dlib_data_dir))
 		print("\tsudo ./install.sh\n")
 		lock.release()
 		exit(1)
