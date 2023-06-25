@@ -7,12 +7,10 @@ threads = dependency('threads')
 subdir('po')
 
 # Paths
-paths = { 'compare_script_path': compare_script_path }
-
 paths_h = configure_file(
 	input: 'paths.hh.in',
 	output: 'paths.hh',
-	configuration: paths,
+	configuration: pam_module_conf_data,
 	install_dir: get_option('pam_dir')
 )
 

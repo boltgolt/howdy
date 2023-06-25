@@ -197,7 +197,7 @@ auto check_enabled(const INIReader &config) -> int {
  */
 auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
               bool auth_tok) -> int {
-  INIReader config("/etc/howdy/config.ini");
+  INIReader config(CONFIG_FILE_PATH);
   openlog("pam_howdy", 0, LOG_AUTHPRIV);
 
   // Error out if we could not read the config file

@@ -9,6 +9,8 @@ usermodelsdir = get_option('user_models_dir') != '' ? get_option('user_models_di
 datadir = get_option('data_dir') != '' ? get_option('data_dir') : join_paths(get_option('prefix'), get_option('datadir'), 'howdy')
 logpath = get_option('log_path')
 
+config_path = join_paths(confdir, 'config.ini')
+
 py_conf = configuration_data({
     'config_dir':  confdir,
     'dlib_data_dir': dlibdatadir,
@@ -57,7 +59,10 @@ else
     pysourcesinstalldir = get_option('py_sources_dir') != '' ? get_option('py_sources_dir') : join_paths(get_option('prefix'), get_option('libdir'), 'howdy')
 endif
 
-compare_script_path = join_paths(pysourcesinstalldir, 'compare.py')
+pam_module_conf_data = configuration_data({ 
+    'compare_script_path': join_paths(pysourcesinstalldir, 'compare.py') ,
+    'config_file_path': config_path,
+})
 subdir('pam')
 
 if get_option('install_in_site_packages')
@@ -81,7 +86,6 @@ endif
 install_data('logo.png', install_tag: 'meta')
 
 fs = import('fs')
-config_path = join_paths(confdir, 'config.ini')
 if not fs.exists(config_path)
     install_data('config.ini', install_dir: confdir, install_mode: 'rwxr--r--', install_tag: 'config')
 endif
