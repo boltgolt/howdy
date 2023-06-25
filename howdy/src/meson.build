@@ -1,4 +1,4 @@
-project('howdy', 'cpp', license: 'MIT', license_files: '../../LICENSE', version: 'beta', meson_version: '>= 1.1.0')
+project('howdy', 'cpp', license: 'MIT', version: 'beta', meson_version: '>= 1.1.0')
 
 py = import('python').find_installation()
 py.dependency()
