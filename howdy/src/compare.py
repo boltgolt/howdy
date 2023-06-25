@@ -23,7 +23,6 @@ import subprocess
 import snapshot
 import numpy as np
 import _thread as thread
-import paths
 import paths_factory
 from recorders.video_capture import VideoCapture
 from i18n import _
@@ -48,7 +47,7 @@ def init_detector(lock):
 	# Test if at lest 1 of the data files is there and abort if it's not
 	if not os.path.isfile(str(paths_factory.shape_predictor_5_face_landmarks_path())):
 		print(_("Data files have not been downloaded, please run the following commands:"))
-		print("\n\tcd " + str(paths.dlib_data_dir))
+		print("\n\tcd " + paths_factory.dlib_data_dir_path())
 		print("\tsudo ./install.sh\n")
 		lock.release()
 		exit(1)

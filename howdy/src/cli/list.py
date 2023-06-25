@@ -6,7 +6,6 @@ import os
 import json
 import time
 import builtins
-import paths
 import paths_factory
 
 from i18n import _
@@ -14,7 +13,7 @@ from i18n import _
 user = builtins.howdy_user
 
 # Check if the models file has been created yet
-if not os.path.exists(paths.user_models_dir):
+if not os.path.exists(paths_factory.user_models_dir_path()):
 	print(_("Face models have not been initialized yet, please run:"))
 	print("\n\tsudo howdy -U " + user + " add\n")
 	sys.exit(1)

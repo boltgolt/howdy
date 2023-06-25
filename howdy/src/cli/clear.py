@@ -4,7 +4,6 @@
 import os
 import sys
 import builtins
-import paths
 import paths_factory
 
 from i18n import _
@@ -13,7 +12,7 @@ from i18n import _
 user = builtins.howdy_user
 
 # Check if the models folder is there
-if not os.path.exists(paths.user_models_dir):
+if not os.path.exists(paths_factory.user_models_dir_path()):
 	print(_("No models created yet, can't clear them if they don't exist"))
 	sys.exit(1)
 

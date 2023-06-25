@@ -8,7 +8,6 @@ import json
 import configparser
 import builtins
 import numpy as np
-import paths
 import paths_factory
 
 from recorders.video_capture import VideoCapture
@@ -31,7 +30,7 @@ import cv2
 # Test if at lest 1 of the data files is there and abort if it's not
 if not os.path.isfile(paths_factory.shape_predictor_5_face_landmarks_path()):
 	print(_("Data files have not been downloaded, please run the following commands:"))
-	print("\n\tcd " + str(paths.dlib_data_dir))
+	print("\n\tcd " + paths_factory.dlib_data_dir_path())
 	print("\tsudo ./install.sh\n")
 	sys.exit(1)
 
@@ -55,9 +54,9 @@ enc_file = str(paths_factory.user_model_path(user))
 encodings = []
 
 # Make the ./models folder if it doesn't already exist
-if not os.path.exists(paths.user_models_dir):
+if not os.path.exists(paths_factory.user_models_dir_path()):
 	print(_("No face model folder found, creating one"))
-	os.makedirs(paths.user_models_dir)
+	os.makedirs(paths_factory.user_models_dir_path())
 
 # To try read a premade encodings file if it exists
 try:
