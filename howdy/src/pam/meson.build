@@ -16,6 +16,8 @@ paths_h = configure_file(
 	install_dir: get_option('pam_dir')
 )
 
+pamdir = get_option('pam_dir') != '' ? get_option('pam_dir') : join_paths(get_option('libdir'), 'security')
+
 shared_library(
 	'pam_howdy',
 	'main.cc',
@@ -30,6 +32,7 @@ shared_library(
 		paths_h,
 	],
 	install: true,
-	install_dir: get_option('pam_dir'),
+	install_dir: pamdir,
+	install_tag: 'pam_module',
 	name_prefix: ''
 )

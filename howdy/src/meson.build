@@ -1,15 +1,15 @@
-project('howdy', 'cpp', license: 'MIT', license_files: '../LICENSE', version: 'beta', meson_version: '>= 1.1.0')
+project('howdy', 'cpp', license: 'MIT', license_files: '../../LICENSE', version: 'beta', meson_version: '>= 1.1.0')
 
 py = import('python').find_installation()
 py.dependency()
 
-confdir = join_paths(get_option('sysconfdir'), 'howdy')
-dlibdatadir = join_paths(confdir, 'dlib-data')
-usermodelsdir = join_paths(confdir, 'models')
-logpath = '/var/log/howdy'
+confdir = get_option('config_dir') != '' ? get_option('config_dir') : join_paths(get_option('sysconfdir'), 'howdy')
+dlibdatadir = get_option('dlib_data_dir') != '' ? get_option('dlib_data_dir') : join_paths(confdir, 'dlib-data')
+usermodelsdir = get_option('user_models_dir') != '' ? get_option('user_models_dir') : join_paths(confdir, 'models')
+logpath = get_option('log_path')
 
 py_conf = configuration_data({
-    'config_dir': confdir,
+    'config_dir':  confdir,
     'dlib_data_dir': dlibdatadir,
     'user_models_dir': usermodelsdir,
     'log_path': logpath,
@@ -48,18 +48,40 @@ py_sources = [
 ]
 
 # Include PAM module
-compare_script_path = join_paths(py.get_install_dir(), 'howdy', 'compare.py')
+if get_option('install_in_site_packages')
+    pysourcesinstalldir = join_paths(py.get_install_dir(), 'howdy')
+else  
+    pysourcesinstalldir = get_option('py_sources_dir') != '' ? get_option('py_sources_dir') : join_paths(get_option('prefix'), get_option('libdir'), 'howdy')
+endif
+
+compare_script_path = join_paths(pysourcesinstalldir, 'compare.py')
 subdir('pam')
 
-py.install_sources(
-    py_sources,
-    subdir: 'howdy',
-    preserve_path: true,
-)
+if get_option('install_in_site_packages')
+    py.install_sources(
+        py_sources,
+        subdir: 'howdy',
+        preserve_path: true,
+        install_mode: 'r--r--r--',
+        install_tag: 'py_sources',
+    )
+else
+    install_data(
+        py_sources,
+        preserve_path: true,
+        install_dir: pysourcesinstalldir,
+        install_mode: 'r--r--r--',
+        install_tag: 'py_sources',
+    )
+endif
 
 install_data('logo.png', install_tag: 'meta')
 
-install_data('config.ini', install_dir: confdir, install_mode: 'rwxr--r--', install_tag: 'config')
+fs = import('fs')
+config_path = join_paths(confdir, 'config.ini')
+if not fs.exists(config_path)
+    install_data('config.ini', install_dir: confdir, install_mode: 'rwxr--r--', install_tag: 'config')
+endif
 
 install_data('dlib-data/install.sh', install_dir: dlibdatadir, install_mode: 'rwxr--r--')
 
@@ -109,21 +131,18 @@ install_man('../howdy.1')
 
 # endif
 
-py_path = py.get_install_dir()
-cli_path = join_paths(py_path, 'howdy', 'cli.py')
-
+cli_path = join_paths(pysourcesinstalldir, 'cli.py')
 conf_data = configuration_data({ 'script_path': cli_path })
 
 bin_name = 'howdy'
-
 bin = configure_file(
     input: 'bin/howdy.in',
     output: bin_name,
     configuration: conf_data
 )
-
 install_data(
   bin,
   install_mode: 'rwxr-xr-x',
   install_dir: get_option('bindir'),
+  install_tag: 'bin',
 )
