@@ -1,7 +1,1 @@
-Checks: 'clang-diagnostic-*,clang-analyser-*,-clang-diagnostic-unused-command-line-argument,google-*,bugprone-*,modernize-*,performance-*,portability-*,readability-*,-bugprone-easily-swappable-*,-readability-magic-numbers,-google-readability-todo'
-WarningsAsErrors: 'clang-diagnostic-*,clang-analyser-*,-clang-diagnostic-unused-command-line-argument,google-*,bugprone-*,modernize-*,performance-*,portability-*,readability-*,-bugprone-easily-swappable-*,-readability-magic-numbers,-google-readability-todo'
-CheckOptions:
-  - key:             readability-function-cognitive-complexity.Threshold
-    value:           '50'
-
-# vim:syntax=yaml
+../.clang-tidy
