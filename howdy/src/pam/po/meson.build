@@ -6,5 +6,5 @@ localedir = '-DLOCALEDIR="@0@"'.format(get_option('prefix') / get_option('locale
 add_project_arguments(gettext_package, localedir, language: 'cpp')
 
 i18n.gettext(meson.project_name(),
-    args: [ '--directory=' + meson.source_root(), '--keyword=S:1' ]
+    args: [ '--directory=' + meson.current_source_dir(), '--keyword=S:1' ]
 )
