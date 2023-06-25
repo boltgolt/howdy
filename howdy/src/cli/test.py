@@ -58,13 +58,13 @@ use_cnn = config.getboolean('core', 'use_cnn', fallback=False)
 
 if use_cnn:
 	face_detector = dlib.cnn_face_detection_model_v1(
-		paths_factory.mmod_human_face_detector_path()
+		str(paths_factory.mmod_human_face_detector_path())
 	)
 else:
 	face_detector = dlib.get_frontal_face_detector()
 
-pose_predictor = dlib.shape_predictor(paths_factory.shape_predictor_5_face_landmarks_path())
-face_encoder = dlib.face_recognition_model_v1(paths_factory.dlib_face_recognition_resnet_model_v1_path())
+pose_predictor = dlib.shape_predictor(str(paths_factory.shape_predictor_5_face_landmarks_path()))
+face_encoder = dlib.face_recognition_model_v1(str(paths_factory.dlib_face_recognition_resnet_model_v1_path()))
 
 encodings = []
 models = None
