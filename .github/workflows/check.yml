@@ -20,7 +20,7 @@ jobs:
 
       - name: Build
         run: |
-          meson setup build howdy/src
+          meson setup -C build
           ninja -C build
 
       - name: Check source code
