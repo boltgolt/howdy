@@ -1,0 +1,3 @@
+#!/bin/sh
+
+env python3 "@script_path@" "$@"

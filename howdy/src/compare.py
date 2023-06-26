@@ -154,7 +154,7 @@ gtk_pipe = sys.stdout if gtk_stdout else subprocess.DEVNULL
 
 # Start the auth ui, register it to be always be closed on exit
 try:
-	gtk_proc = subprocess.Popen(["../howdy-gtk/src/init.py", "--start-auth-ui"], stdin=subprocess.PIPE, stdout=gtk_pipe, stderr=gtk_pipe)
+	gtk_proc = subprocess.Popen(["howdy-gtk", "--start-auth-ui"], stdin=subprocess.PIPE, stdout=gtk_pipe, stderr=gtk_pipe)
 	atexit.register(exit)
 except FileNotFoundError:
 	pass

@@ -40,8 +40,8 @@ def snapshot_path(snapshot: str) -> str:
     return str(snapshots_dir_path() / snapshot)
 
 
-def user_models_dir_path() -> str:
-    return str(paths.user_models_dir)
+def user_models_dir_path() -> PurePath:
+    return paths.user_models_dir
 
 
 def logo_path() -> str:
