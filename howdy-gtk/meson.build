@@ -25,7 +25,7 @@ sources = files(
 )
 
 py = import('python').find_installation(
-    modules: ['gi', 'elevate']
+    # modules: ['gi', 'elevate']
 )
 py.dependency()
 
