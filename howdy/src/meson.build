@@ -5,7 +5,9 @@ endif
 py = import('python').find_installation()
 py.dependency()
 
+datadir = get_option('prefix') / get_option('datadir') / 'howdy'
 py_conf = configuration_data(paths_dict)
+py_conf.set('data_dir', datadir)
 
 py_paths = configure_file(
     input: 'paths.py.in',
