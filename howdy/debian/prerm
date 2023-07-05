@@ -40,6 +40,3 @@ try:
 except Exception:
 	# This error is normal
 	pass
-
-# Remove dlib
-subprocess.call(["pip3", "uninstall", "dlib", "-y", "--no-cache-dir"])
