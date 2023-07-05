@@ -119,6 +119,8 @@ handleStatus(sc(["chmod 755 -R /lib/security/howdy/cli"], shell=True))
 print("Permissions set")
 
 # Make the CLI executable as howdy
+if os.path.exists("/usr/local/bin/howdy"):
+	os.unlink("/usr/local/bin/howdy")
 os.symlink("/lib/security/howdy/cli.py", "/usr/local/bin/howdy")
 os.chmod("/usr/local/bin/howdy", 0o755)
 print("Howdy command installed")
