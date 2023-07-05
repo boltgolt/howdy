@@ -2,6 +2,7 @@
 # Used to check cameras before committing to install
 # Executed before primary apt install of files
 
+import os
 import subprocess
 import sys
 
