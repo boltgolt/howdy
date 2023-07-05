@@ -1,5 +1,4 @@
 src/cli/. lib/security/howdy/cli
-src/locales/. lib/security/howdy/locales
 src/recorders/. lib/security/howdy/recorders
 src/rubberstamps/. lib/security/howdy/rubberstamps
 src/cli.py lib/security/howdy
