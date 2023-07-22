@@ -13,7 +13,7 @@ license=('MIT')
 depends=(
 	'opencv'
 	'hdf5'
-	'pam-python'
+	'python-pam'
 	'python3'
 	'python-dlib'
 	'python-numpy'
