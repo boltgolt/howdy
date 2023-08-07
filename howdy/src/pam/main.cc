@@ -66,10 +66,10 @@ auto howdy_error(int status,
 
     switch (status) {
     case CompareError::NO_FACE_MODEL:
-      conv_function(PAM_ERROR_MSG, S("There is no face model known"));
       syslog(LOG_NOTICE, "Failure, no face model known");
       break;
     case CompareError::TIMEOUT_REACHED:
+      conv_function(PAM_ERROR_MSG, S("Failure, timeout reached"));
       syslog(LOG_ERR, "Failure, timeout reached");
       break;
     case CompareError::ABORT:
@@ -244,12 +244,7 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
   textdomain(GETTEXT_PACKAGE);
 
   // If enabled, send a notice to the user that facial login is being attempted
-  if (config.GetBoolean("core", "detection_notice", false)) {
-    if ((conv_function(PAM_TEXT_INFO, S("Attempting facial authentication"))) !=
-        PAM_SUCCESS) {
-      syslog(LOG_ERR, "Failed to send detection notice");
-    }
-  }
+  bool detection_notice = config.GetBoolean("core", "detection_notice", true);
 
   // Get the username from PAM, needed to match correct face model
   char *username = nullptr;
@@ -259,17 +254,45 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
     return pam_res;
   }
 
+  int conv_pipe[2];
+
+  if (pipe (conv_pipe)) {
+    syslog(LOG_ERR, "Pipe failed.");
+    return PAM_SYSTEM_ERR;
+  }
+
+  posix_spawn_file_actions_t action;
+  posix_spawn_file_actions_init(&action);
+  posix_spawn_file_actions_addclose(&action, conv_pipe[0]);
+  posix_spawn_file_actions_adddup2(&action, conv_pipe[1], 1);
+  posix_spawn_file_actions_addclose(&action, conv_pipe[1]);
+
   const char *const args[] = {PYTHON_EXECUTABLE, // NOLINT
                               COMPARE_PROCESS_PATH, username, nullptr};
   pid_t child_pid;
 
   // Start the python subprocess
-  if (posix_spawnp(&child_pid, PYTHON_EXECUTABLE, nullptr, nullptr,
+  if (posix_spawnp(&child_pid, PYTHON_EXECUTABLE, &action, nullptr,
                    const_cast<char *const *>(args), nullptr) != 0) {
     syslog(LOG_ERR, "Can't spawn the howdy process: %s (%d)", strerror(errno),
            errno);
     return PAM_SYSTEM_ERR;
   }
+
+  // show the PAM message from the compare script
+  optional_task<void> child_conv([&] {
+    char buffer[100];
+    while(read(conv_pipe[0], buffer, 100)) {
+      if (!strncmp(buffer, "HAS_MODEL", 9) && detection_notice) {
+        if ((conv_function(PAM_TEXT_INFO,
+                           S("Attempting facial authentication"))) !=
+            PAM_SUCCESS) {
+          syslog(LOG_ERR, "Failed to send detection notice");
+        }
+      }
+    }
+  });
+  child_conv.activate();
 
   // NOTE: We should replace mutex and condition_variable by atomic wait, but
   // it's too recent (C++20)
@@ -347,6 +370,7 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
 
   // The compare process has finished its execution
   child_task.stop(false);
+  child_conv.stop(true);
 
   // Get python process status code
   int status = child_task.get();

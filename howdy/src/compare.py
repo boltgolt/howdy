@@ -140,6 +140,11 @@ except FileNotFoundError:
 if len(models) < 1:
 	exit(10)
 
+# notify the PAM module so that it issues a message
+sys.stdout.flush()
+print("HAS_MODEL")
+sys.stdout.flush()
+
 # Read config from disk
 config = configparser.ConfigParser()
 config.read(PATH + "/config.ini")
