@@ -78,13 +78,16 @@ if not builtins.howdy_args.plain:
 # Set the default label
 label = "Initial model"
 
+# some id's can be skipped, but the last id is always the maximum
+next_id = encodings[-1]["id"] + 1 if encodings else 0
+
 # Get the label from the cli arguments if provided
 if builtins.howdy_args.arguments:
 	label = builtins.howdy_args.arguments[0]
 
-# If models already exist, set that default label
-elif encodings:
-	label = _("Model #") + str(len(encodings) + 1)
+# Or set the default label
+else:
+	label = _("Model #") + str(next_id)
 
 # Keep de default name if we can't ask questions
 if builtins.howdy_args.y:
@@ -106,7 +109,7 @@ if "," in label:
 insert_model = {
 	"time": int(time.time()),
 	"label": label,
-	"id": len(encodings),
+	"id": next_id,
 	"data": []
 }
 
