@@ -124,6 +124,12 @@ class VideoCapture:
 				self.config.get("video", "device_path"),
 				cv2.CAP_V4L
 			)
+			# Set the capture frame rate
+			# Without this the first detected (and possibly lower) frame rate is used, -1 seems to select the highest
+			# Use 0 as a fallback to avoid breaking an existing setup, new installs should default to -1
+			self.fps = self.config.getint("video", "device_fps", fallback=0)
+			if self.fps != 0:
+				self.internal.set(cv2.CAP_PROP_FPS, self.fps)
 
 		# Force MJPEG decoding if true
 		if self.config.getboolean("video", "force_mjpeg", fallback=False):

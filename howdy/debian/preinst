@@ -4,6 +4,7 @@
 
 import subprocess
 import sys
+import os
 
 # Backup the config file if we're upgrading
 if "upgrade" in sys.argv:
