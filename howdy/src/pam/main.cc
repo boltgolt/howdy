@@ -256,7 +256,9 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
   if (!std::ifstream(model_path)) {
     return howdy_status(username, CompareError::NO_FACE_MODEL, config,
                         conv_function);
-  } else if (config.GetBoolean("core", "detection_notice", true)) {
+  }
+
+  if (config.GetBoolean("core", "detection_notice", true)) {
     if ((conv_function(PAM_TEXT_INFO, S("Attempting facial authentication"))) !=
         PAM_SUCCESS) {
       syslog(LOG_ERR, "Failed to send detection notice");
