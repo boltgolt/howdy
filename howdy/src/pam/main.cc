@@ -66,10 +66,10 @@ auto howdy_error(int status,
 
     switch (status) {
     case CompareError::NO_FACE_MODEL:
-      conv_function(PAM_ERROR_MSG, S("There is no face model known"));
       syslog(LOG_NOTICE, "Failure, no face model known");
       break;
     case CompareError::TIMEOUT_REACHED:
+      conv_function(PAM_ERROR_MSG, S("Failure, timeout reached"));
       syslog(LOG_ERR, "Failure, timeout reached");
       break;
     case CompareError::ABORT:
@@ -243,20 +243,26 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
   bindtextdomain(GETTEXT_PACKAGE, LOCALEDIR);
   textdomain(GETTEXT_PACKAGE);
 
-  // If enabled, send a notice to the user that facial login is being attempted
-  if (config.GetBoolean("core", "detection_notice", false)) {
-    if ((conv_function(PAM_TEXT_INFO, S("Attempting facial authentication"))) !=
-        PAM_SUCCESS) {
-      syslog(LOG_ERR, "Failed to send detection notice");
-    }
-  }
-
   // Get the username from PAM, needed to match correct face model
   char *username = nullptr;
   if ((pam_res = pam_get_user(pamh, const_cast<const char **>(&username),
                               nullptr)) != PAM_SUCCESS) {
     syslog(LOG_ERR, "Failed to get username");
     return pam_res;
+  }
+
+  // pre-check if this user has face model file
+  auto model_path = std::string("/etc/howdy/models/") + username + ".dat";
+  if (!std::ifstream(model_path)) {
+    return howdy_status(username, CompareError::NO_FACE_MODEL, config,
+                        conv_function);
+  }
+
+  if (config.GetBoolean("core", "detection_notice", true)) {
+    if ((conv_function(PAM_TEXT_INFO, S("Attempting facial authentication"))) !=
+        PAM_SUCCESS) {
+      syslog(LOG_ERR, "Failed to send detection notice");
+    }
   }
 
   const char *const args[] = {PYTHON_EXECUTABLE, // NOLINT
