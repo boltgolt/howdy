@@ -9,6 +9,7 @@
 #include <spawn.h>
 #include <stdexcept>
 #include <sys/signalfd.h>
+#include <sys/stat.h>
 #include <sys/syslog.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -66,10 +67,10 @@ auto howdy_error(int status,
 
     switch (status) {
     case CompareError::NO_FACE_MODEL:
-      conv_function(PAM_ERROR_MSG, S("There is no face model known"));
       syslog(LOG_NOTICE, "Failure, no face model known");
       break;
     case CompareError::TIMEOUT_REACHED:
+      conv_function(PAM_ERROR_MSG, S("Failure, timeout reached"));
       syslog(LOG_ERR, "Failure, timeout reached");
       break;
     case CompareError::ABORT:
@@ -134,10 +135,11 @@ auto howdy_status(char *username, int status, const INIReader &config,
  * Check if Howdy should be enabled according to the configuration and the
  * environment.
  * @param  config INI configuration
+ * @param  username Username
  * @return        Returns PAM_AUTHINFO_UNAVAIL if it shouldn't be enabled,
  * PAM_SUCCESS otherwise
  */
-auto check_enabled(const INIReader &config) -> int {
+auto check_enabled(const INIReader &config, const char* username) -> int {
   // Stop executing if Howdy has been disabled in the config
   if (config.GetBoolean("core", "disabled", false)) {
     syslog(LOG_INFO, "Skipped authentication, Howdy is disabled");
@@ -183,6 +185,13 @@ auto check_enabled(const INIReader &config) -> int {
     globfree(&glob_result);
   }
 
+  // pre-check if this user has face model file
+  auto model_path = std::string(USER_MODELS_DIR) + "/" + username + ".dat";
+  struct stat s_;
+  if (stat(model_path.c_str(), &s_) != 0) {
+    return PAM_AUTHINFO_UNAVAIL;
+  }
+
   return PAM_SUCCESS;
 }
 
@@ -210,8 +219,16 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
   // Will contain the responses from PAM functions
   int pam_res = PAM_IGNORE;
 
+  // Get the username from PAM, needed to match correct face model
+  char *username = nullptr;
+  if ((pam_res = pam_get_user(pamh, const_cast<const char **>(&username),
+                              nullptr)) != PAM_SUCCESS) {
+    syslog(LOG_ERR, "Failed to get username");
+    return pam_res;
+  }
+
   // Check if we should continue
-  if ((pam_res = check_enabled(config)) != PAM_SUCCESS) {
+  if ((pam_res = check_enabled(config, username)) != PAM_SUCCESS) {
     return pam_res;
   }
 
@@ -244,20 +261,11 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
   bindtextdomain(GETTEXT_PACKAGE, LOCALEDIR);
   textdomain(GETTEXT_PACKAGE);
 
-  // If enabled, send a notice to the user that facial login is being attempted
-  if (config.GetBoolean("core", "detection_notice", false)) {
+  if (config.GetBoolean("core", "detection_notice", true)) {
     if ((conv_function(PAM_TEXT_INFO, S("Attempting facial authentication"))) !=
         PAM_SUCCESS) {
       syslog(LOG_ERR, "Failed to send detection notice");
     }
-  }
-
-  // Get the username from PAM, needed to match correct face model
-  char *username = nullptr;
-  if ((pam_res = pam_get_user(pamh, const_cast<const char **>(&username),
-                              nullptr)) != PAM_SUCCESS) {
-    syslog(LOG_ERR, "Failed to get username");
-    return pam_res;
   }
 
   const char *const args[] = {PYTHON_EXECUTABLE, // NOLINT

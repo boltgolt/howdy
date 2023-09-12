@@ -49,10 +49,9 @@ else
     pysourcesinstalldir = get_option('py_sources_dir') != '' ? get_option('py_sources_dir') : join_paths(get_option('prefix'), get_option('libdir'), 'howdy')
 endif
 
-pam_module_conf_data = configuration_data({ 
-    'compare_script_path': join_paths(pysourcesinstalldir, 'compare.py') ,
-    'config_file_path': config_path,
-})
+pam_module_conf_data = configuration_data(paths_dict)
+pam_module_conf_data.set('compare_script_path', join_paths(pysourcesinstalldir, 'compare.py'))
+pam_module_conf_data.set('config_file_path', config_path)
 subdir('pam')
 
 if get_option('install_in_site_packages')
