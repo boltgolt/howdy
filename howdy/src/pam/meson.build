@@ -14,7 +14,7 @@ paths_h = configure_file(
 	install_dir: get_option('pam_dir')
 )
 
-pamdir = get_option('pam_dir') != '' ? get_option('pam_dir') : join_paths(get_option('libdir'), 'security')
+pamdir = get_option('pam_dir') != '' ? get_option('pam_dir') : join_paths(get_option('prefix'), get_option('libdir'), 'security')
 
 shared_library(
 	'pam_howdy',
