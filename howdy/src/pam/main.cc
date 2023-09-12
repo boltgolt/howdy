@@ -187,8 +187,8 @@ auto check_enabled(const INIReader &config, const char* username) -> int {
 
   // pre-check if this user has face model file
   auto model_path = std::string(USER_MODELS_DIR) + "/" + username + ".dat";
-  struct stat s_;
-  if (stat(model_path.c_str(), &s_) != 0) {
+  struct stat stat_;
+  if (stat(model_path.c_str(), &stat_) != 0) {
     return PAM_AUTHINFO_UNAVAIL;
   }
 
@@ -201,11 +201,11 @@ auto check_enabled(const INIReader &config, const char* username) -> int {
  * @param  flags    Flags passed on to us by PAM, XORed
  * @param  argc     Amount of rules in the PAM config (disregared)
  * @param  argv     Options defined in the PAM config
- * @param  auth_tok True if we should ask for a password too
+ * @param  ask_auth_tok True if we should ask for a password too
  * @return          Returns a PAM return code
  */
 auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
-              bool auth_tok) -> int {
+              bool ask_auth_tok) -> int {
   INIReader config(CONFIG_FILE_PATH);
   openlog("pam_howdy", 0, LOG_AUTHPRIV);
 
@@ -319,7 +319,7 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
     return std::tuple<int, char *>(pam_res, auth_tok_ptr);
   });
 
-  auto ask_pass = auth_tok && workaround != Workaround::Off;
+  auto ask_pass = ask_auth_tok && workaround != Workaround::Off;
 
   // We ask for the password if the function requires it and if a workaround is
   // set
