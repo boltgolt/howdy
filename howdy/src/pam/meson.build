@@ -10,8 +10,7 @@ subdir('po')
 paths_h = configure_file(
 	input: 'paths.hh.in',
 	output: 'paths.hh',
-	configuration: pam_module_conf_data,
-	install_dir: get_option('pam_dir')
+	configuration: pam_module_conf_data
 )
 
 pamdir = get_option('pam_dir') != '' ? get_option('pam_dir') : join_paths(get_option('prefix'), get_option('libdir'), 'security')

@@ -45,7 +45,7 @@ def init_detector(lock):
 	global face_detector, pose_predictor, face_encoder
 
 	# Test if at lest 1 of the data files is there and abort if it's not
-	if not os.path.isfile(str(paths_factory.shape_predictor_5_face_landmarks_path())):
+	if not os.path.isfile(paths_factory.shape_predictor_5_face_landmarks_path()):
 		print(_("Data files have not been downloaded, please run the following commands:"))
 		print("\n\tcd " + paths_factory.dlib_data_dir_path())
 		print("\tsudo ./install.sh\n")
@@ -54,13 +54,13 @@ def init_detector(lock):
 
 	# Use the CNN detector if enabled
 	if use_cnn:
-		face_detector = dlib.cnn_face_detection_model_v1(str(paths_factory.mmod_human_face_detector_path()))
+		face_detector = dlib.cnn_face_detection_model_v1(paths_factory.mmod_human_face_detector_path())
 	else:
 		face_detector = dlib.get_frontal_face_detector()
 
 	# Start the others regardless
-	pose_predictor = dlib.shape_predictor(str(paths_factory.shape_predictor_5_face_landmarks_path()))
-	face_encoder = dlib.face_recognition_model_v1(str(paths_factory.dlib_face_recognition_resnet_model_v1_path()))
+	pose_predictor = dlib.shape_predictor(paths_factory.shape_predictor_5_face_landmarks_path())
+	face_encoder = dlib.face_recognition_model_v1(paths_factory.dlib_face_recognition_resnet_model_v1_path())
 
 	# Note the time it took to initialize detectors
 	timings["ll"] = time.time() - timings["ll"]

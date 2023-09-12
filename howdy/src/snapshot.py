@@ -30,7 +30,7 @@ def generate(frames, text_lines):
 	# Add the Howdy logo if there's space to do so
 	if len(frames) > 1:
 		# Load the logo from file
-		logo = cv2.imread(str(paths_factory.logo_path()))
+		logo = cv2.imread(paths_factory.logo_path())
 		# Calculate the position of the logo
 		logo_y = frame_height + 20
 		logo_x = frame_width * len(frames) - 210
@@ -54,7 +54,7 @@ def generate(frames, text_lines):
 
 	# Generate a filename based on the current time
 	filename = datetime.datetime.utcnow().strftime("%Y%m%dT%H%M%S.jpg")
-	filepath = str(paths_factory.snapshot_path(filename))
+	filepath = paths_factory.snapshot_path(filename)
 	# Write the image to that file
 	cv2.imwrite(filepath, snap)
 
