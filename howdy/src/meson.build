@@ -53,6 +53,21 @@ pam_module_conf_data = configuration_data(paths_dict)
 pam_module_conf_data.set('compare_script_path', join_paths(pysourcesinstalldir, 'compare.py'))
 pam_module_conf_data.set('config_file_path', config_path)
 subdir('pam')
+if get_option('install_pam_config')
+    # pamdir is inherited from the pam subproject
+    pam_config = configure_file(
+        input: 'pam-config/howdy.in',
+        output: 'pam-config',
+        configuration: {'pamdir': pamdir}
+    )
+    install_data(
+        pam_config,
+        install_dir: get_option('prefix') / get_option('datadir') / 'pam-configs',
+        install_mode: 'rwxr-xr-x',
+        install_tag: 'pam',
+        rename: 'howdy',
+    )
+endif
 
 if get_option('install_in_site_packages')
     py.install_sources(
@@ -73,6 +88,18 @@ else
 endif
 
 install_data('logo.png', install_tag: 'meta')
+autocomplete = configure_file(
+    input: 'autocomplete/howdy.in',
+    output: 'autocomplete',
+    configuration: configuration_data({ 'config_path': config_path })
+)
+install_data(
+    autocomplete,
+    install_dir: join_paths(get_option('prefix'), get_option('datadir'), 'bash-completion', 'completions'),
+    install_mode: 'rwxr--r--',
+    install_tag: 'bash_completion',
+    rename: 'howdy',
+)
 
 fs = import('fs')
 if not fs.exists(config_path)
