@@ -15,6 +15,7 @@ import sys
 import os
 import json
 import configparser
+import re
 import dlib
 import cv2
 import datetime
@@ -23,9 +24,14 @@ import subprocess
 import snapshot
 import numpy as np
 import _thread as thread
+import syslog
+import time
 
 # Allow imports from the local howdy folder
 sys.path.append('/lib/security/howdy')
+
+# Open syslog
+syslog.openlog("pam_howdy", 0, syslog.LOG_AUTHPRIV)
 
 from recorders.video_capture import VideoCapture
 from i18n import _
@@ -210,6 +216,36 @@ timeout = config.getint("video", "timeout", fallback=4)
 dark_threshold = config.getfloat("video", "dark_threshold", fallback=60)
 end_report = config.getboolean("debug", "end_report", fallback=False)
 
+# Check dark hours mode
+dark_inactive = config.get("core", "dark_inactive", fallback="off")
+if dark_inactive != "off" and dark_inactive != "camera" and dark_inactive != "on":
+	syslog.syslog(syslog.LOG_ERR, "Error parsing 'dark_inactive' from config: incorrect value")
+	exit(12)
+dark_start, dark_end = 0, 0
+dark_inactive_now = False
+# all other options are handled in pam module
+if dark_inactive == "camera":
+    dark_hours = config.get("core", "dark_hours", fallback="00:00-00:00")
+
+    # Get hours and minutes
+    dark_hours_regex = "(0[0-9]|1[0-9]|2[0-3]):([0-5][0-9])-(0[0-9]|1[0-9]|2[0-3]):([0-5][0-9])"
+    dark_hours_match = re.fullmatch(dark_hours_regex, dark_hours)
+    if not dark_hours_match:
+        syslog.syslog(syslog.LOG_ERR, "Error parsing 'dark_hours' from config: incorrect value")
+        exit(12)
+    dark_start = int(dark_hours_match.group(1))*60+int(dark_hours_match.group(2))
+    dark_end = int(dark_hours_match.group(3))*60+int(dark_hours_match.group(4))
+
+    # Get local hour and minute
+    timenowseconds = time.time()
+    localtimenow = time.localtime(timenowseconds)
+    local_minutes = localtimenow.tm_hour*60+localtimenow.tm_min
+
+    # Set to stop if dark hour
+    if (dark_start <= dark_end and dark_start <= local_minutes and local_minutes <= dark_end) \
+    or (dark_start > dark_end and (dark_start <= local_minutes or local_minutes <= dark_end)):
+        dark_inactive_now = True
+
 # Initiate histogram equalization
 clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
 
@@ -277,6 +313,10 @@ while True:
 	# skip to the next frame
 	if (darkness > dark_threshold):
 		dark_tries += 1
+		# Stop if dark hour
+		if dark_inactive_now and frames == 1:
+			syslog.syslog(syslog.LOG_INFO, "Aborted authentication, dark hour detected")
+			exit(13)
 		continue
 
 	# If the height is too high
