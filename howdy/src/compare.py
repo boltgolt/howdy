@@ -300,6 +300,11 @@ while True:
 	# Calculate frame darkness
 	darkness = (hist[0] / hist_total * 100)
 
+	# Stop if dark hour
+	if darkness > dark_threshold and dark_inactive_now and frames == 1:
+		syslog.syslog(syslog.LOG_INFO, "Aborted authentication, dark hour detected")
+		exit(13)
+
 	# If the image is fully black due to a bad camera read,
 	# skip to the next frame
 	if (hist_total == 0) or (darkness == 100):
@@ -313,10 +318,6 @@ while True:
 	# skip to the next frame
 	if (darkness > dark_threshold):
 		dark_tries += 1
-		# Stop if dark hour
-		if dark_inactive_now and frames == 1:
-			syslog.syslog(syslog.LOG_INFO, "Aborted authentication, dark hour detected")
-			exit(13)
 		continue
 
 	# If the height is too high
