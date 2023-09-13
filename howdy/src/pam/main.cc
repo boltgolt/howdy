@@ -31,6 +31,7 @@
 #include <thread>
 #include <tuple>
 #include <vector>
+#include <regex>
 
 #include <INIReader.h>
 
@@ -141,6 +142,41 @@ auto check_enabled(const INIReader &config) -> int {
   if (config.GetBoolean("core", "disabled", false)) {
     syslog(LOG_INFO, "Skipped authentication, Howdy is disabled");
     return PAM_AUTHINFO_UNAVAIL;
+  }
+
+  // Check dark hours mode
+  std::string dark_inactive = config.GetString("core", "dark_inactive", "off");
+  if (dark_inactive != "off" && dark_inactive != "camera" && dark_inactive != "on") {
+    syslog(LOG_ERR, "Error parsing 'dark_inactive' from config: incorrect value");
+    return PAM_SYSTEM_ERR;
+  }
+
+  // 'camera' option is handled in python code
+  if (dark_inactive == "on") {
+    std::string dark_hours = config.GetString("core", "dark_hours", "00:00-00:00");
+
+    // Get hours and minutes
+    std::regex dark_hours_regex("(0[0-9]|1[0-9]|2[0-3]):([0-5][0-9])-(0[0-9]|1[0-9]|2[0-3]):([0-5][0-9])");
+    std::smatch dark_hours_match;
+    if (!std::regex_match(dark_hours, dark_hours_match, dark_hours_regex)) {
+      syslog(LOG_ERR, "Error parsing 'dark_hours' from config: incorrect value");
+      return PAM_SYSTEM_ERR;
+    }
+    int dark_start = std::stoi(dark_hours_match[1].str())*60+std::stoi(dark_hours_match[2].str()),
+	dark_end = std::stoi(dark_hours_match[3].str())*60+std::stoi(dark_hours_match[4].str());
+
+    // Get local hour and minute
+    time_t timenowseconds = time(nullptr);
+    std::tm localtimenow;
+    localtime_r(&timenowseconds, &localtimenow);
+    int local_minutes = localtimenow.tm_hour*60+localtimenow.tm_min;
+
+    // Stop if dark hour
+    if ((dark_start <= dark_end && dark_start <= local_minutes && local_minutes <= dark_end)
+     || (dark_start <= local_minutes || local_minutes <= dark_end)) {
+      syslog(LOG_INFO, "Skipped authentication, dark hour");
+      return PAM_AUTHINFO_UNAVAIL;
+    }
   }
 
   // Stop if we're in a remote shell and configured to exit
