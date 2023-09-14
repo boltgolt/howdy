@@ -1,5 +1,3 @@
-project('pam_howdy', 'cpp', version: '0.1.0', default_options: ['cpp_std=c++14'])
-
 inih_cpp = dependency('INIReader', fallback: ['inih', 'INIReader_dep'])
 libevdev = dependency('libevdev')
 libpam = meson.get_compiler('cpp').find_library('pam')
@@ -7,6 +5,15 @@ threads = dependency('threads')
 
 # Translations
 subdir('po')
+
+# Paths
+paths_h = configure_file(
+	input: 'paths.hh.in',
+	output: 'paths.hh',
+	configuration: pam_module_conf_data
+)
+
+pamdir = get_option('pam_dir') != '' ? get_option('pam_dir') : join_paths(get_option('prefix'), get_option('libdir'), 'security')
 
 shared_library(
 	'pam_howdy',
@@ -18,7 +25,11 @@ shared_library(
 		threads,
 		libevdev,
 	],
+	link_depends: [
+		paths_h,
+	],
 	install: true,
-	install_dir: '/lib/security',
+	install_dir: pamdir,
+	install_tag: 'pam_module',
 	name_prefix: ''
 )

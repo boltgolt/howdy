@@ -1,6 +1,7 @@
 import configparser
 
 from i18n import _
+import paths_factory
 
 from gi.repository import Gtk as gtk
 from gi.repository import Gdk as gdk
@@ -17,7 +18,7 @@ def on_page_switch(self, notebook, page, page_num):
 
 		try:
 			self.config = configparser.ConfigParser()
-			self.config.read("/etc/howdy/config.ini")
+			self.config.read(paths_factory.config_file_path())
 		except Exception:
 			print(_("Can't open camera"))
 

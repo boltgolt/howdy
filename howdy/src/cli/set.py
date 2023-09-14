@@ -5,11 +5,12 @@ import sys
 import os
 import builtins
 import fileinput
+import paths_factory
 
 from i18n import _
 
 # Get the absolute filepath
-config_path = os.path.dirname("/etc/howdy/") + "/config.ini"
+config_path = paths_factory.config_file_path()
 
 # Check if enough arguments have been passed
 if len(builtins.howdy_args.arguments) < 2:

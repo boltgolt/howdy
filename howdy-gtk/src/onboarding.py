@@ -3,6 +3,7 @@ import os
 import re
 import time
 import subprocess
+import paths_factory
 
 from i18n import _
 
@@ -22,7 +23,7 @@ class OnboardingWindow(gtk.Window):
 		self.connect("delete_event", self.exit)
 
 		self.builder = gtk.Builder()
-		self.builder.add_from_file("./onboarding.glade")
+		self.builder.add_from_file(paths_factory.onboarding_wireframe_path())
 		self.builder.connect_signals(self)
 
 		self.window = self.builder.get_object("onboardingwindow")
@@ -67,29 +68,17 @@ class OnboardingWindow(gtk.Window):
 			self.execute_slide6()
 
 	def execute_slide1(self):
-		conf_path = "/etc/howdy"
-
 		self.downloadoutputlabel = self.builder.get_object("downloadoutputlabel")
 		eventbox = self.builder.get_object("downloadeventbox")
 		eventbox.modify_bg(gtk.StateType.NORMAL, gdk.Color(red=0, green=0, blue=0))
 
-		for lib_site in ("/lib", "/usr/lib", "/lib64", "/usr/lib64"):
-			if os.path.exists(lib_site + "/security/howdy/"):
-				break
-			else:
-				lib_site = None
-
-		if lib_site is None:
-			self.downloadoutputlabel.set_text(_("Unable to find Howdy's installation location"))
-			return
-
-
-		if os.path.exists(conf_path + "/dlib-data/shape_predictor_5_face_landmarks.dat"):
+		# TODO: Better way to do this?
+		if os.path.exists(paths_factory.dlib_data_dir_path() / "shape_predictor_5_face_landmarks.dat"):
 			self.downloadoutputlabel.set_text(_("Datafiles have already been downloaded!\nClick Next to continue"))
 			self.enable_next()
 			return
 
-		self.proc = subprocess.Popen("./install.sh", stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True, cwd=conf_path + "/howdy/dlib-data")
+		self.proc = subprocess.Popen("./install.sh", stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True, cwd=paths_factory.dlib_data_dir_path())
 
 		self.download_lines = []
 		self.read_download_line()

@@ -9,6 +9,7 @@
 #include <spawn.h>
 #include <stdexcept>
 #include <sys/signalfd.h>
+#include <sys/stat.h>
 #include <sys/syslog.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -41,12 +42,12 @@
 #include "enter_device.hh"
 #include "main.hh"
 #include "optional_task.hh"
+#include "paths.hh"
 
 const auto DEFAULT_TIMEOUT =
     std::chrono::duration<int, std::chrono::milliseconds::period>(100);
 const auto MAX_RETRIES = 5;
 const auto PYTHON_EXECUTABLE = "python3";
-const auto COMPARE_PROCESS_PATH = "/lib/security/howdy/compare.py";
 
 #define S(msg) gettext(msg)
 
@@ -80,7 +81,8 @@ auto howdy_error(int status,
       syslog(LOG_ERR, "Failure, image too dark");
       break;
     case CompareError::INVALID_DEVICE:
-      syslog(LOG_ERR, "Failure, not possible to open camera at configured path");
+      syslog(LOG_ERR,
+             "Failure, not possible to open camera at configured path");
       break;
     default:
       conv_function(PAM_ERROR_MSG,
@@ -133,10 +135,11 @@ auto howdy_status(char *username, int status, const INIReader &config,
  * Check if Howdy should be enabled according to the configuration and the
  * environment.
  * @param  config INI configuration
+ * @param  username Username
  * @return        Returns PAM_AUTHINFO_UNAVAIL if it shouldn't be enabled,
  * PAM_SUCCESS otherwise
  */
-auto check_enabled(const INIReader &config) -> int {
+auto check_enabled(const INIReader &config, const char* username) -> int {
   // Stop executing if Howdy has been disabled in the config
   if (config.GetBoolean("core", "disabled", false)) {
     syslog(LOG_INFO, "Skipped authentication, Howdy is disabled");
@@ -182,6 +185,13 @@ auto check_enabled(const INIReader &config) -> int {
     globfree(&glob_result);
   }
 
+  // pre-check if this user has face model file
+  auto model_path = std::string(USER_MODELS_DIR) + "/" + username + ".dat";
+  struct stat stat_;
+  if (stat(model_path.c_str(), &stat_) != 0) {
+    return PAM_AUTHINFO_UNAVAIL;
+  }
+
   return PAM_SUCCESS;
 }
 
@@ -191,12 +201,12 @@ auto check_enabled(const INIReader &config) -> int {
  * @param  flags    Flags passed on to us by PAM, XORed
  * @param  argc     Amount of rules in the PAM config (disregared)
  * @param  argv     Options defined in the PAM config
- * @param  auth_tok True if we should ask for a password too
+ * @param  ask_auth_tok True if we should ask for a password too
  * @return          Returns a PAM return code
  */
 auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
-              bool auth_tok) -> int {
-  INIReader config("/etc/howdy/config.ini");
+              bool ask_auth_tok) -> int {
+  INIReader config(CONFIG_FILE_PATH);
   openlog("pam_howdy", 0, LOG_AUTHPRIV);
 
   // Error out if we could not read the config file
@@ -209,8 +219,16 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
   // Will contain the responses from PAM functions
   int pam_res = PAM_IGNORE;
 
+  // Get the username from PAM, needed to match correct face model
+  char *username = nullptr;
+  if ((pam_res = pam_get_user(pamh, const_cast<const char **>(&username),
+                              nullptr)) != PAM_SUCCESS) {
+    syslog(LOG_ERR, "Failed to get username");
+    return pam_res;
+  }
+
   // Check if we should continue
-  if ((pam_res = check_enabled(config)) != PAM_SUCCESS) {
+  if ((pam_res = check_enabled(config, username)) != PAM_SUCCESS) {
     return pam_res;
   }
 
@@ -242,21 +260,6 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
   setlocale(LC_ALL, "");
   bindtextdomain(GETTEXT_PACKAGE, LOCALEDIR);
   textdomain(GETTEXT_PACKAGE);
-
-  // Get the username from PAM, needed to match correct face model
-  char *username = nullptr;
-  if ((pam_res = pam_get_user(pamh, const_cast<const char **>(&username),
-                              nullptr)) != PAM_SUCCESS) {
-    syslog(LOG_ERR, "Failed to get username");
-    return pam_res;
-  }
-
-  // pre-check if this user has face model file
-  auto model_path = std::string("/etc/howdy/models/") + username + ".dat";
-  if (!std::ifstream(model_path)) {
-    return howdy_status(username, CompareError::NO_FACE_MODEL, config,
-                        conv_function);
-  }
 
   if (config.GetBoolean("core", "detection_notice", true)) {
     if ((conv_function(PAM_TEXT_INFO, S("Attempting facial authentication"))) !=
@@ -316,7 +319,7 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
     return std::tuple<int, char *>(pam_res, auth_tok_ptr);
   });
 
-  auto ask_pass = auth_tok && workaround != Workaround::Off;
+  auto ask_pass = ask_auth_tok && workaround != Workaround::Off;
 
   // We ask for the password if the function requires it and if a workaround is
   // set
@@ -327,7 +330,8 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
   // Wait for the end either of the child or the password input
   {
     std::unique_lock<std::mutex> lock(mutx);
-    convar.wait(lock, [&] { return confirmation_type != ConfirmationType::Unset; });
+    convar.wait(lock,
+                [&] { return confirmation_type != ConfirmationType::Unset; });
   }
 
   // The password has been entered or an error has occurred

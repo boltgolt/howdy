@@ -6,21 +6,20 @@ import os
 import json
 import time
 import builtins
+import paths_factory
 
 from i18n import _
 
-# Get the absolute path and the username
-path = "/etc/howdy"
 user = builtins.howdy_user
 
 # Check if the models file has been created yet
-if not os.path.exists(path + "/models"):
+if not os.path.exists(paths_factory.user_models_dir_path()):
 	print(_("Face models have not been initialized yet, please run:"))
 	print("\n\tsudo howdy -U " + user + " add\n")
 	sys.exit(1)
 
 # Path to the models file
-enc_file = path + "/models/" + user + ".dat"
+enc_file = paths_factory.user_model_path(user)
 
 # Try to load the models file and abort if the user does not have it yet
 try:

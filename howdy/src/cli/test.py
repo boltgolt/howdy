@@ -10,16 +10,14 @@ import time
 import dlib
 import cv2
 import numpy as np
+import paths_factory
 
 from i18n import _
 from recorders.video_capture import VideoCapture
 
-# The absolute path to the config directory
-path = "/etc/howdy"
-
 # Read config from disk
 config = configparser.ConfigParser()
-config.read(path + "/config.ini")
+config.read(paths_factory.config_file_path())
 
 if config.get("video", "recording_plugin", fallback="opencv") != "opencv":
 	print(_("Howdy has been configured to use a recorder which doesn't support the test command yet, aborting"))
@@ -59,20 +57,20 @@ use_cnn = config.getboolean('core', 'use_cnn', fallback=False)
 
 if use_cnn:
 	face_detector = dlib.cnn_face_detection_model_v1(
-		path + "/dlib-data/mmod_human_face_detector.dat"
+		paths_factory.mmod_human_face_detector_path()
 	)
 else:
 	face_detector = dlib.get_frontal_face_detector()
 
-pose_predictor = dlib.shape_predictor(path + "/dlib-data/shape_predictor_5_face_landmarks.dat")
-face_encoder = dlib.face_recognition_model_v1(path + "/dlib-data/dlib_face_recognition_resnet_model_v1.dat")
+pose_predictor = dlib.shape_predictor(paths_factory.shape_predictor_5_face_landmarks_path())
+face_encoder = dlib.face_recognition_model_v1(paths_factory.dlib_face_recognition_resnet_model_v1_path())
 
 encodings = []
 models = None
 
 try:
 	user = builtins.howdy_user
-	models = json.load(open(path + "/models/" + user + ".dat"))
+	models = json.load(open(paths_factory.user_model_path(user)))
 
 	for model in models:
 		encodings += model["data"]

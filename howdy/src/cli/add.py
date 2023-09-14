@@ -8,6 +8,7 @@ import json
 import configparser
 import builtins
 import numpy as np
+import paths_factory
 
 from recorders.video_capture import VideoCapture
 from i18n import _
@@ -26,39 +27,36 @@ except ImportError as err:
 # OpenCV needs to be imported after dlib
 import cv2
 
-# Define the absolute path to the config directory
-config_path = "/etc/howdy"
-
 # Test if at lest 1 of the data files is there and abort if it's not
-if not os.path.isfile(config_path + "/dlib-data/shape_predictor_5_face_landmarks.dat"):
+if not os.path.isfile(paths_factory.shape_predictor_5_face_landmarks_path()):
 	print(_("Data files have not been downloaded, please run the following commands:"))
-	print("\n\tcd " + config_path + "/dlib-data")
+	print("\n\tcd " + paths_factory.dlib_data_dir_path())
 	print("\tsudo ./install.sh\n")
 	sys.exit(1)
 
 # Read config from disk
 config = configparser.ConfigParser()
-config.read(config_path + "/config.ini")
+config.read(paths_factory.config_file_path())
 
 use_cnn = config.getboolean("core", "use_cnn", fallback=False)
 if use_cnn:
-	face_detector = dlib.cnn_face_detection_model_v1(config_path + "/dlib-data/mmod_human_face_detector.dat")
+	face_detector = dlib.cnn_face_detection_model_v1(paths_factory.mmod_human_face_detector_path())
 else:
 	face_detector = dlib.get_frontal_face_detector()
 
-pose_predictor = dlib.shape_predictor(config_path + "/dlib-data/shape_predictor_5_face_landmarks.dat")
-face_encoder = dlib.face_recognition_model_v1(config_path + "/dlib-data/dlib_face_recognition_resnet_model_v1.dat")
+pose_predictor = dlib.shape_predictor(paths_factory.shape_predictor_5_face_landmarks_path())
+face_encoder = dlib.face_recognition_model_v1(paths_factory.dlib_face_recognition_resnet_model_v1_path())
 
 user = builtins.howdy_user
 # The permanent file to store the encoded model in
-enc_file = config_path + "/models/" + user + ".dat"
+enc_file = paths_factory.user_model_path(user)
 # Known encodings
 encodings = []
 
 # Make the ./models folder if it doesn't already exist
-if not os.path.exists(config_path + "/models"):
+if not os.path.exists(paths_factory.user_models_dir_path()):
 	print(_("No face model folder found, creating one"))
-	os.makedirs(config_path + "/models")
+	os.makedirs(paths_factory.user_models_dir_path())
 
 # To try read a premade encodings file if it exists
 try:

@@ -23,10 +23,7 @@ import subprocess
 import snapshot
 import numpy as np
 import _thread as thread
-
-# Allow imports from the local howdy folder
-sys.path.append('/lib/security/howdy')
-
+import paths_factory
 from recorders.video_capture import VideoCapture
 from i18n import _
 
@@ -48,22 +45,22 @@ def init_detector(lock):
 	global face_detector, pose_predictor, face_encoder
 
 	# Test if at lest 1 of the data files is there and abort if it's not
-	if not os.path.isfile(PATH + "/dlib-data/shape_predictor_5_face_landmarks.dat"):
+	if not os.path.isfile(paths_factory.shape_predictor_5_face_landmarks_path()):
 		print(_("Data files have not been downloaded, please run the following commands:"))
-		print("\n\tcd " + PATH + "/dlib-data")
+		print("\n\tcd " + paths_factory.dlib_data_dir_path())
 		print("\tsudo ./install.sh\n")
 		lock.release()
 		exit(1)
 
 	# Use the CNN detector if enabled
 	if use_cnn:
-		face_detector = dlib.cnn_face_detection_model_v1(PATH + "/dlib-data/mmod_human_face_detector.dat")
+		face_detector = dlib.cnn_face_detection_model_v1(paths_factory.mmod_human_face_detector_path())
 	else:
 		face_detector = dlib.get_frontal_face_detector()
 
 	# Start the others regardless
-	pose_predictor = dlib.shape_predictor(PATH + "/dlib-data/shape_predictor_5_face_landmarks.dat")
-	face_encoder = dlib.face_recognition_model_v1(PATH + "/dlib-data/dlib_face_recognition_resnet_model_v1.dat")
+	pose_predictor = dlib.shape_predictor(paths_factory.shape_predictor_5_face_landmarks_path())
+	face_encoder = dlib.face_recognition_model_v1(paths_factory.dlib_face_recognition_resnet_model_v1_path())
 
 	# Note the time it took to initialize detectors
 	timings["ll"] = time.time() - timings["ll"]
@@ -103,9 +100,6 @@ def send_to_ui(type, message):
 if len(sys.argv) < 2:
 	exit(12)
 
-# Get the absolute path to the config directory
-PATH = "/etc/howdy"
-
 # The username of the user being authenticated
 user = sys.argv[1]
 # The model file contents
@@ -129,7 +123,7 @@ face_encoder = None
 
 # Try to load the face model from the models folder
 try:
-	models = json.load(open(PATH + "/models/" + user + ".dat"))
+	models = json.load(open(paths_factory.user_model_path(user)))
 
 	for model in models:
 		encodings += model["data"]
@@ -142,7 +136,7 @@ if len(models) < 1:
 
 # Read config from disk
 config = configparser.ConfigParser()
-config.read(PATH + "/config.ini")
+config.read(paths_factory.config_file_path())
 
 # Get all config values needed
 use_cnn = config.getboolean("core", "use_cnn", fallback=False)
@@ -160,7 +154,7 @@ gtk_pipe = sys.stdout if gtk_stdout else subprocess.DEVNULL
 
 # Start the auth ui, register it to be always be closed on exit
 try:
-	gtk_proc = subprocess.Popen(["../howdy-gtk/src/init.py", "--start-auth-ui"], stdin=subprocess.PIPE, stdout=gtk_pipe, stderr=gtk_pipe)
+	gtk_proc = subprocess.Popen(["howdy-gtk", "--start-auth-ui"], stdin=subprocess.PIPE, stdout=gtk_pipe, stderr=gtk_pipe)
 	atexit.register(exit)
 except FileNotFoundError:
 	pass

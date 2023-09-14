@@ -1,6 +1,0 @@
-Name: Howdy
-Default: yes
-Priority: 512
-Auth-Type: Primary
-Auth:
-	[success=end default=ignore]        /lib/security/howdy/pam_howdy.so
