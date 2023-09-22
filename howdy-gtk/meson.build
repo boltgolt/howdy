@@ -32,7 +32,7 @@ py.dependency()
 if get_option('install_in_site_packages')
     pysourcesinstalldir = join_paths(py.get_install_dir(), 'howdy-gtk')
 else
-    pysourcesinstalldir = get_option('py_sources_dir') != '' ? get_option('py_sources_dir') : join_paths(get_option('prefix'), get_option('libdir'), 'howdy-gtk')
+    pysourcesinstalldir = get_option('py_sources_dir') != '' ? get_option('py_sources_dir') / 'howdy-gtk' : join_paths(get_option('prefix'), get_option('libdir'), 'howdy-gtk')
 endif
 
 if get_option('install_in_site_packages')
