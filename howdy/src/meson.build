@@ -46,7 +46,7 @@ py_sources = [
 if get_option('install_in_site_packages')
     pysourcesinstalldir = join_paths(py.get_install_dir(), 'howdy')
 else  
-    pysourcesinstalldir = get_option('py_sources_dir') != '' ? get_option('py_sources_dir') : join_paths(get_option('prefix'), get_option('libdir'), 'howdy')
+    pysourcesinstalldir = get_option('py_sources_dir') != '' ? get_option('py_sources_dir') / 'howdy' : join_paths(get_option('prefix'), get_option('libdir'), 'howdy')
 endif
 
 pam_module_conf_data = configuration_data(paths_dict)
