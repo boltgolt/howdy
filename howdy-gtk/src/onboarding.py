@@ -19,15 +19,15 @@ class OnboardingWindow(gtk.Window):
 		# Make the class a GTK window
 		gtk.Window.__init__(self)
 
-		self.connect("destroy", self.exit)
-		self.connect("delete_event", self.exit)
-
 		self.builder = gtk.Builder()
 		self.builder.add_from_file(paths_factory.onboarding_wireframe_path())
 		self.builder.connect_signals(self)
 
 		self.window = self.builder.get_object("onboardingwindow")
 		self.nextbutton = self.builder.get_object("nextbutton")
+
+		self.window.connect("destroy", self.exit)
+		self.window.connect("delete_event", self.exit)
 
 		self.slides = [
 			self.builder.get_object("slide0"),
@@ -317,7 +317,7 @@ class OnboardingWindow(gtk.Window):
 		dialog.destroy()
 		self.exit()
 
-	def exit(self, widget=None):
+	def exit(self, widget=None, context=None):
 		"""Cleanly exit"""
 		gtk.main_quit()
 		sys.exit(0)
