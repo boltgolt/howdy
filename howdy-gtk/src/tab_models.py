@@ -3,6 +3,7 @@ import time
 
 from i18n import _
 from gi.repository import Gtk as gtk
+from gi.repository import GObject as gobject
 
 
 def on_user_change(self, select):
@@ -71,13 +72,13 @@ def on_model_add(self, button):
 		dialog = gtk.MessageDialog(parent=self, flags=gtk.DialogFlags.MODAL, buttons=gtk.ButtonsType.NONE)
 		dialog.set_title(_("Creating Model"))
 		dialog.props.text = _("Please look directly into the camera")
-		dialog.get_child().connect("map", lambda w: execute_add(self, dialog, entered_name, self.active_user))
 		dialog.show_all()
 
+		# Wait a bit to allow the user to read the dialog
+		gobject.timeout_add(600, lambda: execute_add(self, dialog, entered_name))
 
-def execute_add(box, dialog, entered_name, user):
 
-	time.sleep(1)
+def execute_add(box, dialog, entered_name):
 
 	status, output = subprocess.getstatusoutput(["howdy add '" + entered_name + "' -y -U " + box.active_user])
 
