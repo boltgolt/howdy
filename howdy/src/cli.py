@@ -32,14 +32,14 @@ parser = argparse.ArgumentParser(
 
 # Add an argument for the command
 parser.add_argument(
-	_("command"),
+	"command",
 	help=_("The command option to execute, can be one of the following: add, clear, config, disable, list, remove, snapshot, set, test or version."),
 	metavar="command",
 	choices=["add", "clear", "config", "disable", "list", "remove", "set", "snapshot", "test", "version"])
 
 # Add an argument for the extra arguments of disable and remove
 parser.add_argument(
-	_("arguments"),
+	"arguments",
 	help=_("Optional arguments for the add, disable, remove and set commands."),
 	nargs="*")
 
