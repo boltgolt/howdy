@@ -44,6 +44,8 @@ def on_user_add(self, button):
 
 
 def on_model_add(self, button):
+	if self.userlist.items == 0:
+		return
 	# Open question dialog
 	dialog = gtk.MessageDialog(parent=self, flags=gtk.DialogFlags.MODAL, type=gtk.MessageType.QUESTION, buttons=gtk.ButtonsType.OK_CANCEL)
 	dialog.set_title(_("Confirm Model Creation"))
