@@ -122,10 +122,10 @@ class OnboardingWindow(gtk.Window):
 		except Exception:
 			self.show_error(_("Error while importing OpenCV2"), _("Try reinstalling cv2"))
 
-		device_ids = os.listdir("/dev/v4l/by-path")
 		device_rows = []
-
-		if not device_ids:
+		try:
+			device_ids = os.listdir("/dev/v4l/by-path")
+		except Exception:
 			self.show_error(_("No webcams found on system"), _("Please configure your camera yourself if you are sure a compatible camera is connected"))
 
 		# Loop though all devices
