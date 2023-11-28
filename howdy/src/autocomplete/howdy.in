@@ -5,7 +5,6 @@
 _howdy() {
 	local cur prev opts
 	local config_path="@config_path@"
-	source _variables
 	COMPREPLY=()
 	# The argument typed so far
 	cur="${COMP_WORDS[COMP_CWORD]}"
