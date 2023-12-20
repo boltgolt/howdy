@@ -74,7 +74,6 @@ if get_option('install_in_site_packages')
         py_sources,
         subdir: 'howdy',
         preserve_path: true,
-        install_mode: 'r--r--r--',
         install_tag: 'py_sources',
     )
 else
