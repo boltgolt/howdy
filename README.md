@@ -45,6 +45,7 @@ This will guide you through the installation.
 Download the .deb file from the [Releases page](https://github.com/boltgolt/howdy/releases) and install with gdebi.
 
 ### Arch Linux
+
 _Maintainer wanted._
 
 Install the `howdy` package from the AUR. For AUR installation instructions, take a look at this [wiki page](https://wiki.archlinux.org/index.php/Arch_User_Repository#Installing_packages).
@@ -52,6 +53,7 @@ Install the `howdy` package from the AUR. For AUR installation instructions, tak
 You will need to do some additional configuration steps. Please read the [ArchWiki entry](https://wiki.archlinux.org/index.php/Howdy) for more information.
 
 ### Fedora
+
 _Maintainer: [@luyatshimbalanga](https://github.com/luyatshimbalanga)_
 
 The `howdy` package is available as a [Fedora COPR repository](https://copr.fedorainfracloud.org/coprs/principis/howdy/), install it by simply executing the following commands in a terminal:
@@ -64,6 +66,7 @@ sudo dnf --refresh install howdy
 See the link to the COPR repository for detailed configuration steps.
 
 ### openSUSE
+
 _Maintainer: [@dmafanasyev](https://github.com/dmafanasyev)_
 
 Go to the [openSUSE wiki page](https://en.opensuse.org/SDB:Facial_authentication) for detailed installation instructions.
@@ -107,7 +110,8 @@ Code contributions are also very welcome. If you want to port Howdy to another d
 
 Any Python errors get logged directly into the console and should indicate what went wrong. If authentication still fails but no errors are printed, you could take a look at the last lines in `/var/log/auth.log` to see if anything has been reported there.
 
-If you encounter an error that hasn't been reported yet, don't be afraid to open a new issue.
+Please first check the [wiki on common issues](https://github.com/boltgolt/howdy/wiki/Common-issues) and 
+if you encounter an error that hasn't been reported yet, don't be afraid to open a new issue.
 
 ## A note on security
 
