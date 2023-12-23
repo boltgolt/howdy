@@ -40,7 +40,6 @@ if get_option('install_in_site_packages')
         sources,
         py_paths,
         subdir: 'howdy-gtk',
-        install_mode: 'r--r--r--',
         install_tag: 'py_sources',
     )
 else
