@@ -1,6 +1,6 @@
 # Howdy PAM module
 
-## Prepare
+## Requirements
 
 This module depends on `INIReader` and `libevdev`.
 They can be installed with these packages:

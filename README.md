@@ -71,6 +71,27 @@ _Maintainer: [@dmafanasyev](https://github.com/dmafanasyev)_
 
 Go to the [openSUSE wiki page](https://en.opensuse.org/SDB:Facial_authentication) for detailed installation instructions.
 
+### Building from source
+
+If you want to build Howdy from source, a few dependencies are required.
+
+#### Dependencies
+
+- Python 3.6 or higher
+- meson version 0.64 or higher
+- ninja
+- INIReader (can be pulled from git automatically if not found)
+- libevdev
+
+#### Build
+
+```sh
+meson setup build
+meson compile -C build
+```
+
+You can also install Howdy to your system with `meson install -C build`.
+
 ## Setup
 
 After installation, Howdy needs to learn what you look like so it can recognise you later. Run `sudo howdy add` to add a face model.
