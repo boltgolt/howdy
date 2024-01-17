@@ -27,6 +27,7 @@ class OnboardingWindow(gtk.Window):
 		self.builder.connect_signals(self)
 
 		self.window = self.builder.get_object("onboardingwindow")
+		self.slidecontainer = self.builder.get_object("slidecontainer")
 		self.nextbutton = self.builder.get_object("nextbutton")
 
 		self.slides = [
@@ -53,6 +54,8 @@ class OnboardingWindow(gtk.Window):
 		self.slides[self.window.current_slide].hide()
 		self.slides[self.window.current_slide + 1].show()
 		self.window.current_slide += 1
+		# the shown child may have zero/wrong dimensions
+		self.slidecontainer.queue_resize()
 
 		if self.window.current_slide == 1:
 			self.execute_slide1()
@@ -119,10 +122,10 @@ class OnboardingWindow(gtk.Window):
 		except Exception:
 			self.show_error(_("Error while importing OpenCV2"), _("Try reinstalling cv2"))
 
-		device_ids = os.listdir("/dev/v4l/by-path")
 		device_rows = []
-
-		if not device_ids:
+		try:
+			device_ids = os.listdir("/dev/v4l/by-path")
+		except Exception:
 			self.show_error(_("No webcams found on system"), _("Please configure your camera yourself if you are sure a compatible camera is connected"))
 
 		# Loop though all devices

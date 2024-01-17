@@ -14,13 +14,14 @@ MAX_WIDTH = 300
 
 def on_page_switch(self, notebook, page, page_num):
 	if page_num == 1:
-		path = "/dev/video1"
 
 		try:
 			self.config = configparser.ConfigParser()
 			self.config.read(paths_factory.config_file_path())
 		except Exception:
 			print(_("Can't open camera"))
+
+		path = self.config.get("video", "device_path")
 
 		try:
 			# if not self.cv2:
@@ -30,7 +31,7 @@ def on_page_switch(self, notebook, page, page_num):
 			print(_("Can't import OpenCV2"))
 
 		try:
-			self.capture = cv2.VideoCapture(self.config.get("video", "device_path"))
+			self.capture = cv2.VideoCapture(path)
 		except Exception:
 			print(_("Can't open camera"))
 

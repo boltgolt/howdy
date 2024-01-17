@@ -4,6 +4,7 @@
 # Import required modules
 import sys
 import os
+import pwd
 import getpass
 import argparse
 import builtins
@@ -13,8 +14,10 @@ from i18n import _
 # Try to get the original username (not "root") from shell
 sudo_user = os.environ.get("SUDO_USER")
 doas_user = os.environ.get("DOAS_USER")
+pkexec_uid = os.environ.get("PKEXEC_UID")
+pkexec_user = pwd.getpwuid(int(pkexec_uid))[0] if pkexec_uid else ""
 env_user = getpass.getuser()
-user = next((u for u in [sudo_user, doas_user, env_user] if u), "")
+user = next((u for u in [sudo_user, doas_user, pkexec_user, env_user] if u), "")
 
 # If that fails, error out
 if user == "":
