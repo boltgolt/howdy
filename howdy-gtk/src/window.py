@@ -23,9 +23,6 @@ class MainWindow(gtk.Window):
 		# Make the class a GTK window
 		gtk.Window.__init__(self)
 
-		self.connect("destroy", self.exit)
-		self.connect("delete_event", self.exit)
-
 		self.builder = gtk.Builder()
 		self.builder.add_from_file(paths_factory.main_window_wireframe_path())
 		self.builder.connect_signals(self)
@@ -34,6 +31,9 @@ class MainWindow(gtk.Window):
 		self.userlist = self.builder.get_object("userlist")
 		self.modellistbox = self.builder.get_object("modellistbox")
 		self.opencvimage = self.builder.get_object("opencvimage")
+
+		self.window.connect("destroy", self.exit)
+		self.window.connect("delete_event", self.exit)
 
 		# Init capture for video tab
 		self.capture = None
@@ -105,7 +105,7 @@ class MainWindow(gtk.Window):
 		status, output = subprocess.getstatusoutput(["sudo -u " + user + " timeout 10 xdg-open " + uri])
 		return True
 
-	def exit(self, widget, context):
+	def exit(self, widget=None, context=None):
 		"""Cleanly exit"""
 		if self.capture is not None:
 			self.capture.release()
