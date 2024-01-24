@@ -79,3 +79,17 @@ install_data(
   install_dir: get_option('prefix') / get_option('bindir'),
   install_tag: 'bin',
 )
+
+if get_option('with_polkit')
+    polkit_config = configure_file(
+        input: 'src/polkit/com.github.boltgolt.howdy-gtk.policy.in',
+        output: 'com.github.boltgolt.howdy-gtk.policy',
+        configuration: {'script_path': cli_path, 'python_path': py.full_path()}
+    )
+    install_data(
+        polkit_config,
+        install_dir: get_option('prefix') / get_option('datadir') / 'polkit-1' / 'actions',
+        install_mode: 'rw-r--r--',
+        install_tag: 'polkit',
+    )
+endif

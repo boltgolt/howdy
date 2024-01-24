@@ -7,3 +7,4 @@ option('log_path', type: 'string', value: '/var/log/howdy', description: 'Set th
 option('install_in_site_packages', type: 'boolean', value: false, description: 'Install howdy python files in site packages')
 option('py_sources_dir', type: 'string', value: '', description: 'Set the python sources directory')
 option('install_pam_config', type: 'boolean', value: false, description: 'Install pam config file (for Debian/Ubuntu)')
+option('with_polkit', type: 'boolean', value: false, description: 'Install polkit policy config file')
