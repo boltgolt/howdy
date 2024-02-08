@@ -12,6 +12,7 @@ class EnterDevice {
 
 public:
   EnterDevice();
+  void send_space_press() const;
   void send_enter_press() const;
   ~EnterDevice() = default;
 };

@@ -409,6 +409,10 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
           enter_device.send_enter_press();
         }
 
+        // try it one more time with an non-empty input field
+        enter_device.send_space_press();
+        enter_device.send_enter_press();
+
         if (retries == MAX_RETRIES) {
           syslog(LOG_WARNING,
                  "Failed to send enter input before the retries limit");
