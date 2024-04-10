@@ -1,7 +1,6 @@
 #include <cerrno>
 #include <csignal>
 #include <cstdlib>
-#include <ostream>
 
 #include <glob.h>
 #include <libintl.h>
@@ -16,22 +15,15 @@
 #include <syslog.h>
 #include <unistd.h>
 
-#include <atomic>
 #include <chrono>
 #include <condition_variable>
 #include <cstring>
 #include <fstream>
 #include <functional>
 #include <future>
-#include <iostream>
-#include <iterator>
-#include <memory>
 #include <mutex>
 #include <string>
-#include <system_error>
-#include <thread>
 #include <tuple>
-#include <vector>
 
 #include <INIReader.h>
 
@@ -42,7 +34,7 @@
 #include "enter_device.hh"
 #include "main.hh"
 #include "optional_task.hh"
-#include "paths.hh"
+#include <paths.hh>
 
 const auto DEFAULT_TIMEOUT =
     std::chrono::duration<int, std::chrono::milliseconds::period>(100);
@@ -139,7 +131,7 @@ auto howdy_status(char *username, int status, const INIReader &config,
  * @return        Returns PAM_AUTHINFO_UNAVAIL if it shouldn't be enabled,
  * PAM_SUCCESS otherwise
  */
-auto check_enabled(const INIReader &config, const char* username) -> int {
+auto check_enabled(const INIReader &config, const char *username) -> int {
   // Stop executing if Howdy has been disabled in the config
   if (config.GetBoolean("core", "disabled", false)) {
     syslog(LOG_INFO, "Skipped authentication, Howdy is disabled");
@@ -148,8 +140,8 @@ auto check_enabled(const INIReader &config, const char* username) -> int {
 
   // Stop if we're in a remote shell and configured to exit
   if (config.GetBoolean("core", "abort_if_ssh", true)) {
-    if (getenv("SSH_CONNECTION") != nullptr ||
-        getenv("SSH_CLIENT") != nullptr || getenv("SSHD_OPTS") != nullptr) {
+    if (checkenv("SSH_CONNECTION") || checkenv("SSH_CLIENT") ||
+        checkenv("SSH_TTY") || checkenv("SSHD_OPTS")) {
       syslog(LOG_INFO, "Skipped authentication, SSH session detected");
       return PAM_AUTHINFO_UNAVAIL;
     }
