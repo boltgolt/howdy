@@ -1,4 +1,3 @@
-#!/usr/bin/python3
 # Compare incoming video with known faces
 # Running in a local python instance to get around PATH issues
 
