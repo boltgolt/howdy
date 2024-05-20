@@ -153,7 +153,7 @@ install_man('../howdy.1')
 # endif
 
 cli_path = join_paths(pysourcesinstalldir, 'cli.py')
-conf_data = configuration_data({ 'script_path': cli_path })
+conf_data = configuration_data({ 'script_path': cli_path, 'python_path': py.full_path() })
 
 bin_name = 'howdy'
 bin = configure_file(
