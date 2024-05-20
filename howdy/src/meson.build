@@ -2,12 +2,13 @@ if meson.is_subproject()
 project('howdy', 'cpp', license: 'MIT', version: 'beta', meson_version: '>= 0.64.0')
 endif
 
-py = import('python').find_installation()
-py.dependency()
 
 datadir = get_option('prefix') / get_option('datadir') / 'howdy'
 py_conf = configuration_data(paths_dict)
 py_conf.set('data_dir', datadir)
+
+py = import('python').find_installation(paths_dict.get('python_path'))
+py.dependency()
 
 py_paths = configure_file(
     input: 'paths.py.in',

@@ -47,7 +47,6 @@
 const auto DEFAULT_TIMEOUT =
     std::chrono::duration<int, std::chrono::milliseconds::period>(100);
 const auto MAX_RETRIES = 5;
-const auto PYTHON_EXECUTABLE = "@python_path@";
 
 #define S(msg) gettext(msg)
 
@@ -268,12 +267,12 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
     }
   }
 
-  const char *const args[] = {PYTHON_EXECUTABLE, // NOLINT
+  const char *const args[] = {PYTHON_EXECUTABLE_PATH, // NOLINT
                               COMPARE_PROCESS_PATH, username, nullptr};
   pid_t child_pid;
 
   // Start the python subprocess
-  if (posix_spawnp(&child_pid, PYTHON_EXECUTABLE, nullptr, nullptr,
+  if (posix_spawnp(&child_pid, PYTHON_EXECUTABLE_PATH, nullptr, nullptr,
                    const_cast<char *const *>(args), nullptr) != 0) {
     syslog(LOG_ERR, "Can't spawn the howdy process: %s (%d)", strerror(errno),
            errno);
