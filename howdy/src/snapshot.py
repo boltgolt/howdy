@@ -3,7 +3,7 @@
 # Import modules
 import cv2
 import os
-import datetime
+from datetime import timezone, datetime
 import numpy as np
 import paths_factory
 
@@ -53,7 +53,7 @@ def generate(frames, text_lines):
 		os.makedirs(paths_factory.snapshots_dir_path())
 
 	# Generate a filename based on the current time
-	filename = datetime.datetime.utcnow().strftime("%Y%m%dT%H%M%S.jpg")
+	filename = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S.jpg")
 	filepath = paths_factory.snapshot_path(filename)
 	# Write the image to that file
 	cv2.imwrite(filepath, snap)
