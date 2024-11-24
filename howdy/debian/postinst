@@ -128,9 +128,9 @@ handleStatus(sc(cmd))
 DLIB_DIR = None
 # A regex of all files to ignore while unpacking the archive
 excludes = re.compile(
-	"davisking-dlib-\w+/(dlib/(http_client|java|matlab|test/)|"
-	"(docs|examples|python_examples)|"
-	"tools/(archive|convert_dlib_nets_to_caffe|htmlify|imglab|python/test|visual_studio_natvis))"
+    r"davisking-dlib-\w+/(dlib/(http_client|java|matlab|test/)|"
+    r"(docs|examples|python_examples)|"
+    r"tools/(archive|convert_dlib_nets_to_caffe|htmlify|imglab|python/test|visual_studio_natvis))"
 )
 
 # Open the archive
