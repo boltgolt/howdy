@@ -71,7 +71,7 @@ def make_snapshot(type):
 	"""Generate snapshot after detection"""
 	snapshot.generate(snapframes, [
 		type + _(" LOGIN"),
-		_("Date: ") + datetime.datetime.utcnow().strftime("%Y/%m/%d %H:%M:%S UTC"),
+		_("Date: ") + datetime.datetime.now(datetime.UTC).strftime("%Y/%m/%d %H:%M:%S UTC"),
 		_("Scan time: ") + str(round(time.time() - timings["fr"], 2)) + "s",
 		_("Frames: ") + str(frames) + " (" + str(round(frames / (time.time() - timings["fr"]), 2)) + "FPS)",
 		_("Hostname: ") + os.uname().nodename,
