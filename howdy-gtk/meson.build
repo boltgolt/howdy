@@ -65,7 +65,7 @@ interface_files = files(
 install_data(interface_files, install_dir: datadir)
 
 cli_path = join_paths(pysourcesinstalldir, 'init.py')
-conf_data = configuration_data({ 'script_path': cli_path })
+conf_data = configuration_data({ 'script_path': cli_path, 'python_path': py.full_path() })
 
 bin_name = 'howdy-gtk'
 bin = configure_file(

@@ -6,4 +6,5 @@ option('user_models_dir', type: 'string', value: '', description: 'Set the user 
 option('log_path', type: 'string', value: '/var/log/howdy', description: 'Set the log file path')
 option('install_in_site_packages', type: 'boolean', value: false, description: 'Install howdy python files in site packages')
 option('py_sources_dir', type: 'string', value: '', description: 'Set the python sources directory')
+option('python_path', type: 'string', value: '/usr/bin/python', description: 'Set the path to the python executable')
 option('install_pam_config', type: 'boolean', value: false, description: 'Install pam config file (for Debian/Ubuntu)')

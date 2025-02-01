@@ -1,3 +1,4 @@
 const auto COMPARE_PROCESS_PATH = "@compare_script_path@";
 const auto CONFIG_FILE_PATH = "@config_file_path@";
 const auto USER_MODELS_DIR = "@user_models_dir@";
+const auto PYTHON_EXECUTABLE_PATH = "@python_path@";

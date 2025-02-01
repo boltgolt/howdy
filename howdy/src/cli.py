@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # CLI directly called by running the howdy command
 
 # Import required modules
