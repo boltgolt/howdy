@@ -3,7 +3,7 @@
 # Import required modules
 import os
 import configparser
-import datetime
+from datetime import timezone, datetime
 import snapshot
 import paths_factory
 from recorders.video_capture import VideoCapture
@@ -41,7 +41,7 @@ while True:
 # Generate a snapshot image from the frames
 file = snapshot.generate(frames, [
 	_("GENERATED SNAPSHOT"),
-	_("Date: ") + datetime.datetime.utcnow().strftime("%Y/%m/%d %H:%M:%S UTC"),
+	_("Date: ") + datetime.now(timezone.utc).strftime("%Y/%m/%d %H:%M:%S UTC"),
 	_("Dark threshold config: ") + str(config.getfloat("video", "dark_threshold", fallback=60.0)),
 	_("Certainty config: ") + str(config.getfloat("video", "certainty", fallback=3.5))
 ])
