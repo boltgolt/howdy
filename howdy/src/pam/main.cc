@@ -281,7 +281,7 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
   // zombie process)
   optional_task<int> child_task([&] {
     int status;
-    wait(&status);
+    waitpid(child_pid, &status, 0);
     {
       std::unique_lock<std::mutex> lock(mutx);
       if (confirmation_type == ConfirmationType::Unset) {
