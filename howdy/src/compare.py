@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # Compare incoming video with known faces
 # Running in a local python instance to get around PATH issues
 
@@ -17,7 +16,7 @@ import json
 import configparser
 import dlib
 import cv2
-import datetime
+from datetime import timezone, datetime
 import atexit
 import subprocess
 import snapshot
@@ -71,7 +70,7 @@ def make_snapshot(type):
 	"""Generate snapshot after detection"""
 	snapshot.generate(snapframes, [
 		type + _(" LOGIN"),
-		_("Date: ") + datetime.datetime.utcnow().strftime("%Y/%m/%d %H:%M:%S UTC"),
+		_("Date: ") + datetime.now(timezone.utc).strftime("%Y/%m/%d %H:%M:%S UTC"),
 		_("Scan time: ") + str(round(time.time() - timings["fr"], 2)) + "s",
 		_("Frames: ") + str(frames) + " (" + str(round(frames / (time.time() - timings["fr"]), 2)) + "FPS)",
 		_("Hostname: ") + os.uname().nodename,
