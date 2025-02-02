@@ -63,6 +63,14 @@ sudo dnf copr enable principis/howdy
 sudo dnf --refresh install howdy
 ```
 
+*Note:* Fedora 41 [removed support for Python2](https://fedoraproject.org/wiki/Changes/RetirePython2.7), but at this point in time Howdy still depends on it. If the install fails, you can fix this by installing the beta Repository and removing the release version:
+
+```
+sudo dnf copr remove principis/howdy
+sudo dnf copr enable principis/howdy-beta
+sudo dnf --refresh install howdy
+```
+
 See the link to the COPR repository for detailed configuration steps.
 
 ### openSUSE
