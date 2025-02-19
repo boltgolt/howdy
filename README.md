@@ -40,6 +40,9 @@ sudo apt install howdy
 
 This will guide you through the installation.
 
+Note: In newer versions of Ubuntu, the installation of Howdy may fail due to an error related to "wheel." If this happens, first remove the installed Howdy by running ```sudo apt remove howdy```. Then, switch to the root account using ```sudo su``` and reinstall Howdy by running ```sudo apt install howdy```.
+
+
 ### Debian
 
 Download the .deb file from the [Releases page](https://github.com/boltgolt/howdy/releases) and install with gdebi.
