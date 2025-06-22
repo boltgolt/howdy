@@ -1,0 +1,3 @@
+#!/bin/sh
+
+@python_path@ "@script_path@" "$@"

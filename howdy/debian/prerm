@@ -1,0 +1,45 @@
+#!/usr/bin/python3
+# Executed on deinstallation
+# Completely remove howdy from the system
+
+# Import required modules
+import subprocess
+import sys
+import os
+from shutil import rmtree
+
+# Only run when we actually want to remove
+if "remove" not in sys.argv and "purge" not in sys.argv:
+	sys.exit(0)
+
+# Don't try running this if it's already gone
+if not os.path.exists("/lib/security/howdy/cli"):
+	sys.exit(0)
+
+# Remove files and symlinks
+try:
+	os.unlink("/usr/local/bin/howdy")
+except Exception:
+	print("Can't remove executable")
+try:
+	os.unlink("/usr/share/bash-completion/completions/howdy")
+except Exception:
+	print("Can't remove autocompletion script")
+
+# Refresh and remove howdy from pam-config
+try:
+	subprocess.call(["pam-auth-update --package"], shell=True)
+	subprocess.call(["rm /usr/share/pam-configs/howdy"], shell=True)
+	subprocess.call(["pam-auth-update --package"], shell=True)
+except Exception:
+	print("Can't remove pam module")
+
+# Remove full installation folder, just to be sure
+try:
+	rmtree("/lib/security/howdy")
+except Exception:
+	# This error is normal
+	pass
+
+# Remove dlib
+subprocess.call(["pip3", "uninstall", "dlib", "-y", "--no-cache-dir"])

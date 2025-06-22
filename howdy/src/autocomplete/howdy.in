@@ -1,0 +1,47 @@
+#!/bin/bash
+# Autocomplete file run in bash
+# Will sugest arguments on tab
+
+_howdy() {
+	local cur prev opts
+	local config_path="@config_path@"
+	COMPREPLY=()
+	# The argument typed so far
+	cur="${COMP_WORDS[COMP_CWORD]}"
+	# The previous argument
+	prev="${COMP_WORDS[COMP_CWORD-1]}"
+
+	# Go though all cases we support
+	case "${prev}" in
+		# After the main command, show the commands
+		"howdy")
+			opts="add clear config disable list remove clear snapshot test version"
+			COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+			return 0
+			;;
+		# For disable, grab the current "disabled" config option and give the reverse
+		"disable")
+			local status=$(cut -d'=' -f2 <<< $(cat $config_path | grep 'disabled =') | xargs echo -n)
+
+			[ "$status" == "false" ] && COMPREPLY="true" || COMPREPLY="false"
+			return 0
+			;;
+		# List the users available
+		"-U")
+			COMPREPLY=( $(compgen -u -- ${cur}) )
+			return 0
+			;;
+		"--user")
+			COMPREPLY=( $(compgen -u -- ${cur}) )
+			return 0
+			;;
+ 		*)
+		;;
+	esac
+
+	# Nothing matched, so return nothing
+	return 0
+}
+
+# Register the autocomplete function
+complete -F _howdy howdy

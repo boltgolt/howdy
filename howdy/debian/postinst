@@ -1,0 +1,209 @@
+#!/usr/bin/python3
+# Installation script to install howdy
+# Executed after primary apt install
+
+# Import required modules
+import fileinput
+import subprocess
+import sys
+import os
+import re
+import tarfile
+from shutil import rmtree, which
+
+# Don't run unless we need to configure the install
+# Will also happen on upgrade but we will catch that later on
+if "configure" not in sys.argv:
+	sys.exit(0)
+
+
+def log(text):
+	"""Print a nicely formatted line to stdout"""
+	print("\n>>> " + col(1) + text + col(0) + "\n")
+
+
+def handleStatus(status):
+	"""Abort if a command fails"""
+	if (status != 0):
+		print(col(3) + "Error while running last command" + col(0))
+		sys.exit(1)
+
+
+def col(id):
+	"""Add color escape sequences"""
+	if id == 1: return "\033[32m"
+	if id == 2: return "\033[33m"
+	if id == 3: return "\033[31m"
+	return "\033[0m"
+
+
+# Create shorthand for subprocess creation
+sc = subprocess.call
+
+# If the package is being upgraded
+if "upgrade" in sys.argv:
+	# If preinst has made a config backup
+	if os.path.exists("/tmp/howdy_config_backup_v" + sys.argv[2] + ".ini"):
+		# Get the config parser
+		import configparser
+
+		# Load th old and new config files
+		oldConf = configparser.ConfigParser()
+		oldConf.read("/tmp/howdy_config_backup_v" + sys.argv[2] + ".ini")
+		newConf = configparser.ConfigParser()
+		newConf.read("/etc/howdy/config.ini")
+
+		# Go through every setting in the old config and apply it to the new file
+		for section in oldConf.sections():
+			for (key, value) in oldConf.items(section):
+
+				# MIGRATION 2.3.1 -> 2.4.0
+				# If config is still using the old device_id parameter, convert it to a path
+				if key == "device_id":
+					key = "device_path"
+					value = "/dev/video" + value
+
+				# MIGRATION 2.4.0 -> 2.5.0
+				# Finally correct typo in "timout" config value
+				if key == "timout":
+					key = "timeout"
+
+				# MIGRATION 2.5.0 -> 2.5.1
+				# Remove unsafe automatic dismissal of lock screen
+				if key == "dismiss_lockscreen":
+					if value == "true":
+						print("DEPRECATION: Config value dismiss_lockscreen is no longer supported because of login loop issues.")
+					continue
+
+				# MIGRATION 2.6.1 -> 3.0.0
+				# Fix capture being enabled by default
+				if key == "capture_failed" or key == "capture_successful":
+					if value == "true":
+						print("NOTICE: Howdy login image captures have been disabled by default, change the config to enable them again")
+						value = "false"
+
+				# MIGRATION 2.6.1 -> 3.0.0
+				# Rename config options so they don't do the opposite of what is commonly expected
+				if key == "ignore_ssh":
+					key = "abort_if_ssh"
+				if key == "ignore_closed_lid":
+					key = "abort_if_lid_closed"
+				if key == "capture_failed":
+					key = "save_failed"
+				if key == "capture_successful":
+					key = "save_successful"
+
+				try:
+					newConf.set(section, key, value)
+				# Add a new section where needed
+				except configparser.NoSectionError:
+					newConf.add_section(section)
+					newConf.set(section, key, value)
+
+		# Write it all to file
+		with open("/etc/howdy/config.ini", "w") as configfile:
+			newConf.write(configfile)
+
+	sys.exit(0)
+
+log("Downloading dlib")
+
+dlib_archive = "/tmp/v19.16.tar.gz"
+loader = which("wget")
+LOADER_CMD = None
+
+# If wget is installed, use that as the downloader
+if loader:
+	LOADER_CMD = [loader, "--tries", "5", "--output-document"]
+# Otherwise, fall back on curl
+else:
+	loader = which("curl")
+	LOADER_CMD = [loader, "--retry", "5", "--location", "--output"]
+
+# Assemble and execute the download command
+cmd = LOADER_CMD + [dlib_archive, "https://github.com/davisking/dlib/archive/v19.16.tar.gz"]
+handleStatus(sc(cmd))
+
+# The folder containing the dlib source
+DLIB_DIR = None
+# A regex of all files to ignore while unpacking the archive
+excludes = re.compile(
+	r"davisking-dlib-\w+/(dlib/(http_client|java|matlab|test/)|"
+	r"(docs|examples|python_examples)|"
+	r"tools/(archive|convert_dlib_nets_to_caffe|htmlify|imglab|python/test|visual_studio_natvis))"
+)
+
+# Open the archive
+with tarfile.open(dlib_archive) as tf:
+	for item in tf:
+		# Set the destination dir if unset
+		if not DLIB_DIR:
+			DLIB_DIR = "/tmp/" + item.name
+
+		# extract only files sufficient for building
+		if not excludes.match(item.name):
+			tf.extract(item, "/tmp")
+
+# Delete the downloaded archive
+os.unlink(dlib_archive)
+
+log("Building dlib")
+
+cmd = ["sudo", "python3", "setup.py", "install"]
+cuda_used = False
+
+# Compile and link dlib
+try:
+	sp = subprocess.Popen(cmd, cwd=DLIB_DIR, stdout=subprocess.PIPE)
+except subprocess.CalledProcessError:
+	print("Error while building dlib")
+	raise
+
+# Go through each line from stdout to check for CUDA usage
+while sp.poll() is None:
+	line = sp.stdout.readline().decode("utf-8")
+
+	if "DLIB WILL USE CUDA" in line:
+		cuda_used = True
+
+	print(line, end="")
+
+log("Cleaning up dlib")
+
+# Remove the no longer needed git clone
+del sp
+rmtree(DLIB_DIR)
+
+print("Temporary dlib files removed")
+
+log("Configuring howdy")
+
+# Make sure to use CNN if dlib was compiled with CUDA support
+for line in fileinput.input(["/etc/howdy/config.ini"], inplace=1):
+	line = line.replace("use_cnn = false", "use_cnn = " + str(cuda_used).lower())
+	print(line, end="")
+
+print("CNN saved to config, CUDA " + ("enabled" if cuda_used else "disabled"))
+
+# Secure the howdy folder
+handleStatus(sc(["chmod 755 -R /lib/security/howdy/"], shell=True))
+handleStatus(sc(["chmod 755 -R /etc/howdy/"], shell=True))
+
+# Allow anyone to execute the python CLI
+os.chmod("/lib/security/howdy", 0o755)
+os.chmod("/lib/security/howdy/cli.py", 0o755)
+handleStatus(sc(["chmod 755 -R /lib/security/howdy/cli"], shell=True))
+print("Permissions set")
+
+# Make the CLI executable as howdy
+os.symlink("/lib/security/howdy/cli.py", "/usr/local/bin/howdy")
+os.chmod("/usr/local/bin/howdy", 0o755)
+print("Howdy command installed")
+
+log("Adding howdy as PAM module")
+
+# Activate the pam-config file
+handleStatus(subprocess.call(["pam-auth-update --package"], shell=True))
+
+# Sign off
+print("Installation complete.")
