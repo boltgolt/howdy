@@ -89,8 +89,9 @@ def send_to_ui(type, message):
 
 		# Try to send the message to the auth ui, but it's okay if that fails
 		try:
-			gtk_proc.stdin.write(bytearray(message.encode("utf-8")))
-			gtk_proc.stdin.flush()
+			if gtk_proc.poll() is None: # Make sure the gtk_proc is still running before write into the pipe
+				gtk_proc.stdin.write(bytearray(message.encode("utf-8")))
+				gtk_proc.stdin.flush()
 		except IOError:
 			pass
 
