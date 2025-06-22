@@ -128,15 +128,15 @@ handleStatus(sc(cmd))
 DLIB_DIR = None
 # A regex of all files to ignore while unpacking the archive
 excludes = re.compile(
-	"davisking-dlib-\w+/(dlib/(http_client|java|matlab|test/)|"
-	"(docs|examples|python_examples)|"
-	"tools/(archive|convert_dlib_nets_to_caffe|htmlify|imglab|python/test|visual_studio_natvis))"
+	r"davisking-dlib-\w+/(dlib/(http_client|java|matlab|test/)|"
+	r"(docs|examples|python_examples)|"
+	r"tools/(archive|convert_dlib_nets_to_caffe|htmlify|imglab|python/test|visual_studio_natvis))"
 )
 
 # Open the archive
 with tarfile.open(dlib_archive) as tf:
 	for item in tf:
-		# Set the destenation dir if unset
+		# Set the destination dir if unset
 		if not DLIB_DIR:
 			DLIB_DIR = "/tmp/" + item.name
 
@@ -159,7 +159,7 @@ except subprocess.CalledProcessError:
 	print("Error while building dlib")
 	raise
 
-# Go through each line from stdout
+# Go through each line from stdout to check for CUDA usage
 while sp.poll() is None:
 	line = sp.stdout.readline().decode("utf-8")
 
@@ -178,12 +178,12 @@ print("Temporary dlib files removed")
 
 log("Configuring howdy")
 
-# Manually change the camera id to the one picked
+# Make sure to use CNN if dlib was compiled with CUDA support
 for line in fileinput.input(["/etc/howdy/config.ini"], inplace=1):
 	line = line.replace("use_cnn = false", "use_cnn = " + str(cuda_used).lower())
 	print(line, end="")
 
-print("Camera ID saved")
+print("CNN saved to config, CUDA " + ("enabled" if cuda_used else "disabled"))
 
 # Secure the howdy folder
 handleStatus(sc(["chmod 755 -R /lib/security/howdy/"], shell=True))

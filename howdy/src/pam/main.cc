@@ -190,7 +190,7 @@ auto check_enabled(const INIReader &config, const char *username) -> int {
  * The main function, runs the identification and authentication
  * @param  pamh     The handle to interface directly with PAM
  * @param  flags    Flags passed on to us by PAM, XORed
- * @param  argc     Amount of rules in the PAM config (disregared)
+ * @param  argc     Amount of rules in the PAM config (disregarded)
  * @param  argv     Options defined in the PAM config
  * @param  ask_auth_tok True if we should ask for a password too
  * @return          Returns a PAM return code
@@ -212,14 +212,15 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
 
   // Get the username from PAM, needed to match correct face model
   char *username = nullptr;
-  if ((pam_res = pam_get_user(pamh, const_cast<const char **>(&username),
-                              nullptr)) != PAM_SUCCESS) {
+  pam_res = pam_get_user(pamh, const_cast<const char **>(&username), nullptr);
+  if (pam_res != PAM_SUCCESS) {
     syslog(LOG_ERR, "Failed to get username");
     return pam_res;
   }
 
   // Check if we should continue
-  if ((pam_res = check_enabled(config, username)) != PAM_SUCCESS) {
+  pam_res = check_enabled(config, username);
+  if (pam_res != PAM_SUCCESS) {
     return pam_res;
   }
 
@@ -231,7 +232,9 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
   const void **conv_ptr =
       const_cast<const void **>(reinterpret_cast<void **>(&conv));
 
-  if ((pam_res = pam_get_item(pamh, PAM_CONV, conv_ptr)) != PAM_SUCCESS) {
+  // Retrieve the PAM conversation structure
+  pam_res = pam_get_item(pamh, PAM_CONV, conv_ptr);
+  if (pam_res != PAM_SUCCESS) {
     syslog(LOG_ERR, "Failed to acquire conversation");
     return pam_res;
   }

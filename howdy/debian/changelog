@@ -1,3 +1,14 @@
+howdy (3.0.0) focal; urgency=medium
+
+  * Way too many changes to all list individually, thanks to everyone who contributed!
+  * Rewrote PAM handling logic in C++ (thanks @saidsay-so!)
+  * Added simultaneous face recognition and password authentication
+  * Added native dialog dismissal after successful authentication
+  * Added configurable image rotation (thanks @matan-arnon!)
+  * Fixed four config options whose names were opposite of their function
+
+ -- boltgolt <boltgolt@gmail.com>  Sun, 22 Jun 2025 11:52:44 +0200
+
 howdy (2.6.1) xenial; urgency=medium
 
   * Fixed accidentally using emergency priority for log messages (thanks @kageurufu and many others!)

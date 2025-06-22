@@ -4,13 +4,13 @@
 #include <cstring>
 #include <string>
 #include <unistd.h>
+#include <cstdint>
 
-enum class ConfirmationType { Unset, Howdy, Pam };
-
-enum class Workaround { Off, Input, Native };
+enum class ConfirmationType : std::uint8_t { Unset, Howdy, Pam };
+enum class Workaround : std::uint8_t { Off, Input, Native };
 
 // Exit status codes returned by the compare process
-enum CompareError : int {
+enum CompareError : std::uint8_t {
   NO_FACE_MODEL = 10,
   TIMEOUT_REACHED = 11,
   ABORT = 12,
