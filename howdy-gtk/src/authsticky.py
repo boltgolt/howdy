@@ -3,6 +3,7 @@ import cairo
 import gi
 import signal
 import sys
+import paths_factory
 import os
 
 from i18n import _
@@ -32,9 +33,7 @@ class StickyWindow(gtk.Window):
 		gtk.Window.__init__(self)
 
 		# Get the absolute or relative path to the logo file
-		logo_path = "/usr/lib/howdy-gtk/logo.png"
-		if not os.access(logo_path, os.R_OK):
-			logo_path = "./logo.png"
+		logo_path = paths_factory.logo_path()
 
 		# Create image and calculate scale size based on image size
 		self.logo_surface = cairo.ImageSurface.create_from_png(logo_path)
@@ -105,7 +104,7 @@ class StickyWindow(gtk.Window):
 		ctx.set_source_surface(self.logo_surface)
 		ctx.paint()
 
-		# Calculate main message positioning, as the text is heigher if there's a subtext
+		# Calculate main message positioning, as the text is higher if there's a subtext
 		if self.subtext:
 			ctx.move_to(380, 145)
 		else:

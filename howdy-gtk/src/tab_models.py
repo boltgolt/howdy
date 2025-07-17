@@ -3,6 +3,7 @@ import time
 
 from i18n import _
 from gi.repository import Gtk as gtk
+from gi.repository import GObject as gobject
 
 
 def on_user_change(self, select):
@@ -44,6 +45,8 @@ def on_user_add(self, button):
 
 
 def on_model_add(self, button):
+	if self.userlist.items == 0:
+		return
 	# Open question dialog
 	dialog = gtk.MessageDialog(parent=self, flags=gtk.DialogFlags.MODAL, type=gtk.MessageType.QUESTION, buttons=gtk.ButtonsType.OK_CANCEL)
 	dialog.set_title(_("Confirm Model Creation"))
@@ -68,27 +71,30 @@ def on_model_add(self, button):
 	dialog.destroy()
 
 	if response == gtk.ResponseType.OK:
-		dialog = gtk.MessageDialog(parent=self, flags=gtk.DialogFlags.MODAL)
+		dialog = gtk.MessageDialog(parent=self, flags=gtk.DialogFlags.MODAL, buttons=gtk.ButtonsType.NONE)
 		dialog.set_title(_("Creating Model"))
 		dialog.props.text = _("Please look directly into the camera")
 		dialog.show_all()
 
-		time.sleep(1)
+		# Wait a bit to allow the user to read the dialog
+		gobject.timeout_add(600, lambda: execute_add(self, dialog, entered_name))
 
-		status, output = subprocess.getstatusoutput(["howdy add -y -U " + self.active_user + " '" + entered_name + "'"])
 
+def execute_add(box, dialog, entered_name):
+
+	status, output = subprocess.getstatusoutput(["howdy add '" + entered_name + "' -y -U " + box.active_user])
+
+	dialog.destroy()
+
+	if status != 0:
+		dialog = gtk.MessageDialog(parent=box, flags=gtk.DialogFlags.MODAL, type=gtk.MessageType.ERROR, buttons=gtk.ButtonsType.CLOSE)
+		dialog.set_title(_("Howdy Error"))
+		dialog.props.text = _("Error while adding model, error code {}: \n\n").format(str(status))
+		dialog.format_secondary_text(output)
+		dialog.run()
 		dialog.destroy()
 
-		if status != 0:
-			dialog = gtk.MessageDialog(parent=self, flags=gtk.DialogFlags.MODAL, type=gtk.MessageType.ERROR, buttons=gtk.ButtonsType.CLOSE)
-			dialog.set_title(_("Howdy Error"))
-			dialog.props.text = _("Error while adding model, error code {}: \n\n").format(str(status))
-			dialog.format_secondary_text(output)
-			dialog.run()
-			dialog.destroy()
-
-		self.load_model_list()
-
+	box.load_model_list()
 
 def on_model_delete(self, button):
 	selection = self.treeview.get_selection()

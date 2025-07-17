@@ -1,6 +1,7 @@
 import configparser
 
 from i18n import _
+import paths_factory
 
 from gi.repository import Gtk as gtk
 from gi.repository import Gdk as gdk
@@ -13,13 +14,14 @@ MAX_WIDTH = 300
 
 def on_page_switch(self, notebook, page, page_num):
 	if page_num == 1:
-		path = "/dev/video1"
 
 		try:
 			self.config = configparser.ConfigParser()
-			self.config.read("/lib/security/howdy/config.ini")
+			self.config.read(paths_factory.config_file_path())
 		except Exception:
 			print(_("Can't open camera"))
+
+		path = self.config.get("video", "device_path")
 
 		try:
 			# if not self.cv2:
@@ -29,7 +31,7 @@ def on_page_switch(self, notebook, page, page_num):
 			print(_("Can't import OpenCV2"))
 
 		try:
-			self.capture = cv2.VideoCapture(self.config.get("video", "device_path"))
+			self.capture = cv2.VideoCapture(path)
 		except Exception:
 			print(_("Can't open camera"))
 
@@ -44,7 +46,7 @@ def on_page_switch(self, notebook, page, page_num):
 		if width * self.scaling_factor > MAX_WIDTH:
 			self.scaling_factor = (MAX_WIDTH / width) or 1
 
-		config_height = self.config.getfloat("video", "max_height", fallback=0.0)
+		config_height = self.config.getfloat("video", "max_height", fallback=320.0)
 		config_scaling = (config_height / height) or 1
 
 		self.builder.get_object("videoid").set_text(path.split("/")[-1])

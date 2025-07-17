@@ -7,6 +7,7 @@ import elevate
 import subprocess
 
 from i18n import _
+import paths_factory
 
 # Make sure we have the libs we need
 gi.require_version("Gtk", "3.0")
@@ -22,17 +23,17 @@ class MainWindow(gtk.Window):
 		# Make the class a GTK window
 		gtk.Window.__init__(self)
 
-		self.connect("destroy", self.exit)
-		self.connect("delete_event", self.exit)
-
 		self.builder = gtk.Builder()
-		self.builder.add_from_file("./main.glade")
+		self.builder.add_from_file(paths_factory.main_window_wireframe_path())
 		self.builder.connect_signals(self)
 
 		self.window = self.builder.get_object("mainwindow")
 		self.userlist = self.builder.get_object("userlist")
 		self.modellistbox = self.builder.get_object("modellistbox")
 		self.opencvimage = self.builder.get_object("opencvimage")
+
+		self.window.connect("destroy", self.exit)
+		self.window.connect("delete_event", self.exit)
 
 		# Init capture for video tab
 		self.capture = None
@@ -41,7 +42,7 @@ class MainWindow(gtk.Window):
 		self.treeview = gtk.TreeView()
 		self.treeview.set_vexpand(True)
 
-		# Set the coloums
+		# Set the columns
 		for i, column in enumerate([_("ID"), _("Created"), _("Label")]):
 			col = gtk.TreeViewColumn(column, gtk.CellRendererText(), text=i)
 			self.treeview.append_column(col)
@@ -49,7 +50,7 @@ class MainWindow(gtk.Window):
 		# Add the treeview
 		self.modellistbox.add(self.treeview)
 
-		filelist = os.listdir("/lib/security/howdy/models")
+		filelist = os.listdir(paths_factory.user_models_dir_path())
 		self.active_user = ""
 
 		self.userlist.items = 0
@@ -71,10 +72,12 @@ class MainWindow(gtk.Window):
 	def load_model_list(self):
 		"""(Re)load the model list"""
 
-		# Execute the list commond to get the models
-		# status, output = subprocess.getstatusoutput(["howdy list --plain -U " + self.active_user])
-		status = 0
-		output = "1,2020-12-05 14:10:22,sd\n2,2020-12-05 14:22:41,\n3,2020-12-05 14:57:37,Model #3" + self.active_user
+		# Get username and default to none if there are no models at all yet
+		user = 'none'
+		if self.active_user: user = self.active_user
+
+		# Execute the list command to get the models
+		status, output = subprocess.getstatusoutput(["howdy list --plain -U " + user])
 
 		# Create a datamodel
 		self.listmodel = gtk.ListStore(str, str, str)
@@ -82,12 +85,13 @@ class MainWindow(gtk.Window):
 		# If there was no error
 		if status == 0:
 			# Split the output per line
-			# lines = output.decode("utf-8").split("\n")
 			lines = output.split("\n")
 
 			# Add the models to the datamodel
 			for i in range(len(lines)):
-				self.listmodel.append(lines[i].split(","))
+				items = lines[i].split(",")
+				if len(items) < 3: continue
+				self.listmodel.append(items)
 
 		self.treeview.set_model(self.listmodel)
 
@@ -101,7 +105,7 @@ class MainWindow(gtk.Window):
 		status, output = subprocess.getstatusoutput(["sudo -u " + user + " timeout 10 xdg-open " + uri])
 		return True
 
-	def exit(self, widget, context):
+	def exit(self, widget=None, context=None):
 		"""Cleanly exit"""
 		if self.capture is not None:
 			self.capture.release()
@@ -117,7 +121,7 @@ signal.signal(signal.SIGINT, signal.SIG_DFL)
 elevate.elevate()
 
 # If no models have been created yet or when it is forced, start the onboarding
-if "--force-onboarding" in sys.argv or not os.path.exists("/lib/security/howdy/models"):
+if "--force-onboarding" in sys.argv or not os.path.exists(paths_factory.user_models_dir_path()):
 	import onboarding
 	onboarding.OnboardingWindow()
 

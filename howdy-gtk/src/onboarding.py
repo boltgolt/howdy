@@ -3,6 +3,7 @@ import os
 import re
 import time
 import subprocess
+import paths_factory
 
 from i18n import _
 
@@ -18,15 +19,16 @@ class OnboardingWindow(gtk.Window):
 		# Make the class a GTK window
 		gtk.Window.__init__(self)
 
-		self.connect("destroy", self.exit)
-		self.connect("delete_event", self.exit)
-
 		self.builder = gtk.Builder()
-		self.builder.add_from_file("./onboarding.glade")
+		self.builder.add_from_file(paths_factory.onboarding_wireframe_path())
 		self.builder.connect_signals(self)
 
 		self.window = self.builder.get_object("onboardingwindow")
+		self.slidecontainer = self.builder.get_object("slidecontainer")
 		self.nextbutton = self.builder.get_object("nextbutton")
+
+		self.window.connect("destroy", self.exit)
+		self.window.connect("delete_event", self.exit)
 
 		self.slides = [
 			self.builder.get_object("slide0"),
@@ -34,7 +36,8 @@ class OnboardingWindow(gtk.Window):
 			self.builder.get_object("slide2"),
 			self.builder.get_object("slide3"),
 			self.builder.get_object("slide4"),
-			self.builder.get_object("slide5")
+			self.builder.get_object("slide5"),
+			self.builder.get_object("slide6")
 		]
 
 		self.window.show_all()
@@ -51,6 +54,8 @@ class OnboardingWindow(gtk.Window):
 		self.slides[self.window.current_slide].hide()
 		self.slides[self.window.current_slide + 1].show()
 		self.window.current_slide += 1
+		# the shown child may have zero/wrong dimensions
+		self.slidecontainer.queue_resize()
 
 		if self.window.current_slide == 1:
 			self.execute_slide1()
@@ -62,18 +67,21 @@ class OnboardingWindow(gtk.Window):
 			self.execute_slide4()
 		elif self.window.current_slide == 5:
 			self.execute_slide5()
+		elif self.window.current_slide == 6:
+			self.execute_slide6()
 
 	def execute_slide1(self):
 		self.downloadoutputlabel = self.builder.get_object("downloadoutputlabel")
 		eventbox = self.builder.get_object("downloadeventbox")
 		eventbox.modify_bg(gtk.StateType.NORMAL, gdk.Color(red=0, green=0, blue=0))
 
-		if os.path.exists("/lib/security/howdy/dlib-data/shape_predictor_5_face_landmarks.dat"):
+		# TODO: Better way to do this?
+		if os.path.exists(paths_factory.dlib_data_dir_path() / "shape_predictor_5_face_landmarks.dat"):
 			self.downloadoutputlabel.set_text(_("Datafiles have already been downloaded!\nClick Next to continue"))
 			self.enable_next()
 			return
 
-		self.proc = subprocess.Popen("./install.sh", stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True, cwd="/lib/security/howdy/dlib-data")
+		self.proc = subprocess.Popen("./install.sh", stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True, cwd=paths_factory.dlib_data_dir_path())
 
 		self.download_lines = []
 		self.read_download_line()
@@ -114,10 +122,10 @@ class OnboardingWindow(gtk.Window):
 		except Exception:
 			self.show_error(_("Error while importing OpenCV2"), _("Try reinstalling cv2"))
 
-		device_ids = os.listdir("/dev/v4l/by-path")
 		device_rows = []
-
-		if not device_ids:
+		try:
+			device_ids = os.listdir("/dev/v4l/by-path")
+		except Exception:
 			self.show_error(_("No webcams found on system"), _("Please configure your camera yourself if you are sure a compatible camera is connected"))
 
 		# Loop though all devices
@@ -138,28 +146,21 @@ class OnboardingWindow(gtk.Window):
 				if re_name:
 					device_name = re_name.group(1)
 
-			try:
-				capture = cv2.VideoCapture(device_path)
-				capture.grab()
-				ret, frame = capture.read()
-			except Exception:
+			capture = cv2.VideoCapture(device_path)
+			is_open, frame = capture.read()
+			if not is_open:
 				device_rows.append([device_name, device_path, -9, _("No, camera can't be opened")])
 				continue
 
-			if not is_gray(frame):
+			try:
+				if not is_gray(frame):
+					raise Exception()
+			except Exception:
 				device_rows.append([device_name, device_path, -5, _("No, not an infrared camera")])
-				continue
-
-			time.sleep(.2)
-
-			ret, frame = capture.read()
-
-			if not is_gray(frame):
-				device_rows.append([device_name, device_path, -5, _("No, not an infrared camera")])
+				capture.release()
 				continue
 
 			device_rows.append([device_name, device_path, 5, _("Yes, compatible infrared camera")])
-
 			capture.release()
 
 		device_rows = sorted(device_rows, key=lambda k: -k[2])
@@ -170,7 +171,7 @@ class OnboardingWindow(gtk.Window):
 		self.treeview = gtk.TreeView()
 		self.treeview.set_vexpand(True)
 
-		# Set the coloums
+		# Set the columns
 		for i, column in enumerate([_("Camera identifier or path"), _("Recommended")]):
 			cell = gtk.CellRendererText()
 			cell.set_property("ellipsize", pango.EllipsizeMode.END)
@@ -181,19 +182,56 @@ class OnboardingWindow(gtk.Window):
 		self.devicelistbox.add(self.treeview)
 
 		# Create a datamodel
-		self.listmodel = gtk.ListStore(str, str, str)
+		self.listmodel = gtk.ListStore(str, str, str, bool)
 
 		for device in device_rows:
-			self.listmodel.append([device[0], device[3], device[1]])
+			is_gray = device[2] == 5
+			self.listmodel.append([device[0], device[3], device[1], is_gray])
 
 		self.treeview.set_model(self.listmodel)
 		self.treeview.set_cursor(0)
 
-		self.loadinglabel.hide()
 		self.treeview.show()
+		self.loadinglabel.hide()
 		self.enable_next()
 
 	def execute_slide3(self):
+		try:
+			import cv2
+		except Exception:
+			self.show_error(_("Error while importing OpenCV2"), _("Try reinstalling cv2"))
+
+		selection = self.treeview.get_selection()
+		(listmodel, rowlist) = selection.get_selected_rows()
+		
+		if len(rowlist) != 1:
+			self.show_error(_("Error selecting camera"))
+   
+		device_path = listmodel.get_value(listmodel.get_iter(rowlist[0]), 2)
+		is_gray = listmodel.get_value(listmodel.get_iter(rowlist[0]), 3)
+
+		if is_gray:
+			# test if linux-enable-ir-emitter help should be displayed, 
+			# the user must click on the yes/no button which calls the method slide3_button_yes|no
+			self.capture = cv2.VideoCapture(device_path)
+			if not self.capture.isOpened():
+				self.show_error(_("The selected camera cannot be opened"), _("Try to select another one"))
+			self.capture.read()
+		else:  
+			# skip, the selected camera is not infrared
+			self.go_next_slide()
+
+	def slide3_button_yes(self, button):
+		self.capture.release()
+		self.go_next_slide()
+
+	def slide3_button_no(self, button):
+		self.capture.release()
+		self.builder.get_object("leiestatus").set_markup(_("Please visit\n<a href=\"https://github.com/EmixamPP/linux-enable-ir-emitter\">https://github.com/EmixamPP/linux-enable-ir-emitter</a>\nto enable your ir emitter"))
+		self.builder.get_object("leieyesbutton").hide()
+		self.builder.get_object("leienobutton").hide()
+
+	def execute_slide4(self):
 		selection = self.treeview.get_selection()
 		(listmodel, rowlist) = selection.get_selected_rows()
 
@@ -232,10 +270,10 @@ class OnboardingWindow(gtk.Window):
 
 		gobject.timeout_add(10, self.go_next_slide)
 
-	def execute_slide4(self):
+	def execute_slide5(self):
 		self.enable_next()
 
-	def execute_slide5(self):
+	def execute_slide6(self):
 		radio_buttons = self.builder.get_object("radiobalanced").get_group()
 		radio_selected = False
 		radio_certanty = 5.0
@@ -282,7 +320,7 @@ class OnboardingWindow(gtk.Window):
 		dialog.destroy()
 		self.exit()
 
-	def exit(self, widget=None):
+	def exit(self, widget=None, context=None):
 		"""Cleanly exit"""
 		gtk.main_quit()
 		sys.exit(0)
