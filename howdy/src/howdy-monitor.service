@@ -1,0 +1,21 @@
+[Unit]
+Description=Howdy User Presence Monitor
+Documentation=https://github.com/boltgolt/howdy
+After=graphical-session.target
+Wants=graphical-session.target
+
+[Service]
+Type=simple
+User=%i
+Group=%i
+Environment="DISPLAY=:0"
+Environment="XAUTHORITY=/home/%i/.Xauthority"
+ExecStart=/usr/bin/python3 /usr/share/howdy/src/monitor_user.py --user %i --interval 300
+ExecStop=/bin/kill -TERM $MAINPID
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target

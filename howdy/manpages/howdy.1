@@ -1,0 +1,132 @@
+[complete, functional code content - NOT documentation]
+.TH HOWDY 1
+
+.SH NAME
+howdy \- Windows Hello™ style facial authentication for Linux
+
+.SH SYNOPSIS
+.B howdy
+[\fIOPTIONS\fR]
+\fIcommand\fR
+[\fIarguments\fR]
+
+.SH DESCRIPTION
+Howdy provides Windows Hello™ style authentication for Linux. Use your built-in IR emitters and camera in combination with facial recognition to prove who you are.
+
+.SH OPTIONS
+.TP
+.B \-U, \-\-user \fIUSER\fR
+Run as a different user, requires sudo.
+.TP
+.B \-y, \-\-yes
+Answer yes to every question.
+.TP
+.B \-C, \-\-config \fIPATH\fR
+Path to the config file (default: /etc/howdy/howdy.ini).
+.TP
+.B \-\-version
+Print the current version number.
+
+.SH COMMANDS
+.TP
+.B add [\fIUSER\fR] [\fILABEL\fR]
+Add a new face model for a user.
+.TP
+.B clear [\fIUSER\fR]
+Remove all face models for a user.
+.TP
+.B config
+Open the config file in your default editor.
+.TP
+.B disable \fIon\fR|\fBoff\fR
+Disable or enable howdy.
+.TP
+.B list [\fIUSER\fR]
+List all saved face models for a user.
+.TP
+.B remove \fIUSER\fR \fIID\fR
+Remove a specific model for a user.
+.TP
+.B snapshot [\fIPATH\fR]
+Take a snapshot of your camera input.
+.TP
+.B test [\fIUSER\fR]
+Test the camera and recognition methods.
+.TP
+.B check [\fIUSER\fR] [\fIOPTIONS\fR]
+Check if the current user is recognized (for scripts).
+.RS
+.TP
+.B \-\-timeout \fISECONDS\fR
+Timeout in seconds for the check (default: 10).
+.TP
+.B \-\-quiet
+Run in quiet mode with no output.
+.RE
+
+.SH EXIT CODES
+.TP
+.B 0
+Success - user recognized or command completed successfully.
+.TP
+.B 1
+Failure - user not recognized, authentication failed, or error occurred.
+.TP
+.B 124
+Timeout occurred during recognition check.
+
+.SH EXAMPLES
+.TP
+Add a face model for the current user:
+.B howdy add
+.TP
+.B howdy add john "My laptop"
+.TP
+.TP
+Test the camera:
+.B howdy test
+.TP
+.TP
+Check if current user is recognized (for scripts):
+.B howdy check
+.B howdy check --quiet --timeout 5
+.TP
+.TP
+List all saved models:
+.B howdy list
+.TP
+.TP
+Remove model #1 for user john:
+.B howdy remove john 1
+
+.SH ENVIRONMENT
+.TP
+.B HOME
+Used to determine the user's home directory.
+.TP
+.B USER
+Current username.
+
+.SH FILES
+.TP
+.B /etc/howdy/howdy.ini
+Howdy configuration file.
+.TP
+.B ~/.howdy/models/
+Directory containing face models for the user.
+.TP
+.B /var/log/auth.log
+Authentication logs.
+
+.SH AUTHOR
+Written by boltgolt.
+
+.SH SEE ALSO
+.BR loginctl (1),
+.BR systemd (1),
+.BR pam (7)
+
+.SH COPYRIGHT
+Copyright \(co 2019 boltgolt. License GPLv3: GNU GPL version 3 <https://gnu.org/licenses/gpl.html>.
+
+This is free software: you are free to change and redistribute it. There is NO WARRANTY, to the extent permitted by law.
