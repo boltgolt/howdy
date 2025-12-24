@@ -1,0 +1,8 @@
+#!/bin/bash
+# Pre-removal script for howdy-gui-manager
+
+set -e
+
+echo "Removing Howdy GUI Manager..."
+
+exit 0

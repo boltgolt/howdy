@@ -1,0 +1,22 @@
+#!/bin/bash
+# Post-installation script for howdy-gui-manager
+
+set -e
+
+# Set executable permissions
+chmod +x /usr/bin/howdy-gui-manager
+
+# Update desktop database
+if command -v update-desktop-database >/dev/null 2>&1; then
+    update-desktop-database -q
+fi
+
+# Update icon cache
+if command -v gtk-update-icon-cache >/dev/null 2>&1; then
+    gtk-update-icon-cache -q -t -f /usr/share/icons/hicolor || true
+fi
+
+echo "Howdy GUI Manager installed successfully!"
+echo "You can launch it from your application menu or run: sudo howdy-gui-manager"
+
+exit 0
