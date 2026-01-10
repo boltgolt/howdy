@@ -1,8 +1,0 @@
-#!/bin/bash
-#
-# Launcher script for Howdy GUI Manager
-# This script is installed to /usr/bin/howdy-gui-manager
-#
-
-# Run the Python application
-exec python3 /usr/share/howdy-gui/howdy_gui_manager.py "$@"
