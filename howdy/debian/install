@@ -5,7 +5,7 @@ src/rubberstamps/. lib/security/howdy/rubberstamps
 src/cli.py lib/security/howdy
 src/compare.py lib/security/howdy
 src/i18n.py lib/security/howdy
-src/logo.png lib/security/howdy
+src/logo.png usr/share/howdy
 src/snapshot.py lib/security/howdy
 
 build/pam_howdy.so lib/security/howdy

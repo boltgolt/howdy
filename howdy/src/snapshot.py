@@ -31,12 +31,15 @@ def generate(frames, text_lines):
 	if len(frames) > 1:
 		# Load the logo from file
 		logo = cv2.imread(paths_factory.logo_path())
-		# Calculate the position of the logo
-		logo_y = frame_height + 20
-		logo_x = frame_width * len(frames) - 210
+		
+		# Make sure the logo is loaded
+		if logo is not None:
+			# Calculate the position of the logo
+			logo_y = frame_height + 20
+			logo_x = frame_width * len(frames) - 210
 
-		# Overlay the logo on top of the image
-		snap[logo_y:logo_y+57, logo_x:logo_x+180] = logo
+			# Overlay the logo on top of the image
+			snap[logo_y:logo_y+57, logo_x:logo_x+180] = logo
 
 	# Go through each line
 	line_number = 0
