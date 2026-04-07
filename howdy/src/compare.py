@@ -68,6 +68,13 @@ def init_detector(lock):
 
 def make_snapshot(type):
 	"""Generate snapshot after detection"""
+	kind = None
+	upper_type = str(type).upper()
+
+	if "FAIL" in upper_type:
+		kind = "failed"
+	elif "SUCCESS" in upper_type:
+		kind = "success"
 	snapshot.generate(snapframes, [
 		type + _(" LOGIN"),
 		_("Date: ") + datetime.now(timezone.utc).strftime("%Y/%m/%d %H:%M:%S UTC"),
@@ -75,7 +82,7 @@ def make_snapshot(type):
 		_("Frames: ") + str(frames) + " (" + str(round(frames / (time.time() - timings["fr"]), 2)) + "FPS)",
 		_("Hostname: ") + os.uname().nodename,
 		_("Best certainty value: ") + str(round(lowest_certainty * 10, 1))
-	])
+	], kind=kind)
 
 
 def send_to_ui(type, message):
