@@ -155,6 +155,20 @@ Any Python errors get logged directly into the console and should indicate what 
 Please first check the [wiki on common issues](https://github.com/boltgolt/howdy/wiki/Common-issues) and 
 if you encounter an error that hasn't been reported yet, don't be afraid to open a new issue.
 
+### Hardware notes
+
+#### ASUS laptops with Sonix IR cameras (`3277:0018` and similar)
+
+On a number of ASUS laptops (Vivobook X1607C, ProArt PX13, ProArt H7606WX, Zenbook S16 UM5606, …), the IR emitter is **controlled by the laptop's proximity sensor**, not by a UVC extension-unit control. The LED sleeps when no motion is detected in front of the camera and pulses on when a person sits down to authenticate. This means:
+
+- `howdy test` shows a black feed when no one is in front of the camera. That is expected — your face entering the frame at auth time triggers the LED.
+- **Do not run `linux-enable-ir-emitter configure` on these models.** Its brute-force step has been reported to wedge the USB bus on the Sonix `3277:0018` chipset, requiring a hard reboot (see [linux-enable-ir-emitter#195](https://github.com/EmixamPP/linux-enable-ir-emitter/issues/195)). It will not find a working sequence anyway, because the LED is not chipset-controlled.
+- Howdy works out of the box with `device_path = /dev/video2` (or whichever node is the IR camera) on these models — no extra configuration required.
+
+On many of these laptops the IR LED emitter is physically located in the same bezel cutout as the RGB camera, not in the IR-camera cutout. If you use a privacy shutter, covering "the regular camera" can dim the IR feed even though Howdy never opens the RGB device. You can verify this by holding a phone camera in front of the bezel while running `howdy test` — the IR LED is visible as a faint violet/white blink through the phone screen, and it will be in the RGB cutout, not the IR one.
+
+For background data and the empirical investigation that led to these notes, see [#1109](https://github.com/boltgolt/howdy/issues/1109).
+
 ## A note on security
 
 This package is in no way as secure as a password and will never be. Although it's harder to fool than normal face recognition, a person who looks similar to you, or a well-printed photo of you could be enough to do it. Howdy is a more quick and convenient way of logging in, not a more secure one.
