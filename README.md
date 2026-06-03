@@ -113,6 +113,8 @@ meson compile -C build
 
 You can also install Howdy to your system with `meson install -C build`.
 
+On SELinux-enforcing distributions (Fedora, RHEL, etc.) configure the build with `-Dwith_selinux=true` so the SELinux policy module is built and installed. After installing, load it once with `sudo semodule -i /usr/share/selinux/packages/howdy.pp` (packagers should do this from the post-install scriptlet). See [SELinux: face auth works with sudo but not at the login/lock screen](#selinux-face-auth-works-with-sudo-but-not-at-the-loginlock-screen).
+
 ## Setup
 
 After installation, Howdy needs to learn what you look like so it can recognise you later. Run `sudo howdy add` to add a face model.
@@ -154,6 +156,40 @@ Any Python errors get logged directly into the console and should indicate what 
 
 Please first check the [wiki on common issues](https://github.com/boltgolt/howdy/wiki/Common-issues) and 
 if you encounter an error that hasn't been reported yet, don't be afraid to open a new issue.
+
+### SELinux: face auth works with sudo but not at the login/lock screen
+
+On SELinux-enforcing systems (Fedora's default), `sudo howdy test` and `sudo`
+prompts authenticate by face, but the GDM/SDDM login screen and the desktop
+lock screen always fall back to the password, logging:
+
+```
+pam_howdy: Failure, not possible to open camera at configured path
+```
+
+This happens because the greeter and the lock screen run under the confined
+`xdm_t` domain, and SELinux denies the `mmap` that OpenCV uses on the camera
+device (`sudo howdy test` works because it runs unconfined). You can confirm it
+with:
+
+```
+journalctl -b | grep 'avc.*denied'
+# avc: denied { map } ... comm="python3" path="/dev/videoN"
+#      scontext=...:xdm_t tcontext=...:v4l_device_t tclass=chr_file
+```
+
+The fix is the SELinux policy module shipped in this repository
+(`howdy/src/selinux/howdy.te`). If your package didn't install and load it,
+build and load it manually:
+
+```sh
+cd howdy/src/selinux
+checkmodule -M -m -o howdy.mod howdy.te
+semodule_package -o howdy.pp -m howdy.mod
+sudo semodule -i howdy.pp
+```
+
+The module is persistent across reboots; remove it with `sudo semodule -r howdy`.
 
 ## A note on security
 

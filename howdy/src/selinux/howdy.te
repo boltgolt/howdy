@@ -1,0 +1,27 @@
+module howdy 1.0;
+
+# Allow display managers and the screen locker (xdm_t: the GDM/SDDM/LightDM
+# greeters and the GNOME/KDE lock screen) to open V4L capture devices for face
+# authentication.
+#
+# pam_howdy runs under the xdm_t domain at the login and lock screens. OpenCV
+# maps the V4L2 capture buffers into memory (mmap), which SELinux denies by
+# default:
+#
+#   avc: denied { map } for comm="python3" path="/dev/videoN"
+#        scontext=...:xdm_t tcontext=...:v4l_device_t tclass=chr_file
+#
+# Without this rule pam_howdy aborts at the login/lock screen with
+# "Failure, not possible to open camera at configured path" and falls back to
+# the password, even though `sudo howdy test` works (it runs unconfined).
+#
+# Only { map } is denied in practice; the rest of the access vector is included
+# so OpenCV does not hit a follow-on denial once it proceeds past mmap.
+
+require {
+    type xdm_t;
+    type v4l_device_t;
+    class chr_file { map read write open ioctl getattr };
+}
+
+allow xdm_t v4l_device_t:chr_file { map read write open ioctl getattr };

@@ -70,6 +70,33 @@ if get_option('install_pam_config')
     )
 endif
 
+# Build and install the SELinux policy module on SELinux-enforcing distros
+# (Fedora/RHEL). Without it pam_howdy runs under the confined xdm_t domain at
+# the login/lock screen and SELinux denies mmap on the camera, so face auth
+# silently falls back to the password. The compiled module still has to be
+# loaded once with `semodule -i` (usually from the package post-install); see
+# the README.
+if get_option('with_selinux')
+    checkmodule = find_program('checkmodule')
+    semodule_package = find_program('semodule_package')
+
+    selinux_mod = custom_target(
+        'howdy-selinux-mod',
+        input: 'selinux/howdy.te',
+        output: 'howdy.mod',
+        command: [checkmodule, '-M', '-m', '-o', '@OUTPUT@', '@INPUT@'],
+    )
+    custom_target(
+        'howdy-selinux-pp',
+        input: selinux_mod,
+        output: 'howdy.pp',
+        command: [semodule_package, '-o', '@OUTPUT@', '-m', '@INPUT@'],
+        install: true,
+        install_dir: get_option('prefix') / get_option('datadir') / 'selinux' / 'packages',
+        install_tag: 'selinux',
+    )
+endif
+
 if get_option('install_in_site_packages')
     py.install_sources(
         py_sources,
