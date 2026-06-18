@@ -123,4 +123,4 @@ elif args.command == "snapshot":
 elif args.command == "test":
 	import cli.test
 else:
-	print("Ubuntu Hello 1.0.1")
+	print("Ubuntu Hello 1.0.2")

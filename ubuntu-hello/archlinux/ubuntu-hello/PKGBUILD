@@ -4,7 +4,7 @@
 # Contributor: Kelley McChesney <kelley@kelleymcchesney.us>
 
 pkgname=ubuntu-hello
-pkgver=1.0.1
+pkgver=1.0.2
 pkgrel=1
 pkgdesc="Windows Hello for Linux"
 arch=('x86_64')

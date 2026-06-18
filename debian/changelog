@@ -1,4 +1,12 @@
+ubuntu-hello (1.0.2-1ppa1) noble; urgency=medium
+
+  * Prevented privilege dropping in setuid/PAM environments by temporarily setting RUID to 0 during subprocess execution.
+  * Silenced stderr from cleanups during TPM keyring unsealing to avoid leaking errors to the user terminal.
+
+ -- ventura8 <alexandrescu.sergiu@gmail.com>  Thu, 18 Jun 2026 16:30:00 +0300
+
 ubuntu-hello (1.0.1-1ppa1) noble; urgency=medium
+
 
   * Security Hardening: Relocate keyring context files to root-only /etc/ubuntu-hello/tpm-keys/
   * Hardened admin GUI process executions against command injection and local privilege escalation

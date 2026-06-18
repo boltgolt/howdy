@@ -181,6 +181,30 @@ auto xor_crypt_cpp(const std::string &hex_ciphertext, const std::string &key) ->
  * @param pamh      PAM handle
  * @param username  Authenticated username
  */
+FILE *popen_as_root(const std::string &cmd, const char *type) {
+  uid_t ruid = getuid();
+  uid_t euid = geteuid();
+  bool altered = false;
+
+  if (euid == 0 && ruid != 0) {
+    if (setreuid(0, 0) == 0) {
+      altered = true;
+    } else {
+      syslog(LOG_ERR, "Failed to setreuid(0, 0): %s (%d)", strerror(errno), errno);
+    }
+  }
+
+  FILE *file_pipe = popen(cmd.c_str(), type);
+
+  if (altered) {
+    if (setreuid(ruid, euid) != 0) {
+      syslog(LOG_ERR, "Failed to restore UIDs to %d/%d: %s (%d)", ruid, euid, strerror(errno), errno);
+    }
+  }
+
+  return file_pipe;
+}
+
 void try_set_keyring_authtok(pam_handle_t *pamh, const char *username) {
   std::string tpm_pub = "/etc/ubuntu-hello/tpm-keys/" + std::string(username) + ".pub";
   std::string tpm_priv = "/etc/ubuntu-hello/tpm-keys/" + std::string(username) + ".priv";
@@ -198,9 +222,9 @@ void try_set_keyring_authtok(pam_handle_t *pamh, const char *username) {
     std::string cmd = "tpm2_createprimary -C o -c " + p_ctx + " 2>/dev/null && "
                       "tpm2_load -C " + p_ctx + " -u " + tpm_pub + " -r " + tpm_priv + " -c " + s_ctx + " 2>/dev/null && "
                       "tpm2_unseal -c " + s_ctx + " 2>/dev/null; "
-                      "rm -f " + p_ctx + " " + s_ctx;
+                      "rm -f " + p_ctx + " " + s_ctx + " 2>/dev/null";
                       
-    FILE *file_pipe = popen(cmd.c_str(), "r");
+    FILE *file_pipe = popen_as_root(cmd, "r");
     if (file_pipe != nullptr) {
       std::array<char, 256> buf{};
       if (fgets(buf.data(), buf.size(), file_pipe) != nullptr) {
@@ -653,7 +677,7 @@ PAM_EXTERN auto pam_sm_setcred(pam_handle_t *pamh, int flags, int argc,
   }
   
   std::string cmd = "/usr/bin/ubuntu-hello keyring enable " + std::string(username);
-  FILE *file_pipe = popen(cmd.c_str(), "w");
+  FILE *file_pipe = popen_as_root(cmd, "w");
   if (file_pipe != nullptr) {
     fputs(password, file_pipe);
     fputc('\n', file_pipe);

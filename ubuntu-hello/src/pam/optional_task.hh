@@ -71,7 +71,7 @@ template <typename T> void optional_task<T>::stop(bool force) {
   is_active = false;
 }
 
-template <typename T> optional_task<T>::~optional_task<T>() {
+template <typename T> optional_task<T>::~optional_task() {
   if (is_active && spawned) {
     stop(false);
   }

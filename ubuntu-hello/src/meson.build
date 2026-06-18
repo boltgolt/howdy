@@ -1,5 +1,5 @@
 if meson.is_subproject()
-project('ubuntu-hello', 'cpp', license: 'MIT', version: '1.0.1', meson_version: '>= 0.64.0')
+project('ubuntu-hello', 'cpp', license: 'MIT', version: '1.0.2', meson_version: '>= 0.64.0')
 endif
 
 
