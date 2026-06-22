@@ -107,8 +107,11 @@ class ffmpeg_reader:
 			self.record(self.numframes)
 			return 0, self.video
 
-		# If we are called and self.video is empty, we should record self.numframes to fill the video buffer
-		if self.video == ():
+		# If we are called and self.video is empty, we should record self.numframes to fill the video buffer.
+		# self.video is an empty tuple until record() replaces it with a NumPy array, so check the type
+		# directly. Using "== ()" would trigger NumPy elementwise broadcasting once it holds an array and
+		# raise a ValueError instead of reporting emptiness.
+		if isinstance(self.video, tuple):
 			self.record(self.numframes)
 
 		# If we've read max frames, but still are being requested to read more, we simply record another batch.
