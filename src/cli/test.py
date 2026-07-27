@@ -108,15 +108,15 @@ try:
 		height, width = frame.shape[:2]
 
 		# Create a histogram of the image with 8 values
-		hist = cv2.calcHist([frame], [0], None, [8], [0, 256])
+		hist = cv2.calcHist([frame], [0], None, [8], [0, 256]).ravel()
 		# All values combined for percentage calculation
-		hist_total = int(sum(hist)[0])
+		hist_total = int(hist.sum())
 		# Fill with the overal containing percentage
 		hist_perc = []
 
 		# Loop though all values to calculate a percentage and add it to the overlay
 		for index, value in enumerate(hist):
-			value_perc = float(value[0]) / hist_total * 100
+			value_perc = float(value) / hist_total * 100
 			hist_perc.append(value_perc)
 
 			# Top left pont, 10px margins

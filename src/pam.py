@@ -6,11 +6,14 @@ import os
 import glob
 import syslog
 
-# pam-python is running python 2, so we use the old module here
-import ConfigParser
+# Import the configuration parser under a consistent name
+try:
+        import configparser
+except ImportError:
+        import ConfigParser as configparser
 
 # Read config from disk
-config = ConfigParser.ConfigParser()
+config = configparser.ConfigParser()
 config.read(os.path.dirname(os.path.abspath(__file__)) + "/config.ini")
 
 
