@@ -82,7 +82,15 @@ def on_model_add(self, button):
 
 def execute_add(box, dialog, entered_name):
 
-	status, output = subprocess.getstatusoutput(["howdy add '" + entered_name + "' -y -U " + box.active_user])
+	# Run howdy without a shell so the label travels as one argument,
+	# quotes and spaces in the name can't break out of the command
+	proc = subprocess.run(
+		["howdy", "add", entered_name, "-y", "-U", box.active_user],
+		capture_output=True,
+		text=True,
+	)
+	status = proc.returncode
+	output = proc.stdout + proc.stderr
 
 	dialog.destroy()
 
@@ -111,7 +119,13 @@ def on_model_delete(self, button):
 		dialog.destroy()
 
 		if response == gtk.ResponseType.OK:
-			status, output = subprocess.getstatusoutput(["howdy remove " + id + " -y -U " + self.active_user])
+			proc = subprocess.run(
+				["howdy", "remove", str(id), "-y", "-U", self.active_user],
+				capture_output=True,
+				text=True,
+			)
+			status = proc.returncode
+			output = proc.stdout + proc.stderr
 
 			if status != 0:
 				dialog = gtk.MessageDialog(parent=self, flags=gtk.DialogFlags.MODAL, type=gtk.MessageType.ERROR, buttons=gtk.ButtonsType.CLOSE)
