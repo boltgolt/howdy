@@ -73,6 +73,54 @@ sudo dnf --refresh install howdy
 
 See the link to the COPR repository for detailed configuration steps.
 
+#### Fedora 43 and newer
+
+Fedora no longer ships `dlib`, so the `principis/howdy-beta` package cannot be installed there ([#1069](https://github.com/boltgolt/howdy/issues/1069)). On Fedora 44 and newer, the community COPR [`alvarogarinf/howdy`](https://copr.fedorainfracloud.org/coprs/alvarogarinf/howdy/) packages dlib, the face models and an SELinux module:
+
+```
+sudo dnf copr enable alvarogarinf/howdy
+sudo dnf install howdy
+```
+
+On Fedora 43, or to build it yourself, install the dependencies and build from source:
+
+```sh
+sudo dnf install meson ninja-build gcc-c++ cmake pam-devel libevdev-devel inih-devel \
+  python3-devel python3-opencv python3-numpy checkpolicy
+sudo pip install dlib    # installs into /usr/local, compiling takes several minutes
+
+# Fedora's Python hides /usr/local when sudo runs the PAM module (see below), so add it explicitly
+echo /usr/local/lib64/python3.14/site-packages | sudo tee /usr/lib64/python3.14/site-packages/zz-usr-local.pth
+
+meson setup build --prefix=/usr -Dpython_path=/usr/bin/python3 -Dwith_selinux=true
+meson compile -C build
+sudo meson install -C build
+sudo /usr/share/dlib-data/install.sh
+sudo semodule -i /usr/share/selinux/packages/howdy.pp
+```
+
+Replace `3.14` with your Python version (`python3 --version`). Why the `.pth` file is needed: when `sudo` runs the PAM module, the real and effective user IDs differ, and Fedora's Python then leaves `/usr/local` off its module path. `sudo howdy test` finds `dlib`, but `sudo` itself fails with `ModuleNotFoundError: No module named 'dlib'`.
+
+#### Fedora setup
+
+1. Set `device_path` with `sudo howdy config`. Use the IR camera's path from `/dev/v4l/by-path/`: it is usually the node that lists the `GREY` format in `v4l2-ctl --list-formats -d <path>` (from `v4l-utils`).
+2. Add a face model with `sudo howdy add`, and check it with `sudo howdy test`.
+3. Add `auth sufficient pam_howdy.so` as the first `auth` line of each service that should accept your face. Edit only these files, not `system-auth` or `password-auth`, which `authselect` overwrites:
+
+| Where | File |
+|---|---|
+| sudo | `/etc/pam.d/sudo` |
+| KDE Plasma lock screen | `/etc/pam.d/kde` |
+| SDDM login | `/etc/pam.d/sddm` (after the `pam_selinux_permit.so` line) |
+| GDM login and GNOME lock screen | `/etc/pam.d/gdm-password` |
+
+Keep a root shell (`sudo -i`) open while editing, and test from a new terminal before closing it. A `sufficient` match skips every module after it, including a second factor such as a security key, so don't add Howdy to a service that requires one.
+
+- **KDE Plasma lock screen:** it runs the check as your own user, so it must be able to read your model: `sudo chmod 711 /etc/howdy/models && sudo chmod 644 /etc/howdy/models/$USER.dat`. This lets other local users read the model too.
+- **SDDM:** authentication only starts when you press Enter. Look at the camera and press Enter with an empty password field.
+- **Login and lock screens on SELinux:** if face authentication works with `sudo` but not at the login screen, check `sudo ausearch -m avc -ts recent` for a denied `map` on `/dev/video*`. The SELinux module installed above fixes it ([#1117](https://github.com/boltgolt/howdy/issues/1117)).
+- Logging in by face does not unlock KWallet or GNOME Keyring; they ask for your password when first needed.
+
 ### openSUSE
 
 _Maintainer: [@dmafanasyev](https://github.com/dmafanasyev)_

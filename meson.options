@@ -9,3 +9,4 @@ option('py_sources_dir', type: 'string', value: '', description: 'Set the python
 option('install_pam_config', type: 'boolean', value: false, description: 'Install pam config file (for Debian/Ubuntu)')
 option('python_path', type: 'string', value: '/usr/bin/python', description: 'Set the path to the python executable')
 option('with_polkit', type: 'boolean', value: false, description: 'Install polkit policy config file')
+option('with_selinux', type: 'boolean', value: false, description: 'Build and install the SELinux policy module (needs checkmodule and semodule_package)')
