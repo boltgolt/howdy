@@ -1,6 +1,14 @@
-if meson.is_subproject()
 project('howdy-gtk', license: 'MIT', version: 'beta', meson_version: '>= 0.64.0')
-endif
+
+dlibdatadir = get_option('dlib_data_dir') != '' ? get_option('dlib_data_dir') : join_paths(get_option('prefix'), get_option('datadir'), 'dlib-data')
+confdir = get_option('config_dir') != '' ? get_option('config_dir') : join_paths(get_option('prefix'), get_option('sysconfdir'), 'howdy')
+usermodelsdir = get_option('user_models_dir') != '' ? get_option('user_models_dir') : join_paths(confdir, 'models')
+
+paths_dict = {
+    'config_dir': confdir,
+    'dlib_data_dir': dlibdatadir,
+    'user_models_dir': usermodelsdir
+}
 
 datadir = get_option('prefix') / get_option('datadir') / 'howdy-gtk'
 py_conf = configuration_data(paths_dict)

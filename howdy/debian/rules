@@ -5,18 +5,20 @@ DPKG_EXPORT_BUILDFLAGS = 1
 include /usr/share/dpkg/default.mk
 
 %:
-	dh $@
+	dh $@ --buildsystem=meson
 
-build:
-	# Create build dir
-	meson setup -Dinih:with_INIReader=true build src/pam
-	# Compile shared object
-	ninja -C build
+override_dh_auto_configure:
+	# Install to the same locations as previous Howdy packages
+	dh_auto_configure -- \
+		-Dinih:with_INIReader=true \
+		-Dpython_path=/usr/bin/python3 \
+		-Dconfig_dir=/etc/howdy \
+		-Ddlib_data_dir=/etc/howdy/dlib-data \
+		-Dpy_sources_dir=/lib/security \
+		-Dpam_dir=/lib/security/howdy \
+		-Dinstall_pam_config=true
 
-clean:
-	# Delete mason build directory
-	rm -rf ./build
-	# Force remove temp debian build directory
-	rm -rf ./debian/howdy
+override_dh_auto_clean:
+	dh_auto_clean
 	# Make sure subprojects get pulled locally
-	meson subprojects download --sourcedir src/pam
+	meson subprojects download --sourcedir .

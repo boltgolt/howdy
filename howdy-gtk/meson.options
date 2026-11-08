@@ -1,0 +1,6 @@
+option('config_dir', type: 'string', value: '', yield: true, description: 'Set the howdy config directory')
+option('dlib_data_dir', type: 'string', value: '', yield: true, description: 'Set the dlib data directory')
+option('user_models_dir', type: 'string', value: '', yield: true, description: 'Set the user models directory')
+option('install_in_site_packages', type: 'boolean', value: false, yield: true, description: 'Install howdy python files in site packages')
+option('py_sources_dir', type: 'string', value: '', yield: true, description: 'Set the python sources directory')
+option('with_polkit', type: 'boolean', value: false, yield: true, description: 'Install polkit policy config file')

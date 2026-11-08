@@ -20,8 +20,10 @@ jobs:
 
       - name: Build
         run: |
-          meson setup build
+          meson setup build howdy
           ninja -C build
+          meson setup build-gtk howdy-gtk
+          ninja -C build-gtk
 
       - name: Check source code
         run: |

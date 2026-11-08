@@ -107,11 +107,18 @@ python3-dev libopencv-dev
 #### Build
 
 ```sh
-meson setup build
+meson setup build howdy
 meson compile -C build
 ```
 
 You can also install Howdy to your system with `meson install -C build`.
+
+The optional GTK interface is a separate project, built the same way:
+
+```sh
+meson setup build-gtk howdy-gtk
+meson compile -C build-gtk
+```
 
 ## Setup
 

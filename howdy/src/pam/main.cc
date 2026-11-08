@@ -2,6 +2,7 @@
 #include <csignal>
 #include <cstdlib>
 
+#include <fcntl.h>
 #include <glob.h>
 #include <libintl.h>
 #include <pthread.h>
@@ -44,11 +45,12 @@ const auto MAX_RETRIES = 5;
 
 /**
  * Inspect the status code returned by the compare process
+ * @param  pamh          The handle to interface directly with PAM
  * @param  status        The status code
  * @param  conv_function The PAM conversation function
  * @return               A PAM return code
  */
-auto howdy_error(int status,
+auto howdy_error(pam_handle_t *pamh, int status,
                  const std::function<int(int, const char *)> &conv_function)
     -> int {
   // If the process has exited
@@ -58,34 +60,35 @@ auto howdy_error(int status,
 
     switch (status) {
     case CompareError::NO_FACE_MODEL:
-      syslog(LOG_NOTICE, "Failure, no face model known");
+      pam_syslog(pamh, LOG_NOTICE, "Failure, no face model known");
       break;
     case CompareError::TIMEOUT_REACHED:
       conv_function(PAM_ERROR_MSG, S("Failure, timeout reached"));
-      syslog(LOG_ERR, "Failure, timeout reached");
+      pam_syslog(pamh, LOG_ERR, "Failure, timeout reached");
       break;
     case CompareError::ABORT:
-      syslog(LOG_ERR, "Failure, general abort");
+      pam_syslog(pamh, LOG_ERR, "Failure, general abort");
       break;
     case CompareError::TOO_DARK:
       conv_function(PAM_ERROR_MSG, S("Face detection image too dark"));
-      syslog(LOG_ERR, "Failure, image too dark");
+      pam_syslog(pamh, LOG_ERR, "Failure, image too dark");
       break;
     case CompareError::INVALID_DEVICE:
-      syslog(LOG_ERR,
-             "Failure, not possible to open camera at configured path");
+      pam_syslog(pamh, LOG_ERR,
+                 "Failure, not possible to open camera at configured path");
       break;
     default:
-      conv_function(PAM_ERROR_MSG,
-                    std::string(S("Unknown error: ") + status).c_str());
-      syslog(LOG_ERR, "Failure, unknown error %d", status);
+      conv_function(
+          PAM_ERROR_MSG,
+          (std::string(S("Unknown error: ")) + std::to_string(status)).c_str());
+      pam_syslog(pamh, LOG_ERR, "Failure, unknown error %d", status);
     }
   } else if (WIFSIGNALED(status)) {
     // We get the signal
     status = WTERMSIG(status);
 
-    syslog(LOG_ERR, "Child killed by signal %s (%d)", strsignal(status),
-           status);
+    pam_syslog(pamh, LOG_ERR, "Child killed by signal %s (%d)",
+               strsignal(status), status);
   }
 
   // As this function is only called for error status codes, signal an error to
@@ -96,17 +99,19 @@ auto howdy_error(int status,
 /**
  * Format the success message if the status is successful or log the error in
  * the other case
+ * @param  pamh          The handle to interface directly with PAM
  * @param  username      Username
  * @param  status        Status code
  * @param  config        INI  configuration
  * @param  conv_function PAM conversation function
  * @return          Returns the conversation function return code
  */
-auto howdy_status(char *username, int status, const INIReader &config,
+auto howdy_status(pam_handle_t *pamh, char *username, int status,
+                  const INIReader &config,
                   const std::function<int(int, const char *)> &conv_function)
     -> int {
   if (status != EXIT_SUCCESS) {
-    return howdy_error(status, conv_function);
+    return howdy_error(pamh, status, conv_function);
   }
 
   if (!config.GetBoolean("core", "no_confirmation", true)) {
@@ -117,7 +122,7 @@ auto howdy_status(char *username, int status, const INIReader &config,
     conv_function(PAM_TEXT_INFO, identify_msg.c_str());
   }
 
-  syslog(LOG_INFO, "Login approved");
+  pam_syslog(pamh, LOG_INFO, "Login approved");
 
   return PAM_SUCCESS;
 }
@@ -125,15 +130,17 @@ auto howdy_status(char *username, int status, const INIReader &config,
 /**
  * Check if Howdy should be enabled according to the configuration and the
  * environment.
+ * @param  pamh   The handle to interface directly with PAM
  * @param  config INI configuration
  * @param  username Username
  * @return        Returns PAM_AUTHINFO_UNAVAIL if it shouldn't be enabled,
  * PAM_SUCCESS otherwise
  */
-auto check_enabled(const INIReader &config, const char *username) -> int {
+auto check_enabled(pam_handle_t *pamh, const INIReader &config,
+                   const char *username) -> int {
   // Stop executing if Howdy has been disabled in the config
   if (config.GetBoolean("core", "disabled", false)) {
-    syslog(LOG_INFO, "Skipped authentication, Howdy is disabled");
+    pam_syslog(pamh, LOG_INFO, "Skipped authentication, Howdy is disabled");
     return PAM_AUTHINFO_UNAVAIL;
   }
 
@@ -141,7 +148,8 @@ auto check_enabled(const INIReader &config, const char *username) -> int {
   if (config.GetBoolean("core", "abort_if_ssh", true)) {
     if (checkenv("SSH_CONNECTION") || checkenv("SSH_CLIENT") ||
         checkenv("SSH_TTY") || checkenv("SSHD_OPTS")) {
-      syslog(LOG_INFO, "Skipped authentication, SSH session detected");
+      pam_syslog(pamh, LOG_INFO,
+                 "Skipped authentication, SSH session detected");
       return PAM_AUTHINFO_UNAVAIL;
     }
   }
@@ -155,9 +163,11 @@ auto check_enabled(const INIReader &config, const char *username) -> int {
         glob("/proc/acpi/button/lid/*/state", 0, nullptr, &glob_result);
 
     if (return_value != 0) {
-      syslog(LOG_ERR, "Failed to read files from glob: %d", return_value);
+      pam_syslog(pamh, LOG_ERR, "Failed to read files from glob: %d",
+                 return_value);
       if (errno != 0) {
-        syslog(LOG_ERR, "Underlying error: %s (%d)", strerror(errno), errno);
+        pam_syslog(pamh, LOG_ERR, "Underlying error: %s (%d)", strerror(errno),
+                   errno);
       }
     } else {
       for (size_t i = 0; i < glob_result.gl_pathc; i++) {
@@ -168,7 +178,8 @@ auto check_enabled(const INIReader &config, const char *username) -> int {
         if (lid_state.find("closed") != std::string::npos) {
           globfree(&glob_result);
 
-          syslog(LOG_INFO, "Skipped authentication, closed lid detected");
+          pam_syslog(pamh, LOG_INFO,
+                     "Skipped authentication, closed lid detected");
           return PAM_AUTHINFO_UNAVAIL;
         }
       }
@@ -198,12 +209,11 @@ auto check_enabled(const INIReader &config, const char *username) -> int {
 auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
               bool ask_auth_tok) -> int {
   INIReader config(CONFIG_FILE_PATH);
-  openlog("pam_howdy", 0, LOG_AUTHPRIV);
 
   // Error out if we could not read the config file
   if (config.ParseError() != 0) {
-    syslog(LOG_ERR, "Failed to parse the configuration file: %d",
-           config.ParseError());
+    pam_syslog(pamh, LOG_ERR, "Failed to parse the configuration file: %d",
+               config.ParseError());
     return PAM_SYSTEM_ERR;
   }
 
@@ -214,12 +224,12 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
   char *username = nullptr;
   pam_res = pam_get_user(pamh, const_cast<const char **>(&username), nullptr);
   if (pam_res != PAM_SUCCESS) {
-    syslog(LOG_ERR, "Failed to get username");
+    pam_syslog(pamh, LOG_ERR, "Failed to get username");
     return pam_res;
   }
 
   // Check if we should continue
-  pam_res = check_enabled(config, username);
+  pam_res = check_enabled(pamh, config, username);
   if (pam_res != PAM_SUCCESS) {
     return pam_res;
   }
@@ -235,7 +245,7 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
   // Retrieve the PAM conversation structure
   pam_res = pam_get_item(pamh, PAM_CONV, conv_ptr);
   if (pam_res != PAM_SUCCESS) {
-    syslog(LOG_ERR, "Failed to acquire conversation");
+    pam_syslog(pamh, LOG_ERR, "Failed to acquire conversation");
     return pam_res;
   }
 
@@ -258,7 +268,7 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
   if (config.GetBoolean("core", "detection_notice", true)) {
     if ((conv_function(PAM_TEXT_INFO, S("Attempting facial authentication"))) !=
         PAM_SUCCESS) {
-      syslog(LOG_ERR, "Failed to send detection notice");
+      pam_syslog(pamh, LOG_ERR, "Failed to send detection notice");
     }
   }
 
@@ -266,11 +276,30 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
                               COMPARE_PROCESS_PATH, username, nullptr};
   pid_t child_pid;
 
+  // Send the output of the python subprocess to stderr, as stdout can be a
+  // protocol channel of the program using PAM (like polkit-agent-helper-1)
+  posix_spawn_file_actions_t file_actions;
+  posix_spawn_file_actions_init(&file_actions);
+
+  if (fcntl(STDERR_FILENO, F_GETFD) != -1) {
+    posix_spawn_file_actions_adddup2(&file_actions, STDERR_FILENO,
+                                     STDOUT_FILENO);
+  } else {
+    // Discard the output if the program using PAM has closed stderr
+    posix_spawn_file_actions_addopen(&file_actions, STDOUT_FILENO, "/dev/null",
+                                     O_WRONLY, 0);
+  }
+
   // Start the python subprocess
-  if (posix_spawnp(&child_pid, PYTHON_EXECUTABLE_PATH, nullptr, nullptr,
-                   const_cast<char *const *>(args), nullptr) != 0) {
-    syslog(LOG_ERR, "Can't spawn the howdy process: %s (%d)", strerror(errno),
-           errno);
+  int spawn_res =
+      posix_spawnp(&child_pid, PYTHON_EXECUTABLE_PATH, &file_actions, nullptr,
+                   const_cast<char *const *>(args), nullptr);
+  posix_spawn_file_actions_destroy(&file_actions);
+
+  // posix_spawnp returns the error code instead of setting errno
+  if (spawn_res != 0) {
+    pam_syslog(pamh, LOG_ERR, "Can't spawn the howdy process: %s (%d)",
+               strerror(spawn_res), spawn_res);
     return PAM_SYSTEM_ERR;
   }
 
@@ -366,7 +395,7 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
     std::tie(pam_res, password) = pass_task.get();
 
     if (pam_res != PAM_SUCCESS) {
-      return howdy_status(username, status, config, conv_function);
+      return howdy_status(pamh, username, status, config, conv_function);
     }
 
     // The password has been entered, we are passing it to PAM stack
@@ -384,7 +413,8 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
   } else if (workaround == Workaround::Input) {
     // We check if we have the right permissions on /dev/uinput
     if (euidaccess("/dev/uinput", W_OK | R_OK) != 0) {
-      syslog(LOG_WARNING, "Insufficient permissions to create the fake device");
+      pam_syslog(pamh, LOG_WARNING,
+                 "Insufficient permissions to create the fake device");
       conv_function(PAM_ERROR_MSG,
                     S("Insufficient permissions to send Enter "
                       "press, waiting for user to press it instead"));
@@ -404,13 +434,14 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
         }
 
         if (retries == MAX_RETRIES) {
-          syslog(LOG_WARNING,
-                 "Failed to send enter input before the retries limit");
+          pam_syslog(pamh, LOG_WARNING,
+                     "Failed to send enter input before the retries limit");
           conv_function(PAM_ERROR_MSG, S("Failed to send Enter press, waiting "
                                          "for user to press it instead"));
         }
       } catch (std::runtime_error &err) {
-        syslog(LOG_WARNING, "Failed to send enter input: %s", err.what());
+        pam_syslog(pamh, LOG_WARNING, "Failed to send enter input: %s",
+                   err.what());
         conv_function(PAM_ERROR_MSG, S("Failed to send Enter press, waiting "
                                        "for user to press it instead"));
       }
@@ -421,7 +452,7 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
     pass_task.stop(false);
   }
 
-  return howdy_status(username, status, config, conv_function);
+  return howdy_status(pamh, username, status, config, conv_function);
 }
 
 // Called by PAM when a user needs to be authenticated, for example by running

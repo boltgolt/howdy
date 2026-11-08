@@ -40,8 +40,9 @@ def col(id):
 # Create shorthand for subprocess creation
 sc = subprocess.call
 
-# If the package is being upgraded
-if "upgrade" in sys.argv:
+# If the package is being upgraded, dpkg passes the previously configured version
+# On a fresh install this argument is empty
+if len(sys.argv) > 2 and sys.argv[2] != "":
 	# If preinst has made a config backup
 	if os.path.exists("/tmp/howdy_config_backup_v" + sys.argv[2] + ".ini"):
 		# Get the config parser
@@ -108,7 +109,8 @@ if "upgrade" in sys.argv:
 
 log("Downloading dlib")
 
-dlib_archive = "/tmp/v19.16.tar.gz"
+dlib_version = "19.24.9"
+dlib_archive = "/tmp/v" + dlib_version + ".tar.gz"
 loader = which("wget")
 LOADER_CMD = None
 
@@ -121,7 +123,7 @@ else:
 	LOADER_CMD = [loader, "--retry", "5", "--location", "--output"]
 
 # Assemble and execute the download command
-cmd = LOADER_CMD + [dlib_archive, "https://github.com/davisking/dlib/archive/v19.16.tar.gz"]
+cmd = LOADER_CMD + [dlib_archive, "https://github.com/davisking/dlib/archive/v" + dlib_version + ".tar.gz"]
 handleStatus(sc(cmd))
 
 # The folder containing the dlib source
@@ -149,12 +151,16 @@ os.unlink(dlib_archive)
 
 log("Building dlib")
 
-cmd = ["sudo", "python3", "setup.py", "install"]
+# Verbose so the cmake output can be checked for CUDA, no build isolation to use the system setuptools
+cmd = ["python3", "-m", "pip", "install", "--verbose", "--no-build-isolation", "--no-cache-dir", "."]
 cuda_used = False
+
+# Allow pip to install system wide and as root, older pip versions ignore these
+pip_env = dict(os.environ, PIP_BREAK_SYSTEM_PACKAGES="1", PIP_ROOT_USER_ACTION="ignore")
 
 # Compile and link dlib
 try:
-	sp = subprocess.Popen(cmd, cwd=DLIB_DIR, stdout=subprocess.PIPE)
+	sp = subprocess.Popen(cmd, cwd=DLIB_DIR, stdout=subprocess.PIPE, env=pip_env)
 except subprocess.CalledProcessError:
 	print("Error while building dlib")
 	raise
@@ -167,6 +173,9 @@ while sp.poll() is None:
 		cuda_used = True
 
 	print(line, end="")
+
+# Abort if dlib failed to build
+handleStatus(sp.returncode)
 
 log("Cleaning up dlib")
 
@@ -194,11 +203,6 @@ os.chmod("/lib/security/howdy", 0o755)
 os.chmod("/lib/security/howdy/cli.py", 0o755)
 handleStatus(sc(["chmod 755 -R /lib/security/howdy/cli"], shell=True))
 print("Permissions set")
-
-# Make the CLI executable as howdy
-os.symlink("/lib/security/howdy/cli.py", "/usr/local/bin/howdy")
-os.chmod("/usr/local/bin/howdy", 0o755)
-print("Howdy command installed")
 
 log("Adding howdy as PAM module")
 

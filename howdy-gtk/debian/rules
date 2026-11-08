@@ -5,4 +5,12 @@ DPKG_EXPORT_BUILDFLAGS = 1
 include /usr/share/dpkg/default.mk
 
 %:
-	dh $@
+	dh $@ --buildsystem=meson
+
+override_dh_auto_configure:
+	# Use the same paths as the howdy package
+	dh_auto_configure -- \
+		-Dconfig_dir=/etc/howdy \
+		-Ddlib_data_dir=/etc/howdy/dlib-data \
+		-Dpy_sources_dir=/usr/lib \
+		-Dwith_polkit=true

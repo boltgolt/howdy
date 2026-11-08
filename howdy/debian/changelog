@@ -1,4 +1,4 @@
-howdy (3.0.0) focal; urgency=medium
+howdy (3.0.0) jammy; urgency=medium
 
   * Way too many changes to all list individually, thanks to everyone who contributed!
   * Rewrote PAM handling logic in C++ (thanks @saidsay-so!)
