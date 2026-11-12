@@ -9,5 +9,5 @@ Vcs-Git: https://github.com/boltgolt/howdy
 Package: howdy-gtk
 Homepage: https://github.com/boltgolt/howdy
 Architecture: all
-Depends: ${misc:Depends}, howdy, python3, python3-pip, python3-gi, gir1.2-gtk-3.0
+Depends: ${misc:Depends}, howdy, python3, python3-pip, python3-gi, python3-gi-cairo, python3-cairo, gir1.2-gtk-3.0
 Description: Optional UI package for Howdy, written in Gtk

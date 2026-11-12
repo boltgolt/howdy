@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Howdy
+Comment=Facial authentication for Linux
+Exec=howdy-gtk
+Icon=@data_dir@/logo.png
+Terminal=false
+Categories=Settings;Security;
+StartupWMClass=howdy-gtk

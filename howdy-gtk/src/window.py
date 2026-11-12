@@ -64,6 +64,9 @@ class MainWindow(gtk.Window):
 
 		self.userlist.set_active(0)
 
+		# Fill the settings tab with the current config
+		self.load_settings()
+
 		self.window.show_all()
 
 		# Start GTK main loop
@@ -136,6 +139,10 @@ MainWindow.on_model_delete = tab_models.on_model_delete
 import tab_video
 MainWindow.on_page_switch = tab_video.on_page_switch
 MainWindow.capture_frame = tab_video.capture_frame
+import tab_settings
+MainWindow.load_settings = tab_settings.load_settings
+MainWindow.on_settings_changed = tab_settings.on_settings_changed
+MainWindow.on_settings_save = tab_settings.on_settings_save
 
 # Open the GTK window
 window = MainWindow()

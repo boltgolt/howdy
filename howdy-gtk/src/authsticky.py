@@ -8,6 +8,10 @@ import os
 
 from i18n import _
 
+# Prefer X11, as Wayland does not allow windows to position themselves
+# Has to be set before Gtk is imported, which opens the display
+os.environ.setdefault("GDK_BACKEND", "x11,*")
+
 # Make sure we have the libs we need
 gi.require_version("Gtk", "3.0")
 gi.require_version("Gdk", "3.0")
@@ -15,7 +19,7 @@ gi.require_version("Gdk", "3.0")
 # Import them
 from gi.repository import Gtk as gtk
 from gi.repository import Gdk as gdk
-from gi.repository import GObject as gobject
+from gi.repository import GLib as glib
 
 # Set window size constants
 windowWidth = 400
@@ -74,23 +78,31 @@ class StickyWindow(gtk.Window):
 		visual = screen.get_rgba_visual()
 		self.set_visual(visual)
 
-		# Move the window to the center top of the default window, where a webcam usually is
-		self.move((screen.get_width() / 2) - (windowWidth / 2), 0)
+		# Get the size of the primary monitor, or the first one if none is marked as primary
+		display = gdk.Display.get_default()
+		monitor = display.get_primary_monitor() or display.get_monitor(0)
+		geometry = monitor.get_geometry()
+
+		# Move the window to the center top of the monitor, where a webcam usually is
+		self.move(geometry.x + int(geometry.width / 2 - windowWidth / 2), geometry.y)
 
 		# Show window and force a resize again
 		self.show_all()
 		self.resize(windowWidth, windowHeight)
 
 		# Add a timeout to catch input passed from compare.py
-		gobject.timeout_add(100, self.catch_stdin)
+		glib.timeout_add(100, self.catch_stdin)
 
 		# Start GTK main loop
 		gtk.main()
 
 	def draw(self, widget, ctx):
 		"""Draw the UI"""
-		# Change cursor to the kill icon
-		self.get_window().set_cursor(gdk.Cursor(gdk.CursorType.PIRATE))
+		# Change cursor to the kill icon, Wayland cursor themes don't have it
+		try:
+			self.get_window().set_cursor(gdk.Cursor.new_for_display(gdk.Display.get_default(), gdk.CursorType.PIRATE))
+		except TypeError:
+			pass
 
 		# Draw a semi transparent background
 		ctx.set_source_rgba(0, 0, 0, .7)
@@ -127,7 +139,14 @@ class StickyWindow(gtk.Window):
 	def catch_stdin(self):
 		"""Catch input from stdin and redraw"""
 		# Wait for a line on stdin
-		comm = sys.stdin.readline()[:-1]
+		line = sys.stdin.readline()
+
+		# Exit when compare.py has closed the pipe, as authentication is over
+		if not line:
+			gtk.main_quit()
+			return False
+
+		comm = line[:-1]
 
 		# If the line is not empty
 		if comm:
@@ -143,7 +162,7 @@ class StickyWindow(gtk.Window):
 		self.queue_draw()
 
 		# Fire this function again in 10ms, as we're waiting on IO in readline anyway
-		gobject.timeout_add(10, self.catch_stdin)
+		glib.timeout_add(10, self.catch_stdin)
 
 	def exit(self, widget, context):
 		"""Cleanly exit"""

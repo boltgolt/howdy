@@ -56,4 +56,29 @@ auto checkenv(const char *name) -> bool {
   return false;
 }
 
+/**
+ * Get the value of an environment variable either using getenv or from the
+ * environ array.
+ * @param name The name of the environment variable.
+ * @return The value of the environment variable or nullptr if it doesn't exist.
+ * @note The environ array is searched for the same reason as in checkenv.
+ */
+auto getenv_value(const char *name) -> const char * {
+  const char *value = std::getenv(name);
+  if (value != nullptr) {
+    return value;
+  }
+
+  auto len = strlen(name);
+
+  for (char **env = environ; *env != nullptr; env++) {
+    // Only match the full name, directly followed by the equals sign
+    if (strncmp(*env, name, len) == 0 && (*env)[len] == '=') {
+      return *env + len + 1;
+    }
+  }
+
+  return nullptr;
+}
+
 #endif // MAIN_H_

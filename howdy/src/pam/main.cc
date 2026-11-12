@@ -25,6 +25,7 @@
 #include <mutex>
 #include <string>
 #include <tuple>
+#include <vector>
 
 #include <INIReader.h>
 
@@ -290,10 +291,29 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
                                      O_WRONLY, 0);
   }
 
+  // Only pass the variables needed to show the auth UI, as the python
+  // subprocess runs as root the rest of the environment can't be trusted
+  std::vector<std::string> env_vars;
+  for (const char *name :
+       {"DISPLAY", "WAYLAND_DISPLAY", "XAUTHORITY", "XDG_RUNTIME_DIR"}) {
+    const char *value = getenv_value(name);
+    if (value != nullptr) {
+      env_vars.emplace_back(std::string(name) + "=" + value);
+    }
+  }
+
+  // Build the null terminated array posix_spawnp expects
+  std::vector<char *> envp;
+  envp.reserve(env_vars.size() + 1);
+  for (auto &env_var : env_vars) {
+    envp.push_back(env_var.data());
+  }
+  envp.push_back(nullptr);
+
   // Start the python subprocess
   int spawn_res =
       posix_spawnp(&child_pid, PYTHON_EXECUTABLE_PATH, &file_actions, nullptr,
-                   const_cast<char *const *>(args), nullptr);
+                   const_cast<char *const *>(args), envp.data());
   posix_spawn_file_actions_destroy(&file_actions);
 
   // posix_spawnp returns the error code instead of setting errno

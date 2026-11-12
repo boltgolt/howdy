@@ -4,9 +4,8 @@ from i18n import _
 import paths_factory
 
 from gi.repository import Gtk as gtk
-from gi.repository import Gdk as gdk
 from gi.repository import GdkPixbuf as pixbuf
-from gi.repository import GObject as gobject
+from gi.repository import GLib as glib
 
 MAX_HEIGHT = 300
 MAX_WIDTH = 300
@@ -36,7 +35,11 @@ def on_page_switch(self, notebook, page, page_num):
 			print(_("Can't open camera"))
 
 		opencvbox = self.builder.get_object("opencvbox")
-		opencvbox.modify_bg(gtk.StateType.NORMAL, gdk.Color(red=0, green=0, blue=0))
+
+		# Give the video preview a black background
+		css = gtk.CssProvider()
+		css.load_from_data(b"* { background-color: black; }")
+		opencvbox.get_style_context().add_provider(css, gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
 
 		height = self.capture.get(self.cv2.CAP_PROP_FRAME_HEIGHT) or 1
 		width = self.capture.get(self.cv2.CAP_PROP_FRAME_WIDTH) or 1
@@ -54,7 +57,7 @@ def on_page_switch(self, notebook, page, page_num):
 		self.builder.get_object("videoresused").set_text(str(int(width * config_scaling)) + "x" + str(int(height * config_scaling)))
 		self.builder.get_object("videorecorder").set_text(self.config.get("video", "recording_plugin", fallback=_("Unknown")))
 
-		gobject.timeout_add(10, self.capture_frame)
+		glib.timeout_add(10, self.capture_frame)
 
 	elif self.capture is not None:
 		self.capture.release()
@@ -78,4 +81,4 @@ def capture_frame(self):
 
 	self.opencvimage.set_from_pixbuf(buffer)
 
-	gobject.timeout_add(20, self.capture_frame)
+	glib.timeout_add(20, self.capture_frame)

@@ -28,6 +28,7 @@ sources = files(
     'src/onboarding.py',
     'src/paths_factory.py',
     'src/tab_models.py',
+    'src/tab_settings.py',
     'src/tab_video.py',
     'src/window.py',
 )
@@ -65,6 +66,18 @@ logos = files(
     'src/logo_about.png',
 )
 install_data(logos, install_dir: datadir)
+
+# Desktop entry so the app can be found and its windows get an icon
+desktop_file = configure_file(
+    input: 'src/howdy-gtk.desktop.in',
+    output: 'howdy-gtk.desktop',
+    configuration: {'data_dir': datadir}
+)
+install_data(
+    desktop_file,
+    install_dir: get_option('prefix') / get_option('datadir') / 'applications',
+    install_mode: 'rw-r--r--',
+)
 
 interface_files = files(
     'src/main.glade',

@@ -226,6 +226,16 @@ try:
 		if cv2.waitKey(1) != -1:
 			raise KeyboardInterrupt()
 
+		# Quit if the window has been closed, imshow would otherwise open a new one
+		# The Qt backend throws an error instead of returning -1 for a closed window
+		try:
+			window_closed = cv2.getWindowProperty("Howdy Test", cv2.WND_PROP_VISIBLE) < 1
+		except cv2.error:
+			window_closed = True
+
+		if window_closed:
+			raise KeyboardInterrupt()
+
 		frame_time = time.time() - frame_tm
 
 		# Delay the frame if slowmode is on

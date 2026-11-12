@@ -2,23 +2,43 @@
 <!-- Generated with glade 3.18.3 -->
 <interface domain="howdy">
   <requires lib="gtk+" version="3.10"/>
+  <object class="GtkAdjustment" id="certaintyadjustment">
+    <property name="lower">1</property>
+    <property name="upper">10</property>
+    <property name="value">3.5</property>
+    <property name="step_increment">0.1</property>
+    <property name="page_increment">1</property>
+  </object>
+  <object class="GtkAdjustment" id="darkthresholdadjustment">
+    <property name="upper">100</property>
+    <property name="value">60</property>
+    <property name="step_increment">1</property>
+    <property name="page_increment">10</property>
+  </object>
+  <object class="GtkAdjustment" id="timeoutadjustment">
+    <property name="lower">1</property>
+    <property name="upper">60</property>
+    <property name="value">4</property>
+    <property name="step_increment">1</property>
+    <property name="page_increment">5</property>
+  </object>
   <object class="GtkImage" id="iconadd">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="margin_right">5</property>
-    <property name="stock">gtk-add</property>
+    <property name="margin_end">5</property>
+    <property name="icon_name">list-add</property>
   </object>
   <object class="GtkImage" id="iconadduser">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="margin_right">5</property>
-    <property name="stock">gtk-add</property>
+    <property name="margin_end">5</property>
+    <property name="icon_name">list-add</property>
   </object>
   <object class="GtkImage" id="icondelete">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="margin_right">5</property>
-    <property name="stock">gtk-delete</property>
+    <property name="margin_end">5</property>
+    <property name="icon_name">edit-delete</property>
   </object>
   <object class="GtkWindow" id="mainwindow">
     <property name="can_focus">False</property>
@@ -30,7 +50,7 @@
       <object class="GtkNotebook" id="notebook">
         <property name="visible">True</property>
         <property name="can_focus">True</property>
-        <property name="margin_left">2</property>
+        <property name="margin_start">2</property>
         <property name="tab_pos">left</property>
         <property name="show_border">False</property>
         <signal name="switch-page" handler="on_page_switch" swapped="no"/>
@@ -43,8 +63,8 @@
               <object class="GtkBox" id="box4">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="margin_left">10</property>
-                <property name="margin_right">10</property>
+                <property name="margin_start">10</property>
+                <property name="margin_end">10</property>
                 <property name="margin_top">10</property>
                 <property name="spacing">5</property>
                 <child>
@@ -78,7 +98,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
-                    <property name="margin_left">15</property>
+                    <property name="margin_start">15</property>
                     <property name="image">iconadduser</property>
                     <property name="relief">none</property>
                     <property name="always_show_image">True</property>
@@ -102,8 +122,8 @@
               <object class="GtkBox" id="modellistbox">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="margin_left">10</property>
-                <property name="margin_right">10</property>
+                <property name="margin_start">10</property>
+                <property name="margin_end">10</property>
                 <property name="orientation">vertical</property>
                 <child>
                   <object class="GtkSeparator" id="separator1">
@@ -129,7 +149,7 @@
               <object class="GtkBox" id="box1">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="margin_right">10</property>
+                <property name="margin_end">10</property>
                 <property name="margin_top">8</property>
                 <property name="margin_bottom">10</property>
                 <child>
@@ -142,7 +162,6 @@
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
                     <property name="image">iconadd</property>
-                    <property name="xalign">0.5899999737739563</property>
                     <property name="always_show_image">True</property>
                     <signal name="clicked" handler="on_model_add" swapped="no"/>
                   </object>
@@ -159,7 +178,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
-                    <property name="margin_right">11</property>
+                    <property name="margin_end">11</property>
                     <property name="image">icondelete</property>
                     <property name="always_show_image">True</property>
                     <signal name="clicked" handler="on_model_delete" swapped="no"/>
@@ -182,12 +201,36 @@
           </object>
         </child>
         <child type="tab">
-          <object class="GtkLabel" id="modelstab">
+          <object class="GtkBox" id="modelstabbox">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="margin_left">10</property>
-            <property name="margin_right">10</property>
-            <property name="label" translatable="yes">Models</property>
+            <property name="margin_start">10</property>
+            <property name="margin_end">10</property>
+            <property name="spacing">8</property>
+            <child>
+              <object class="GtkImage" id="modelstabicon">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="icon_name">avatar-default-symbolic</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="modelstab">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Models</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
           </object>
           <packing>
             <property name="position">1</property>
@@ -198,15 +241,15 @@
           <object class="GtkBox" id="box2">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="margin_left">10</property>
-            <property name="margin_right">10</property>
+            <property name="margin_start">10</property>
+            <property name="margin_end">10</property>
             <property name="margin_top">10</property>
             <property name="margin_bottom">10</property>
             <child>
               <object class="GtkBox" id="box7">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="margin_left">10</property>
+                <property name="margin_start">10</property>
                 <property name="orientation">vertical</property>
                 <child>
                   <object class="GtkLabel" id="label1">
@@ -349,7 +392,7 @@
                   <object class="GtkImage" id="opencvimage">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="stock">gtk-execute</property>
+                    <property name="icon_name">system-run</property>
                     <property name="icon_size">6</property>
                   </object>
                 </child>
@@ -366,13 +409,375 @@
           </packing>
         </child>
         <child type="tab">
-          <object class="GtkLabel" id="videotab">
+          <object class="GtkBox" id="videotabbox">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="label" translatable="yes">Video</property>
+            <property name="margin_start">10</property>
+            <property name="margin_end">10</property>
+            <property name="spacing">8</property>
+            <child>
+              <object class="GtkImage" id="videotabicon">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="icon_name">camera-web-symbolic</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="videotab">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Video</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
           </object>
           <packing>
             <property name="position">1</property>
+            <property name="tab_fill">False</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkGrid" id="settingsgrid">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="margin_start">20</property>
+            <property name="margin_end">20</property>
+            <property name="margin_top">20</property>
+            <property name="margin_bottom">20</property>
+            <property name="row_spacing">15</property>
+            <property name="column_spacing">20</property>
+            <child>
+              <object class="GtkLabel" id="settingsenabledlabel">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="halign">start</property>
+                <property name="label" translatable="yes">Use face authentication</property>
+              </object>
+              <packing>
+                <property name="left_attach">0</property>
+                <property name="top_attach">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkSwitch" id="settingsenabled">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="halign">end</property>
+                <signal name="notify::active" handler="on_settings_changed" swapped="no"/>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="top_attach">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkBox" id="settingscertaintylabelbox">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="halign">start</property>
+                <property name="valign">center</property>
+                <property name="orientation">vertical</property>
+                <property name="spacing">2</property>
+                <child>
+                  <object class="GtkLabel" id="settingscertaintylabel">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="halign">start</property>
+                    <property name="label" translatable="yes">Certainty</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="settingscertaintydescription">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="halign">start</property>
+                    <property name="label" translatable="yes">How close a face has to match a saved model. Lower is stricter, values above 5 are not recommended</property>
+                    <property name="wrap">True</property>
+                    <property name="max_width_chars">45</property>
+                    <attributes>
+                      <attribute name="scale" value="0.9"/>
+                    </attributes>
+                    <style>
+                      <class name="dim-label"/>
+                    </style>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
+              </object>
+              <packing>
+                <property name="left_attach">0</property>
+                <property name="top_attach">1</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkScale" id="settingscertainty">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="hexpand">True</property>
+                <property name="width_request">200</property>
+                <property name="valign">center</property>
+                <property name="adjustment">certaintyadjustment</property>
+                <property name="round_digits">1</property>
+                <property name="digits">1</property>
+                <property name="value_pos">right</property>
+                <signal name="value-changed" handler="on_settings_changed" swapped="no"/>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="top_attach">1</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkBox" id="settingstimeoutlabelbox">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="halign">start</property>
+                <property name="valign">center</property>
+                <property name="orientation">vertical</property>
+                <property name="spacing">2</property>
+                <child>
+                  <object class="GtkLabel" id="settingstimeoutlabel">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="halign">start</property>
+                    <property name="label" translatable="yes">Timeout in seconds</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="settingstimeoutdescription">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="halign">start</property>
+                    <property name="label" translatable="yes">How long to look for a known face before falling back to the password</property>
+                    <property name="wrap">True</property>
+                    <property name="max_width_chars">45</property>
+                    <attributes>
+                      <attribute name="scale" value="0.9"/>
+                    </attributes>
+                    <style>
+                      <class name="dim-label"/>
+                    </style>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
+              </object>
+              <packing>
+                <property name="left_attach">0</property>
+                <property name="top_attach">2</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkSpinButton" id="settingstimeout">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="halign">end</property>
+                <property name="valign">center</property>
+                <property name="adjustment">timeoutadjustment</property>
+                <property name="numeric">True</property>
+                <signal name="value-changed" handler="on_settings_changed" swapped="no"/>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="top_attach">2</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkBox" id="settingsdarkthresholdlabelbox">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="halign">start</property>
+                <property name="valign">center</property>
+                <property name="orientation">vertical</property>
+                <property name="spacing">2</property>
+                <child>
+                  <object class="GtkLabel" id="settingsdarkthresholdlabel">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="halign">start</property>
+                    <property name="label" translatable="yes">Dark frame threshold in %</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="settingsdarkthresholddescription">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="halign">start</property>
+                    <property name="label" translatable="yes">Frames darker than this are skipped. Lower this if all frames are reported as too dark</property>
+                    <property name="wrap">True</property>
+                    <property name="max_width_chars">45</property>
+                    <attributes>
+                      <attribute name="scale" value="0.9"/>
+                    </attributes>
+                    <style>
+                      <class name="dim-label"/>
+                    </style>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
+              </object>
+              <packing>
+                <property name="left_attach">0</property>
+                <property name="top_attach">3</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkScale" id="settingsdarkthreshold">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="hexpand">True</property>
+                <property name="width_request">200</property>
+                <property name="valign">center</property>
+                <property name="adjustment">darkthresholdadjustment</property>
+                <property name="round_digits">0</property>
+                <property name="digits">0</property>
+                <property name="value_pos">right</property>
+                <signal name="value-changed" handler="on_settings_changed" swapped="no"/>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="top_attach">3</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="settingsabortsshlabel">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="halign">start</property>
+                <property name="label" translatable="yes">Disable in remote (SSH) sessions</property>
+              </object>
+              <packing>
+                <property name="left_attach">0</property>
+                <property name="top_attach">4</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkSwitch" id="settingsabortssh">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="halign">end</property>
+                <signal name="notify::active" handler="on_settings_changed" swapped="no"/>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="top_attach">4</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="settingsabortlidlabel">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="halign">start</property>
+                <property name="label" translatable="yes">Disable when the laptop lid is closed</property>
+              </object>
+              <packing>
+                <property name="left_attach">0</property>
+                <property name="top_attach">5</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkSwitch" id="settingsabortlid">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="halign">end</property>
+                <signal name="notify::active" handler="on_settings_changed" swapped="no"/>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="top_attach">5</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="settingssave">
+                <property name="label" translatable="yes">Save</property>
+                <property name="visible">True</property>
+                <property name="sensitive">False</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="halign">end</property>
+                <property name="valign">end</property>
+                <property name="vexpand">True</property>
+                <signal name="clicked" handler="on_settings_save" swapped="no"/>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="top_attach">6</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="position">2</property>
+          </packing>
+        </child>
+        <child type="tab">
+          <object class="GtkBox" id="settingstabbox">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="margin_start">10</property>
+            <property name="margin_end">10</property>
+            <property name="spacing">8</property>
+            <child>
+              <object class="GtkImage" id="settingstabicon">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="icon_name">emblem-system-symbolic</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="settingstab">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Settings</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="position">2</property>
             <property name="tab_fill">False</property>
           </packing>
         </child>
@@ -387,8 +792,9 @@
               <object class="GtkImage" id="image1">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="margin_start">12</property>
+                <property name="margin_end">12</property>
                 <property name="margin_bottom">20</property>
-                <property name="xpad">12</property>
                 <property name="pixbuf">logo_about.png</property>
               </object>
               <packing>
@@ -437,7 +843,7 @@
                   <object class="GtkLabel" id="label4">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="margin_right">3</property>
+                    <property name="margin_end">3</property>
                     <property name="label" translatable="yes">&lt;a href="https://github.com/boltgolt/howdy"&gt;Open GitHub link&lt;/a&gt; </property>
                     <property name="use_markup">True</property>
                     <property name="track_visited_links">False</property>
@@ -458,7 +864,7 @@
                   <object class="GtkLabel" id="label5">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="margin_left">3</property>
+                    <property name="margin_start">3</property>
                     <property name="label" translatable="yes">&lt;a href="https://www.buymeacoffee.com/boltgolt"&gt;Donate to the project&lt;/a&gt; </property>
                     <property name="use_markup">True</property>
                     <attributes>
@@ -483,17 +889,43 @@
             </child>
           </object>
           <packing>
-            <property name="position">2</property>
+            <property name="position">3</property>
           </packing>
         </child>
         <child type="tab">
-          <object class="GtkLabel" id="abouttab">
+          <object class="GtkBox" id="abouttabbox">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="label" translatable="yes">About</property>
+            <property name="margin_start">10</property>
+            <property name="margin_end">10</property>
+            <property name="spacing">8</property>
+            <child>
+              <object class="GtkImage" id="abouttabicon">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="icon_name">help-about-symbolic</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="abouttab">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">About</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
           </object>
           <packing>
-            <property name="position">2</property>
+            <property name="position">3</property>
             <property name="tab_fill">False</property>
           </packing>
         </child>

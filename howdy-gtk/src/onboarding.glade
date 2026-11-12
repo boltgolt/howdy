@@ -5,26 +5,26 @@
   <object class="GtkImage" id="iconcancel">
     <property name="visible">True</property>
     <property name="can-focus">False</property>
-    <property name="margin-right">4</property>
-    <property name="stock">gtk-cancel</property>
+    <property name="margin-end">4</property>
+    <property name="icon-name">process-stop</property>
   </object>
   <object class="GtkImage" id="iconfinish">
     <property name="visible">True</property>
     <property name="can-focus">False</property>
-    <property name="margin-right">5</property>
-    <property name="stock">gtk-apply</property>
+    <property name="margin-end">5</property>
+    <property name="icon-name">object-select-symbolic</property>
   </object>
   <object class="GtkImage" id="iconforward">
     <property name="visible">True</property>
     <property name="can-focus">False</property>
-    <property name="margin-left">4</property>
-    <property name="stock">gtk-go-forward</property>
+    <property name="margin-start">4</property>
+    <property name="icon-name">go-next</property>
   </object>
   <object class="GtkImage" id="iconscan">
     <property name="visible">True</property>
     <property name="can-focus">False</property>
-    <property name="margin-left">5</property>
-    <property name="stock">gtk-media-play</property>
+    <property name="margin-start">5</property>
+    <property name="icon-name">media-playback-start</property>
   </object>
   <object class="GtkWindow" id="onboardingwindow">
     <property name="width-request">500</property>
@@ -39,7 +39,6 @@
       <object class="GtkBox" id="slidecontainer">
         <property name="visible">True</property>
         <property name="can-focus">False</property>
-        <property name="resize-mode">immediate</property>
         <property name="orientation">vertical</property>
         <child>
           <object class="GtkBox" id="slide6">
@@ -66,8 +65,8 @@
               <object class="GtkLabel" id="label10">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
-                <property name="margin-left">10</property>
-                <property name="margin-right">10</property>
+                <property name="margin-start">10</property>
+                <property name="margin-end">10</property>
                 <property name="margin-top">10</property>
                 <property name="margin-bottom">20</property>
                 <property name="label" translatable="yes">We're done! Howdy is now active on this computer. Try doing anything you would normally have to type your password for to authenticate, like running a command with sudo.
@@ -114,8 +113,8 @@ You can open the Howdy Configurator later on to change more advanced settings or
               <object class="GtkLabel" id="label12">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
-                <property name="margin-left">10</property>
-                <property name="margin-right">10</property>
+                <property name="margin-start">10</property>
+                <property name="margin-end">10</property>
                 <property name="margin-top">10</property>
                 <property name="margin-bottom">40</property>
                 <property name="label" translatable="yes">Because of changes in angles, distance, and other factors a face match is never exactly the same as the stored face model. On this page you can set how strict Howdy should be.</property>
@@ -132,8 +131,8 @@ You can open the Howdy Configurator later on to change more advanced settings or
               <object class="GtkBox" id="box2">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
-                <property name="margin-left">60</property>
-                <property name="margin-right">60</property>
+                <property name="margin-start">60</property>
+                <property name="margin-end">60</property>
                 <property name="orientation">vertical</property>
                 <child>
                   <object class="GtkRadioButton" id="radiofast">
@@ -141,8 +140,7 @@ You can open the Howdy Configurator later on to change more advanced settings or
                     <property name="can-focus">True</property>
                     <property name="receives-default">False</property>
                     <property name="margin-bottom">10</property>
-                    <property name="xalign">0</property>
-                    <property name="yalign">0.5099999904632568</property>
+                    <property name="halign">start</property>
                     <property name="active">True</property>
                     <property name="draw-indicator">True</property>
                     <property name="group">radiobalanced</property>
@@ -150,7 +148,7 @@ You can open the Howdy Configurator later on to change more advanced settings or
                       <object class="GtkBox" id="box3">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
-                        <property name="margin-left">5</property>
+                        <property name="margin-start">5</property>
                         <property name="orientation">vertical</property>
                         <child>
                           <object class="GtkLabel" id="label13">
@@ -198,14 +196,14 @@ but speeds up the scanning process greatly.</property>
                     <property name="can-focus">True</property>
                     <property name="receives-default">False</property>
                     <property name="margin-bottom">10</property>
-                    <property name="xalign">0</property>
+                    <property name="halign">start</property>
                     <property name="active">True</property>
                     <property name="draw-indicator">True</property>
                     <child>
                       <object class="GtkBox" id="box4">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
-                        <property name="margin-left">5</property>
+                        <property name="margin-start">5</property>
                         <property name="orientation">vertical</property>
                         <child>
                           <object class="GtkLabel" id="label15">
@@ -252,7 +250,7 @@ but might not log you in when further away.</property>
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
                     <property name="receives-default">False</property>
-                    <property name="xalign">0</property>
+                    <property name="halign">start</property>
                     <property name="active">True</property>
                     <property name="draw-indicator">True</property>
                     <property name="group">radiobalanced</property>
@@ -260,7 +258,7 @@ but might not log you in when further away.</property>
                       <object class="GtkBox" id="box5">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
-                        <property name="margin-left">5</property>
+                        <property name="margin-start">5</property>
                         <property name="orientation">vertical</property>
                         <child>
                           <object class="GtkLabel" id="label17">
@@ -341,8 +339,8 @@ but will take much longer to authenticate you</property>
               <object class="GtkLabel" id="label5">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
-                <property name="margin-left">10</property>
-                <property name="margin-right">10</property>
+                <property name="margin-start">10</property>
+                <property name="margin-end">10</property>
                 <property name="margin-top">10</property>
                 <property name="margin-bottom">20</property>
                 <property name="label" translatable="yes">To authenticate you Howdy needs to save a model of your face to recognise you. Press the Scan button below to start the facial scan.</property>
@@ -370,8 +368,8 @@ but will take much longer to authenticate you</property>
                     <property name="has-focus">True</property>
                     <property name="is-focus">True</property>
                     <property name="receives-default">True</property>
-                    <property name="margin-left">50</property>
-                    <property name="margin-right">50</property>
+                    <property name="margin-start">50</property>
+                    <property name="margin-end">50</property>
                     <property name="image">iconscan</property>
                     <property name="relief">none</property>
                     <property name="image-position">right</property>
@@ -511,8 +509,8 @@ but will take much longer to authenticate you</property>
               <object class="GtkLabel" id="label3">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
-                <property name="margin-left">10</property>
-                <property name="margin-right">10</property>
+                <property name="margin-start">10</property>
+                <property name="margin-end">10</property>
                 <property name="margin-top">10</property>
                 <property name="margin-bottom">20</property>
                 <property name="label" translatable="yes">Howdy will search your system automatically for any available cameras, so make sure your webcam is connected. After detection a list of usable webcams will be shown. Pick the one you want to use and click Next.</property>
@@ -530,8 +528,8 @@ but will take much longer to authenticate you</property>
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
                 <property name="opacity">0.89</property>
-                <property name="margin-left">10</property>
-                <property name="margin-right">10</property>
+                <property name="margin-start">10</property>
+                <property name="margin-end">10</property>
                 <property name="orientation">vertical</property>
                 <child>
                   <object class="GtkLabel" id="loadinglabel">
@@ -592,8 +590,8 @@ but will take much longer to authenticate you</property>
               <object class="GtkLabel" id="label1">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
-                <property name="margin-left">10</property>
-                <property name="margin-right">10</property>
+                <property name="margin-start">10</property>
+                <property name="margin-end">10</property>
                 <property name="margin-top">10</property>
                 <property name="margin-bottom">20</property>
                 <property name="label" translatable="yes">Howdy needs three pre trained facial recognition datasets to be able to recognise you, which will be downloaded now. You can see the download progress below.</property>
@@ -614,8 +612,8 @@ but will take much longer to authenticate you</property>
                   <object class="GtkLabel" id="downloadoutputlabel">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
-                    <property name="margin-left">10</property>
-                    <property name="margin-right">10</property>
+                    <property name="margin-start">10</property>
+                    <property name="margin-end">10</property>
                     <property name="margin-top">10</property>
                     <property name="label" translatable="yes">Starting download...</property>
                     <property name="justify">center</property>
@@ -647,10 +645,10 @@ but will take much longer to authenticate you</property>
             <child>
               <object class="GtkImage" id="image2">
                 <property name="can-focus">False</property>
-                <property name="margin-top">20</property>
-                <property name="margin-bottom">10</property>
-                <property name="xpad">7</property>
-                <property name="ypad">13</property>
+                <property name="margin-start">7</property>
+                <property name="margin-end">7</property>
+                <property name="margin-top">33</property>
+                <property name="margin-bottom">23</property>
                 <property name="pixbuf">logo_about.png</property>
               </object>
               <packing>
@@ -682,8 +680,8 @@ but will take much longer to authenticate you</property>
                 <property name="can-focus">False</property>
                 <property name="halign">center</property>
                 <property name="valign">center</property>
-                <property name="margin-left">20</property>
-                <property name="margin-right">20</property>
+                <property name="margin-start">20</property>
+                <property name="margin-end">20</property>
                 <property name="margin-top">10</property>
                 <property name="label" translatable="yes">This wizard will walk you through the setup process and automatically configure Howdy for you. Press next to continue.</property>
                 <property name="justify">center</property>
@@ -713,7 +711,7 @@ but will take much longer to authenticate you</property>
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="receives-default">True</property>
-                <property name="margin-left">10</property>
+                <property name="margin-start">10</property>
                 <property name="image">iconcancel</property>
                 <property name="always-show-image">True</property>
                 <signal name="clicked" handler="exit" swapped="no"/>
@@ -735,7 +733,7 @@ but will take much longer to authenticate you</property>
                 <property name="has-focus">True</property>
                 <property name="is-focus">True</property>
                 <property name="receives-default">True</property>
-                <property name="margin-right">10</property>
+                <property name="margin-end">10</property>
                 <property name="image">iconforward</property>
                 <property name="relief">none</property>
                 <property name="image-position">right</property>
@@ -755,7 +753,7 @@ but will take much longer to authenticate you</property>
                 <property name="can-focus">True</property>
                 <property name="receives-default">True</property>
                 <property name="no-show-all">True</property>
-                <property name="margin-right">10</property>
+                <property name="margin-end">10</property>
                 <property name="image">iconfinish</property>
                 <property name="relief">none</property>
                 <property name="always-show-image">True</property>

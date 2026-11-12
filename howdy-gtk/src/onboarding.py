@@ -2,14 +2,16 @@ import sys
 import os
 import re
 import time
+import fcntl
+import struct
 import subprocess
+import threading
 import paths_factory
 
 from i18n import _
 
 from gi.repository import Gtk as gtk
-from gi.repository import Gdk as gdk
-from gi.repository import GObject as gobject
+from gi.repository import GLib as glib
 from gi.repository import Pango as pango
 
 
@@ -60,7 +62,7 @@ class OnboardingWindow(gtk.Window):
 		if self.window.current_slide == 1:
 			self.execute_slide1()
 		elif self.window.current_slide == 2:
-			gobject.timeout_add(10, self.execute_slide2)
+			glib.timeout_add(10, self.execute_slide2)
 		elif self.window.current_slide == 3:
 			self.execute_slide3()
 		elif self.window.current_slide == 4:
@@ -73,7 +75,11 @@ class OnboardingWindow(gtk.Window):
 	def execute_slide1(self):
 		self.downloadoutputlabel = self.builder.get_object("downloadoutputlabel")
 		eventbox = self.builder.get_object("downloadeventbox")
-		eventbox.modify_bg(gtk.StateType.NORMAL, gdk.Color(red=0, green=0, blue=0))
+
+		# Give the download output a black background
+		css = gtk.CssProvider()
+		css.load_from_data(b"* { background-color: black; }")
+		eventbox.get_style_context().add_provider(css, gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
 
 		# TODO: Better way to do this?
 		if os.path.exists(paths_factory.dlib_data_dir_path() / "shape_predictor_5_face_landmarks.dat"):
@@ -99,7 +105,7 @@ class OnboardingWindow(gtk.Window):
 		self.downloadoutputlabel.set_text(" ".join(self.download_lines))
 
 		if line:
-			gobject.timeout_add(10, self.read_download_line)
+			glib.timeout_add(10, self.read_download_line)
 			return
 
 		# Wait for the process to finish and check the status code
@@ -110,6 +116,11 @@ class OnboardingWindow(gtk.Window):
 		self.enable_next()
 
 	def execute_slide2(self):
+		# Scan in a separate thread, opening every camera takes too long to do in the UI thread
+		threading.Thread(target=self.scan_devices, daemon=True).start()
+
+	def scan_devices(self):
+		"""Find all cameras and check if they are infrared, runs outside of the UI thread"""
 		def is_gray(frame):
 			for row in frame:
 				for pixel in row:
@@ -117,24 +128,62 @@ class OnboardingWindow(gtk.Window):
 						return False
 			return True
 
+		def is_capture_device(path):
+			"""Check if the device can capture video, cameras also have metadata nodes that can't"""
+			try:
+				fd = os.open(path, os.O_RDONLY | os.O_NONBLOCK)
+				try:
+					# Ask the driver for its 104 byte v4l2_capability struct (VIDIOC_QUERYCAP)
+					caps = fcntl.ioctl(fd, 0x80685600, bytes(104))
+				finally:
+					os.close(fd)
+			except OSError:
+				# Let the regular checks report devices we can't query
+				return True
+
+			capabilities, device_caps = struct.unpack_from("II", caps, 84)
+
+			# Use the capabilities of this specific device node if the driver provides them (V4L2_CAP_DEVICE_CAPS)
+			if capabilities & 0x80000000:
+				capabilities = device_caps
+
+			# Check for V4L2_CAP_VIDEO_CAPTURE
+			return bool(capabilities & 0x1)
+
+		# GTK can only be used from the UI thread, so errors are passed on with idle_add
 		try:
 			import cv2
 		except Exception:
-			self.show_error(_("Error while importing OpenCV2"), _("Try reinstalling cv2"))
+			glib.idle_add(self.show_error, _("Error while importing OpenCV2"), _("Try reinstalling cv2"))
+			return
 
 		device_rows = []
 		try:
 			device_ids = os.listdir("/dev/v4l/by-path")
 		except Exception:
-			self.show_error(_("No webcams found on system"), _("Please configure your camera yourself if you are sure a compatible camera is connected"))
+			glib.idle_add(self.show_error, _("No webcams found on system"), _("Please configure your camera yourself if you are sure a compatible camera is connected"))
+			return
 
-		# Loop though all devices
-		for dev in device_ids:
-			time.sleep(.5)
+		# Devices that have already been checked, by-path can contain multiple links to the same device
+		seen_devices = []
 
+		# Loop though all devices, sorted so the same link is picked every time
+		for dev in sorted(device_ids):
 			# The full path to the device is the default name
 			device_path = "/dev/v4l/by-path/" + dev
 			device_name = dev
+
+			# Skip links to a device we've already checked
+			real_path = os.path.realpath(device_path)
+			if real_path in seen_devices:
+				continue
+			seen_devices.append(real_path)
+
+			# Skip metadata nodes and other devices that can't capture video
+			if not is_capture_device(device_path):
+				continue
+
+			time.sleep(.5)
 
 			# Get the udevadm details to try to get a better name
 			udevadm = subprocess.check_output(["udevadm info -r --query=all -n " + device_path], shell=True).decode("utf-8")
@@ -144,7 +193,8 @@ class OnboardingWindow(gtk.Window):
 				# Match it and encase it in quotes
 				re_name = re.search('product.*=(.*)$', line, re.IGNORECASE)
 				if re_name:
-					device_name = re_name.group(1)
+					# The kernel cuts names off at 31 characters, which can leave a trailing colon
+					device_name = re_name.group(1).strip().rstrip(":").rstrip()
 
 			capture = cv2.VideoCapture(device_path)
 			is_open, frame = capture.read()
@@ -165,6 +215,11 @@ class OnboardingWindow(gtk.Window):
 
 		device_rows = sorted(device_rows, key=lambda k: -k[2])
 
+		# Show the results from the UI thread
+		glib.idle_add(self.show_devices, device_rows)
+
+	def show_devices(self, device_rows):
+		"""Show the list of found cameras"""
 		self.loadinglabel = self.builder.get_object("loadinglabel")
 		self.devicelistbox = self.builder.get_object("devicelistbox")
 
@@ -249,13 +304,13 @@ class OnboardingWindow(gtk.Window):
 		# if status != 0:
 		# 	self.show_error(_("Error setting camera path"), _("Please set the camera path manually"))
 
-		self.dialog = gtk.MessageDialog(parent=self, flags=gtk.DialogFlags.MODAL)
+		self.dialog = gtk.MessageDialog(transient_for=self, modal=True)
 		self.dialog.set_title(_("Creating Model"))
 		self.dialog.props.text = _("Please look directly into the camera")
 		self.dialog.show_all()
 
 		# Wait a bit to allow the user to read the dialog
-		gobject.timeout_add(600, self.run_add)
+		glib.timeout_add(600, self.run_add)
 
 	def run_add(self):
 		status, output = subprocess.getstatusoutput(["howdy add -y"])
@@ -268,7 +323,7 @@ class OnboardingWindow(gtk.Window):
 		if status != 0:
 			self.show_error(_("Can't save face model"), output)
 
-		gobject.timeout_add(10, self.go_next_slide)
+		glib.timeout_add(10, self.go_next_slide)
 
 	def execute_slide5(self):
 		self.enable_next()
@@ -310,7 +365,7 @@ class OnboardingWindow(gtk.Window):
 		self.window.set_focus(self.nextbutton)
 
 	def show_error(self, error, secon=""):
-		dialog = gtk.MessageDialog(parent=self, flags=gtk.DialogFlags.MODAL, type=gtk.MessageType.ERROR, buttons=gtk.ButtonsType.CLOSE)
+		dialog = gtk.MessageDialog(transient_for=self, modal=True, message_type=gtk.MessageType.ERROR, buttons=gtk.ButtonsType.CLOSE)
 		dialog.set_title(_("Howdy Error"))
 		dialog.props.text = error
 		dialog.format_secondary_text(secon)
