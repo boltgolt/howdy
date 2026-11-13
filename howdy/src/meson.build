@@ -3,7 +3,6 @@ py_conf = configuration_data(paths_dict)
 py_conf.set('data_dir', datadir)
 
 py = import('python').find_installation(paths_dict.get('python_path'))
-py.dependency()
 
 py_paths = configure_file(
     input: 'paths.py.in',
@@ -11,32 +10,42 @@ py_paths = configure_file(
     configuration: py_conf,
 )
 
-py_sources = [
-    'cli/__init__.py',
-    'cli/add.py',
-    'cli/clear.py',
-    'cli/config.py',
-    'cli/disable.py',
-    'cli/list.py',
-    'cli/remove.py',
-    'cli/set.py',
-    'cli/snap.py',
-    'cli/test.py',
-    'cli.py',
-    'compare.py',
-    'i18n.py',
-    'paths_factory.py',
-    'recorders/__init__.py',
-    'recorders/ffmpeg_reader.py',
-    'recorders/pyv4l2_reader.py',
-    'recorders/v4l2.py',
-    'recorders/video_capture.py',
-    'rubberstamps/__init__.py',
-    'rubberstamps/hotkey.py',
-    'rubberstamps/nod.py',
-    'snapshot.py',
-    py_paths,
-]
+# Sources grouped by the subdirectory they are installed to, as preserve_path
+# is not available in the meson version of the oldest supported Ubuntu LTS
+py_sources = {
+    '': [
+        'cli.py',
+        'compare.py',
+        'i18n.py',
+        'paths_factory.py',
+        'snapshot.py',
+        py_paths,
+    ],
+    'cli': [
+        'cli/__init__.py',
+        'cli/add.py',
+        'cli/clear.py',
+        'cli/config.py',
+        'cli/disable.py',
+        'cli/list.py',
+        'cli/remove.py',
+        'cli/set.py',
+        'cli/snap.py',
+        'cli/test.py',
+    ],
+    'recorders': [
+        'recorders/__init__.py',
+        'recorders/ffmpeg_reader.py',
+        'recorders/pyv4l2_reader.py',
+        'recorders/v4l2.py',
+        'recorders/video_capture.py',
+    ],
+    'rubberstamps': [
+        'rubberstamps/__init__.py',
+        'rubberstamps/hotkey.py',
+        'rubberstamps/nod.py',
+    ],
+}
 
 # Include PAM module
 if get_option('install_in_site_packages')
@@ -65,22 +74,22 @@ if get_option('install_pam_config')
     )
 endif
 
-if get_option('install_in_site_packages')
-    py.install_sources(
-        py_sources,
-        subdir: 'howdy',
-        preserve_path: true,
-        install_tag: 'py_sources',
-    )
-else
-    install_data(
-        py_sources,
-        preserve_path: true,
-        install_dir: pysourcesinstalldir,
-        install_mode: 'r--r--r--',
-        install_tag: 'py_sources',
-    )
-endif
+foreach py_subdir, py_subdir_sources : py_sources
+    if get_option('install_in_site_packages')
+        py.install_sources(
+            py_subdir_sources,
+            subdir: 'howdy' / py_subdir,
+            install_tag: 'py_sources',
+        )
+    else
+        install_data(
+            py_subdir_sources,
+            install_dir: pysourcesinstalldir / py_subdir,
+            install_mode: 'r--r--r--',
+            install_tag: 'py_sources',
+        )
+    endif
+endforeach
 
 install_data('logo.png', install_dir: datadir, install_tag: 'meta')
 autocomplete = configure_file(

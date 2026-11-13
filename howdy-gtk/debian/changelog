@@ -1,3 +1,18 @@
+howdy-gtk (1.0.0) jammy; urgency=medium
+
+  * Added settings tab for the most important config options
+  * Added application icon and desktop entry
+  * Added icons to the tabs
+  * Fixed onboarding freezing while scanning for cameras
+  * Fixed camera metadata devices being listed in onboarding
+  * Fixed authentication popup not closing after authentication
+  * Fixed authentication popup not being centered on Wayland
+  * Fixed authentication popup failing to draw because of a missing dependency
+  * Fixed deprecated GTK calls
+  * Fixed launching from polkit
+
+ -- boltgolt <boltgolt@gmail.com>  Fri, 13 Nov 2026 18:08:32 +0100
+
 howdy-gtk (0.0.1) xenial; urgency=medium
 
   * Initial testing release with sticky authentication ui

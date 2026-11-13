@@ -1,3 +1,15 @@
+howdy (3.0.1) jammy; urgency=medium
+
+  * Fixed authentication popup not being shown since the C++ PAM rewrite
+  * Fixed login loop in polkit authentication dialogs
+  * Fixed PAM log messages being logged under the wrong program name
+  * Fixed unknown errors not showing the actual error code
+  * Fixed closing the test command window reopening it
+  * Fixed upgrades being treated as fresh installations
+  * Fixed dlib installation on systems with externally managed Python
+
+ -- boltgolt <boltgolt@gmail.com>  Fri, 13 Nov 2026 18:08:32 +0100
+
 howdy (3.0.0) jammy; urgency=medium
 
   * Way too many changes to all list individually, thanks to everyone who contributed!

@@ -7,12 +7,6 @@
 	<a href="https://github.com/boltgolt/howdy/graphs/contributors">
 		<img src="https://img.shields.io/github/contributors/boltgolt/howdy.svg?style=flat">
 	</a>
-	<a href="https://www.buymeacoffee.com/boltgolt">
-		<img src="https://img.shields.io/badge/endpoint.svg?url=https://boltgolt.nl/howdy/shield.json">
-	</a>
-	<a href="https://actions-badge.atrox.dev/boltgolt/howdy/goto?ref=beta">
-		<img src="https://img.shields.io/endpoint.svg?url=https%3A%2F%2Factions-badge.atrox.dev%2Fboltgolt%2Fhowdy%2Fbadge%3Fref%3Dbeta&style=flat&label=build&logo=none">
-	</a>
 	<a href="https://aur.archlinux.org/packages/howdy">
 		<img src="https://img.shields.io/aur/votes/howdy?color=4c1&label=aur%20votes">
 	</a>
@@ -35,26 +29,30 @@ Run the installer by pasting (`ctrl+shift+V`) the following commands into the te
 ```
 sudo add-apt-repository ppa:boltgolt/howdy
 sudo apt update
-sudo apt install howdy
+sudo apt install howdy-gtk
 ```
 
-This will guide you through the installation.
+This  installs Howdy together with its graphical interface. Once installed, run this command to use the installation wizard:
+
+```
+howdy-gtk
+```
 
 ### Debian
 
-Download the .deb file from the [Releases page](https://github.com/boltgolt/howdy/releases) and install with gdebi.
+Download the .deb file from the [Releases page](https://github.com/boltgolt/howdy/releases) and install it with apt from the folder you downloaded it to:
+
+```
+sudo apt install ./howdy_*.deb
+```
 
 ### Arch Linux
-
-_Maintainer wanted._
 
 Install the `howdy` package from the AUR. For AUR installation instructions, take a look at this [wiki page](https://wiki.archlinux.org/index.php/Arch_User_Repository#Installing_packages).
 
 You will need to do some additional configuration steps. Please read the [ArchWiki entry](https://wiki.archlinux.org/index.php/Howdy) for more information.
 
 ### Fedora
-
-_Maintainer: [@luyatshimbalanga](https://github.com/luyatshimbalanga)_
 
 The `howdy` package is available as a [Fedora COPR repository](https://copr.fedorainfracloud.org/coprs/principis/howdy/), install it by simply executing the following commands in a terminal:
 
@@ -75,8 +73,6 @@ See the link to the COPR repository for detailed configuration steps.
 
 ### openSUSE
 
-_Maintainer: [@dmafanasyev](https://github.com/dmafanasyev)_
-
 Go to the [openSUSE wiki page](https://en.opensuse.org/SDB:Facial_authentication) for detailed installation instructions.
 
 ### Building from source
@@ -85,11 +81,11 @@ If you want to build Howdy from source, a few dependencies are required.
 
 #### Dependencies
 
-- Python 3.6 or higher
+- Python 3.10 or higher
   * pip
   * setuptools
   * wheel
-- meson version 0.64 or higher
+- meson version 0.61 or higher
 - ninja
 - INIReader (can be pulled from git automatically if not found)
 - libevdev
@@ -107,6 +103,7 @@ python3-dev libopencv-dev
 #### Build
 
 ```sh
+pip install dlib
 meson setup build howdy
 meson compile -C build
 ```
@@ -145,6 +142,7 @@ howdy [-U user] [-y] command [argument]
 | `disable` | Disable or enable howdy                       |
 | `list`    | List all saved face models for a user         |
 | `remove`  | Remove a specific model for a user            |
+| `set`     | Set a specific config value                   |
 | `snapshot`| Take a snapshot of your camera input          |
 | `test`    | Test the camera and recognition methods       |
 | `version` | Print the current version number              |
@@ -157,9 +155,9 @@ Code contributions are also very welcome. If you want to port Howdy to another d
 
 ## Troubleshooting
 
-Any Python errors get logged directly into the console and should indicate what went wrong. If authentication still fails but no errors are printed, you could take a look at the last lines in `/var/log/auth.log` to see if anything has been reported there.
+Any Python errors get logged directly into the console and should indicate what went wrong. If authentication still fails but no errors are printed, you could take a look at the last lines in `/var/log/auth.log` to see if anything has been reported there. There may also be logs under `journalctl -b | grep howdy`.
 
-Please first check the [wiki on common issues](https://github.com/boltgolt/howdy/wiki/Common-issues) and 
+Please first check the [wiki on common issues](https://github.com/boltgolt/howdy/wiki/Common-issues) and
 if you encounter an error that hasn't been reported yet, don't be afraid to open a new issue.
 
 ## A note on security
