@@ -11,6 +11,7 @@ import numpy as np
 import paths_factory
 
 from recorders.video_capture import VideoCapture
+from enrollment import select_consistent
 from i18n import _
 
 # Try to import dlib and give a nice error if we can't
@@ -119,8 +120,13 @@ print(_("\nPlease look straight into the camera"))
 # Give the user time to read
 time.sleep(2)
 
-# Will contain found face encodings
-enc = []
+# How many frames to build the model from, and how many must agree
+enroll_frames = max(1, config.getint("video", "enroll_frames", fallback=5))
+min_agreeing = min(enroll_frames, 3)
+# Frames from one capture of a still user should match each other at least as
+# well as a later login has to match the model
+max_spread = config.getfloat("video", "certainty", fallback=3.5) / 10
+
 # Count the number of read frames
 frames = 0
 # Count the number of illuminated read frames
@@ -130,15 +136,29 @@ valid_frames = 0
 dark_tries = 0
 # Track the running darkness total
 dark_running_total = 0
-face_locations = None
+# Encodings of the frames in which exactly one face was found
+captured = []
 
 dark_threshold = config.getfloat("video", "dark_threshold", fallback=60)
 
+# Read exposure from config to use in the main loop
+exposure = config.getint("video", "exposure", fallback=-1)
+
 clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
 
-# Loop through frames till we hit a timeout
-while frames < 60:
+# Loop through frames till we have enough faces or hit the frame budget
+while frames < max(60, enroll_frames * 15) and len(captured) < enroll_frames:
 	frames += 1
+
+	if exposure != -1:
+		# For a strange reason on some cameras (e.g. Lenoxo X1E)
+		# setting manual exposure works only after a couple frames
+		# are captured and even after a delay it does not
+		# always work. Setting exposure at every frame is
+		# reliable though.
+		video_capture.internal.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1.0)  # 1 = Manual
+		video_capture.internal.set(cv2.CAP_PROP_EXPOSURE, float(exposure))
+
 	# Grab a single frame of video
 	frame, gsframe = video_capture.read_frame()
 	gsframe = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -170,14 +190,27 @@ while frames < 60:
 	# Get all faces from that frame as encodings
 	face_locations = face_detector(gsframe, 1)
 
-	# If we've found at least one, we can continue
-	if face_locations:
-		break
+	if not face_locations:
+		continue
+
+	# If more than 1 faces are detected we can't know which one belongs to the user
+	if len(face_locations) > 1:
+		video_capture.release()
+		print(_("Multiple faces detected, aborting"))
+		sys.exit(1)
+
+	face_location = face_locations[0]
+	if use_cnn:
+		face_location = face_location.rect
+
+	# Get the encoding of the face in this frame
+	face_landmark = pose_predictor(frame, face_location)
+	captured.append(np.array(face_encoder.compute_face_descriptor(frame, face_landmark, 1)))
 
 video_capture.release()
 
 # If we've found no faces, try to determine why
-if not face_locations:
+if not captured:
 	if valid_frames == 0:
 		print(_("Camera saw only black frames - is IR emitter working?"))
 	elif valid_frames == dark_tries:
@@ -187,20 +220,23 @@ if not face_locations:
 		print(_("No face detected, aborting"))
 	sys.exit(1)
 
-# If more than 1 faces are detected we can't know which one belongs to the user
-elif len(face_locations) > 1:
-	print(_("Multiple faces detected, aborting"))
+if len(captured) < min_agreeing:
+	print(_("Only {found} of {needed} frames showed a usable face, please try again").format(found=len(captured), needed=min_agreeing))
 	sys.exit(1)
 
-face_location = face_locations[0]
-if use_cnn:
-	face_location = face_location.rect
+# Drop frames that disagree with the rest of the capture
+kept, spread = select_consistent(captured, max_spread, min_agreeing)
 
-# Get the encodings in the frame
-face_landmark = pose_predictor(frame, face_location)
-face_encoding = np.array(face_encoder.compute_face_descriptor(frame, face_landmark, 1))
+if kept is None:
+	print(_("The captured frames did not match each other closely enough (spread {spread}, limit {limit})").format(spread=round(spread * 10, 1), limit=round(max_spread * 10, 1)))
+	print(_("Hold still, look straight into the camera and try again"))
+	sys.exit(1)
 
-insert_model["data"].append(face_encoding.tolist())
+for face_encoding in kept:
+	insert_model["data"].append(face_encoding.tolist())
+
+if not builtins.howdy_args.plain:
+	print(_("Used {kept} of {captured} captured frames (spread {spread})").format(kept=len(kept), captured=len(captured), spread=round(spread * 10, 1)))
 
 # Insert full object into the list
 encodings.append(insert_model)

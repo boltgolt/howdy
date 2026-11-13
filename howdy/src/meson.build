@@ -24,6 +24,7 @@ py_sources = [
     'cli/test.py',
     'cli.py',
     'compare.py',
+    'enrollment.py',
     'i18n.py',
     'paths_factory.py',
     'recorders/__init__.py',
