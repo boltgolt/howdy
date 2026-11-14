@@ -303,6 +303,14 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
     }
   }
 
+  // Pass the locale so gettext in the subprocess and the auth UI can translate
+  for (const char *name : {"LANGUAGE", "LC_ALL", "LC_MESSAGES", "LANG"}) {
+    const char *value = getenv_value(name);
+    if (value != nullptr && is_safe_locale(value)) {
+      env_vars.emplace_back(std::string(name) + "=" + value);
+    }
+  }
+
   // Build the null terminated array posix_spawnp expects
   std::vector<char *> envp;
   envp.reserve(env_vars.size() + 1);
