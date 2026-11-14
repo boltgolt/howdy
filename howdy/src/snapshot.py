@@ -8,7 +8,7 @@ import numpy as np
 import paths_factory
 
 
-def generate(frames, text_lines):
+def generate(frames, text_lines, kind=None):
 	"""Generate a snapshot from given frames"""
 
 	# Don't execute if no frames were given
@@ -48,13 +48,14 @@ def generate(frames, text_lines):
 
 		line_number += 1
 
+	snapshot_dir = paths_factory.snapshots_dir_path(kind)
 	# Made sure a snapshot folder exist
-	if not os.path.exists(paths_factory.snapshots_dir_path()):
-		os.makedirs(paths_factory.snapshots_dir_path())
+	if not os.path.exists(snapshot_dir):
+		os.makedirs(snapshot_dir, exist_ok=True)
 
 	# Generate a filename based on the current time
 	filename = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S.jpg")
-	filepath = paths_factory.snapshot_path(filename)
+	filepath = paths_factory.snapshot_path(filename, kind)
 	# Write the image to that file
 	cv2.imwrite(filepath, snap)
 

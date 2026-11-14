@@ -32,12 +32,24 @@ def config_file_path() -> str:
     return str(paths.config_dir / "config.ini")
 
 
-def snapshots_dir_path() -> PurePath:
-    return paths.log_path / "snapshots"
+def snapshots_dir_path(kind: str | None = None) -> PurePath:
+	base = paths.log_path / "snapshots"
 
+	if kind is None:
+	    return base
 
-def snapshot_path(snapshot: str) -> str:
-    return str(snapshots_dir_path() / snapshot)
+	kind = kind.lower()
+
+	if kind in ("failed", "fail", "failed login"):
+	    return base / "failed"
+
+	if kind in ("successful", "success", "successful login"):
+	    return base / "success"
+
+	return base / kind
+
+def snapshot_path(snapshot: str, kind: str | None = None) -> str:
+	return str(snapshots_dir_path(kind) / snapshot)
 
 
 def user_models_dir_path() -> PurePath:
