@@ -92,14 +92,14 @@ sec_frames = 0
 # Last secands FPS
 fps = 0
 # The current second we're counting
-sec = int(time.time())
+sec = int(time.monotonic())
 # recognition time
 rec_tm = 0
 
 # Wrap everything in an keyboard interrupt handler
 try:
 	while True:
-		frame_tm = time.time()
+		frame_tm = time.monotonic()
 
 		# Increment the frames
 		total_frames += 1
@@ -164,12 +164,12 @@ try:
 			# Show that this is an active frame
 			cv2.putText(overlay, _("SCAN FRAME"), (width - 68, 16), cv2.FONT_HERSHEY_SIMPLEX, .3, (0, 255, 0), 0, cv2.LINE_AA)
 
-			rec_tm = time.time()
+			rec_tm = time.monotonic()
 
 			# Get the locations of all faces and their locations
 			# Upsample it once
 			face_locations = face_detector(frame, 1)
-			rec_tm = time.time() - rec_tm
+			rec_tm = time.monotonic() - rec_tm
 
 			# Loop though all faces and paint a circle around them
 			for loc in face_locations:
@@ -238,7 +238,7 @@ try:
 		if window_closed:
 			raise KeyboardInterrupt()
 
-		frame_time = time.time() - frame_tm
+		frame_time = time.monotonic() - frame_tm
 
 		# Delay the frame if slowmode is on
 		if slow_mode:

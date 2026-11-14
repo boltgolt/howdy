@@ -25,10 +25,10 @@ class nod(RubberStamp):
 		# Contains booleans recording successful nods and their directions
 		recorded_nods = {"x": [], "y": []}
 
-		starttime = time.time()
+		starttime = time.monotonic()
 
 		# Keep running the loop while we have not hit timeout yet
-		while time.time() < starttime + self.options["timeout"]:
+		while time.monotonic() < starttime + self.options["timeout"]:
 			# Read a frame from the camera
 			ret, frame = self.video_capture.read_frame()
 
