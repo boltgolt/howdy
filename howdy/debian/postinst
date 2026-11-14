@@ -198,6 +198,13 @@ print("CNN saved to config, CUDA " + ("enabled" if cuda_used else "disabled"))
 handleStatus(sc(["chmod 755 -R /lib/security/howdy/"], shell=True))
 handleStatus(sc(["chmod 755 -R /etc/howdy/"], shell=True))
 
+# Restrict biometric model files to root only
+models_dir = "/etc/howdy/models"
+if os.path.isdir(models_dir):
+	os.chmod(models_dir, 0o700)
+	for f in os.listdir(models_dir):
+		os.chmod(os.path.join(models_dir, f), 0o600)
+
 # Allow anyone to execute the python CLI
 os.chmod("/lib/security/howdy", 0o755)
 os.chmod("/lib/security/howdy/cli.py", 0o755)
