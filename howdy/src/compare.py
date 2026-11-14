@@ -68,14 +68,18 @@ def init_detector(lock):
 
 def make_snapshot(type):
 	"""Generate snapshot after detection"""
-	snapshot.generate(snapframes, [
-		type + _(" LOGIN"),
-		_("Date: ") + datetime.now(timezone.utc).strftime("%Y/%m/%d %H:%M:%S UTC"),
-		_("Scan time: ") + str(round(time.monotonic() - timings["fr"], 2)) + "s",
-		_("Frames: ") + str(frames) + " (" + str(round(frames / (time.monotonic() - timings["fr"]), 2)) + "FPS)",
-		_("Hostname: ") + os.uname().nodename,
-		_("Best certainty value: ") + str(round(lowest_certainty * 10, 1))
-	])
+	# A snapshot that can't be saved should never change the outcome of the login
+	try:
+		snapshot.generate(snapframes, [
+			type + _(" LOGIN"),
+			_("Date: ") + datetime.now(timezone.utc).strftime("%Y/%m/%d %H:%M:%S UTC"),
+			_("Scan time: ") + str(round(time.monotonic() - timings["fr"], 2)) + "s",
+			_("Frames: ") + str(frames) + " (" + str(round(frames / (time.monotonic() - timings["fr"]), 2)) + "FPS)",
+			_("Hostname: ") + os.uname().nodename,
+			_("Best certainty value: ") + str(round(lowest_certainty * 10, 1))
+		])
+	except Exception as error:
+		print(_("Could not save snapshot: {}").format(error))
 
 
 def send_to_ui(type, message):

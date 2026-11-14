@@ -48,15 +48,21 @@ def generate(frames, text_lines):
 
 		line_number += 1
 
-	# Made sure a snapshot folder exist
-	if not os.path.exists(paths_factory.snapshots_dir_path()):
-		os.makedirs(paths_factory.snapshots_dir_path())
+	# Snapshots contain the user's face, so only allow the owner to read them
+	old_umask = os.umask(0o077)
 
-	# Generate a filename based on the current time
-	filename = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S.jpg")
-	filepath = paths_factory.snapshot_path(filename)
-	# Write the image to that file
-	cv2.imwrite(filepath, snap)
+	try:
+		# Made sure a snapshot folder exist
+		if not os.path.exists(paths_factory.snapshots_dir_path()):
+			os.makedirs(paths_factory.snapshots_dir_path())
+
+		# Generate a filename based on the current time
+		filename = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S.jpg")
+		filepath = paths_factory.snapshot_path(filename)
+		# Write the image to that file
+		cv2.imwrite(filepath, snap)
+	finally:
+		os.umask(old_umask)
 
 	# Return the saved file location
 	return filepath
