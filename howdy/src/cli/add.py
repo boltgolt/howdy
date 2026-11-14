@@ -134,11 +134,24 @@ face_locations = None
 
 dark_threshold = config.getfloat("video", "dark_threshold", fallback=60)
 
+# Read exposure from config to use in the main loop
+exposure = config.getint("video", "exposure", fallback=-1)
+
 clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
 
 # Loop through frames till we hit a timeout
 while frames < 60:
 	frames += 1
+
+	if exposure != -1:
+		# For a strange reason on some cameras (e.g. Lenoxo X1E)
+		# setting manual exposure works only after a couple frames
+		# are captured and even after a delay it does not
+		# always work. Setting exposure at every frame is
+		# reliable though.
+		video_capture.internal.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1.0)  # 1 = Manual
+		video_capture.internal.set(cv2.CAP_PROP_EXPOSURE, float(exposure))
+
 	# Grab a single frame of video
 	frame, gsframe = video_capture.read_frame()
 	gsframe = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
