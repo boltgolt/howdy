@@ -93,7 +93,7 @@ class ffmpeg_reader:
 		self.video = (
 			numpy
 			.frombuffer(stream, numpy.uint8)
-			.reshape([-1, self.width, self.height, 3])
+			.reshape([-1, self.height, self.width, 3])
 		)
 
 	def read(self):
@@ -105,10 +105,10 @@ class ffmpeg_reader:
 			self.init_camera = False
 			self.video = ()
 			self.record(self.numframes)
-			return 0, self.video
+			return 1, self.video[0]
 
 		# If we are called and self.video is empty, we should record self.numframes to fill the video buffer
-		if self.video == ():
+		if isinstance(self.video, tuple):
 			self.record(self.numframes)
 
 		# If we've read max frames, but still are being requested to read more, we simply record another batch.
@@ -122,7 +122,7 @@ class ffmpeg_reader:
 		self.num_frames_read += 1
 
 		# Return a single frame of video
-		return 0, self.video[self.num_frames_read]
+		return 1, self.video[self.num_frames_read]
 
 	def release(self):
 		""" Empty our array. If we had a hold on the camera, we would give it back here. """
