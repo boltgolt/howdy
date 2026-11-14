@@ -12,6 +12,12 @@ timings = {
 # Import required modules
 import sys
 import os
+
+# Force singlethreaded BLAS. dlib's OpenBLAS/OpenMP matmuls can livelock when raced against this scri>
+os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
+os.environ.setdefault("OMP_NUM_THREADS", "1")
+os.environ.setdefault("GOTO_NUM_THREADS", "1")
+
 import json
 import configparser
 import dlib
