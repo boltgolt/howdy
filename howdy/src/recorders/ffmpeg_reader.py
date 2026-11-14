@@ -65,7 +65,7 @@ class ffmpeg_reader:
 			height = probe["streams"][0]["height"]
 			width = probe["streams"][0]["width"]
 		else:
-			(height, width) = [x.strip() for x in probe[0].split("x")]
+			(width, height) = [x.strip() for x in probe[0].split("x")]
 
 		# Set height and width from probe if they haven't been set already
 		if height.isdigit() and self.get(CAP_PROP_FRAME_HEIGHT) == 0:
