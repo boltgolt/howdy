@@ -88,7 +88,7 @@ class ffmpeg_reader:
 			ffmpeg
 			.input(self.device_path, format=self.device_format)
 			.output("pipe:", format="rawvideo", pix_fmt="rgb24", vframes=numframes)
-			.run(capture_stdout=True, quiet=True)
+			.run(capture_stdout=True, capture_stderr=True)
 		)
 		self.video = (
 			numpy
