@@ -163,7 +163,8 @@ auto check_enabled(pam_handle_t *pamh, const INIReader &config,
     int return_value =
         glob("/proc/acpi/button/lid/*/state", 0, nullptr, &glob_result);
 
-    if (return_value != 0) {
+    // GLOB_NOMATCH means there is no lid, which is normal on desktops
+    if (return_value != 0 && return_value != GLOB_NOMATCH) {
       pam_syslog(pamh, LOG_ERR, "Failed to read files from glob: %d",
                  return_value);
       if (errno != 0) {
