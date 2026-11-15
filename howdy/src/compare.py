@@ -24,6 +24,7 @@ import numpy as np
 import _thread as thread
 import paths_factory
 from recorders.video_capture import VideoCapture
+from rotation import rotate_frame
 from i18n import _
 
 def exit(code=None):
@@ -198,7 +199,7 @@ max_height = config.getfloat("video", "max_height", fallback=320.0)
 
 # Get the height of the image (which would be the width if screen is portrait oriented)
 height = video_capture.internal.get(cv2.CAP_PROP_FRAME_HEIGHT) or 1
-if rotate == 2:
+if rotate >= 2:
 	height = video_capture.internal.get(cv2.CAP_PROP_FRAME_WIDTH) or 1
 # Calculate the amount the image has to shrink
 scaling_factor = (max_height / height) or 1
@@ -283,23 +284,9 @@ while True:
 		frame = cv2.resize(frame, None, fx=scaling_factor, fy=scaling_factor, interpolation=cv2.INTER_AREA)
 		gsframe = cv2.resize(gsframe, None, fx=scaling_factor, fy=scaling_factor, interpolation=cv2.INTER_AREA)
 
-	# If camera is configured to rotate = 1, check portrait in addition to landscape
-	if rotate == 1:
-		if frames % 3 == 1:
-			frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
-			gsframe = cv2.rotate(gsframe, cv2.ROTATE_90_COUNTERCLOCKWISE)
-		if frames % 3 == 2:
-			frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
-			gsframe = cv2.rotate(gsframe, cv2.ROTATE_90_CLOCKWISE)
-
-	# If camera is configured to rotate = 2, check portrait orientation
-	elif rotate == 2:
-		if frames % 2 == 0:
-			frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
-			gsframe = cv2.rotate(gsframe, cv2.ROTATE_90_COUNTERCLOCKWISE)
-		else:
-			frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
-			gsframe = cv2.rotate(gsframe, cv2.ROTATE_90_CLOCKWISE)
+	# Turn the frame the way the rotate option asks for
+	frame = rotate_frame(frame, rotate, frames)
+	gsframe = rotate_frame(gsframe, rotate, frames)
 
 	# Get all faces from that frame as encodings
 	# Upsamples 1 time

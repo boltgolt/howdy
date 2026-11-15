@@ -11,6 +11,7 @@ import numpy as np
 import paths_factory
 
 from recorders.video_capture import VideoCapture
+from rotation import rotate_frame
 from i18n import _
 
 # Try to import dlib and give a nice error if we can't
@@ -137,6 +138,9 @@ dark_threshold = config.getfloat("video", "dark_threshold", fallback=60)
 # Read exposure from config to use in the main loop
 exposure = config.getint("video", "exposure", fallback=-1)
 
+# Read the rotation from config, so the model is made from an upright face
+rotate = config.getint("video", "rotate", fallback=0)
+
 clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
 
 # Loop through frames till we hit a timeout
@@ -154,6 +158,7 @@ while frames < 60:
 
 	# Grab a single frame of video
 	frame, gsframe = video_capture.read_frame()
+	frame = rotate_frame(frame, rotate, frames)
 	gsframe = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 	gsframe = clahe.apply(gsframe)
 
