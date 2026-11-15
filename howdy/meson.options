@@ -7,3 +7,4 @@ option('install_in_site_packages', type: 'boolean', value: false, yield: true, d
 option('py_sources_dir', type: 'string', value: '', yield: true, description: 'Set the python sources directory')
 option('install_pam_config', type: 'boolean', value: false, yield: true, description: 'Install pam config file (for Debian/Ubuntu)')
 option('python_path', type: 'string', value: '/usr/bin/python', yield: true, description: 'Set the path to the python executable')
+option('install_selinux_module', type: 'boolean', value: false, yield: true, description: 'Build and install the SELinux policy module (needs checkmodule and semodule_package)')
