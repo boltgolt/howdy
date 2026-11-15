@@ -18,6 +18,7 @@ py_sources = {
         'compare.py',
         'i18n.py',
         'paths_factory.py',
+        'rotation.py',
         'snapshot.py',
         py_paths,
     ],

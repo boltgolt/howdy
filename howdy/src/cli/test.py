@@ -14,6 +14,7 @@ import paths_factory
 
 from i18n import _
 from recorders.video_capture import VideoCapture
+from rotation import rotate_frame
 
 # Read config from disk
 config = configparser.ConfigParser()
@@ -77,6 +78,11 @@ try:
 except FileNotFoundError:
 	pass
 
+# Only the fixed rotations are shown, the alternating ones would flicker
+rotate = config.getint("video", "rotate", fallback=0)
+if rotate not in (3, 4):
+	rotate = 0
+
 clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
 
 # Open the window and attach a a mouse listener
@@ -116,6 +122,8 @@ try:
 
 		# Grab a single frame of video
 		orig_frame, frame = video_capture.read_frame()
+		orig_frame = rotate_frame(orig_frame, rotate, total_frames)
+		frame = rotate_frame(frame, rotate, total_frames)
 
 		frame = clahe.apply(frame)
 		# Make a frame to put overlays in
