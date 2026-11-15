@@ -1,0 +1,12 @@
+module howdy 1.0;
+
+require {
+	type xdm_t;
+	type v4l_device_t;
+	class chr_file { getattr ioctl map open read write };
+}
+
+# The login screen (SDDM, GDM) and the GDM lock screen run pam_howdy in the
+# confined xdm_t domain. OpenCV mmaps the V4L2 capture buffers, and xdm_t is
+# denied "map" on cameras by default, so the camera cannot be opened there.
+allow xdm_t v4l_device_t:chr_file { getattr ioctl map open read write };
