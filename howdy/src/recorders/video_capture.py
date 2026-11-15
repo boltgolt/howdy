@@ -40,6 +40,13 @@ class VideoCapture:
 				print("\n\tsudo howdy config\n")
 			sys.exit(14)
 
+		# Fixed rotation of the camera itself, see the camera_rotation option
+		self.rotation = {
+			90: cv2.ROTATE_90_CLOCKWISE,
+			180: cv2.ROTATE_180,
+			270: cv2.ROTATE_90_COUNTERCLOCKWISE
+		}.get(self.config.getint("video", "camera_rotation", fallback=0) % 360)
+
 		# Create reader
 		# The internal video recorder
 		self.internal = None
@@ -86,6 +93,10 @@ class VideoCapture:
 			print(_("Failed to read camera specified in the 'device_path' config option, aborting"))
 			sys.exit(14)
 
+		# Turn the frame upright if the camera is mounted rotated
+		if self.rotation is not None:
+			frame = cv2.rotate(frame, self.rotation)
+
 		# Single channel frames come from grayscale or raw formats, see the
 		# pixel_format option. Deeper than 8 bits gets scaled down first.
 		if frame.ndim == 2:
@@ -103,6 +114,17 @@ class VideoCapture:
 			print("\nAn error occurred in OpenCV\n")
 			raise
 		return frame, gsframe
+
+	def frame_size(self):
+		"""
+		Returns the (width, height) of the frames read_frame() hands out, so
+		with the camera rotation applied.
+		"""
+		width = self.internal.get(cv2.CAP_PROP_FRAME_WIDTH)
+		height = self.internal.get(cv2.CAP_PROP_FRAME_HEIGHT)
+		if self.rotation in (cv2.ROTATE_90_CLOCKWISE, cv2.ROTATE_90_COUNTERCLOCKWISE):
+			return height, width
+		return width, height
 
 	def _scale_raw(self, frame):
 		"""

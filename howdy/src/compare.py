@@ -197,9 +197,10 @@ del lock
 max_height = config.getfloat("video", "max_height", fallback=320.0)
 
 # Get the height of the image (which would be the width if screen is portrait oriented)
-height = video_capture.internal.get(cv2.CAP_PROP_FRAME_HEIGHT) or 1
+frame_width, frame_height = video_capture.frame_size()
+height = frame_height or 1
 if rotate == 2:
-	height = video_capture.internal.get(cv2.CAP_PROP_FRAME_WIDTH) or 1
+	height = frame_width or 1
 # Calculate the amount the image has to shrink
 scaling_factor = (max_height / height) or 1
 
