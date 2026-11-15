@@ -33,9 +33,7 @@ sources = files(
     'src/window.py',
 )
 
-py = import('python').find_installation(
-    # modules: ['gi', 'elevate']
-)
+py = import('python').find_installation(paths_dict.get('python_path'))
 
 if get_option('install_in_site_packages')
     pysourcesinstalldir = join_paths(py.get_install_dir(), 'howdy-gtk')
