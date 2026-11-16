@@ -1,4 +1,4 @@
-project('howdy', 'cpp', license: 'MIT', version: '3.0.1', meson_version: '>= 0.61.0', subproject_dir: 'src/pam/subprojects')
+project('howdy', 'cpp', license: 'MIT', version: '3.0.1', meson_version: '>= 0.61.0', subproject_dir: 'src/pam/subprojects', default_options: ['cpp_std=c++17'])
 
 dlibdatadir = get_option('dlib_data_dir') != '' ? get_option('dlib_data_dir') : join_paths(get_option('prefix'), get_option('datadir'), 'dlib-data')
 confdir = get_option('config_dir') != '' ? get_option('config_dir') : join_paths(get_option('prefix'), get_option('sysconfdir'), 'howdy')
