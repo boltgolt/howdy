@@ -1,6 +1,7 @@
 import subprocess
 import time
 
+import elevate_op
 from i18n import _
 from gi.repository import Gtk as gtk
 from gi.repository import GLib as glib
@@ -84,8 +85,8 @@ def execute_add(box, dialog, entered_name):
 
 	# Run howdy without a shell so the label travels as one argument,
 	# quotes and spaces in the name can't break out of the command
-	proc = subprocess.run(
-		["howdy", "add", entered_name, "-y", "-U", box.active_user],
+	proc = elevate_op.howdy_run(
+		["add", entered_name, "-y", "-U", box.active_user],
 		capture_output=True,
 		text=True,
 	)
@@ -119,8 +120,8 @@ def on_model_delete(self, button):
 		dialog.destroy()
 
 		if response == gtk.ResponseType.OK:
-			proc = subprocess.run(
-				["howdy", "remove", str(id), "-y", "-U", self.active_user],
+			proc = elevate_op.howdy_run(
+				["remove", str(id), "-y", "-U", self.active_user],
 				capture_output=True,
 				text=True,
 			)

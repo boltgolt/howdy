@@ -4,3 +4,4 @@ option('user_models_dir', type: 'string', value: '', yield: true, description: '
 option('install_in_site_packages', type: 'boolean', value: false, yield: true, description: 'Install howdy python files in site packages')
 option('py_sources_dir', type: 'string', value: '', yield: true, description: 'Set the python sources directory')
 option('with_polkit', type: 'boolean', value: false, yield: true, description: 'Install polkit policy config file')
+option('howdy_cli_path', type: 'string', value: '/usr/bin/howdy', yield: true, description: 'Path to the howdy CLI used for privileged operations')

@@ -8,6 +8,8 @@ import subprocess
 import threading
 import paths_factory
 
+import elevate_op
+
 from i18n import _
 
 from gi.repository import Gtk as gtk
@@ -87,7 +89,14 @@ class OnboardingWindow(gtk.Window):
 			self.enable_next()
 			return
 
-		self.proc = subprocess.Popen("./install.sh", stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True, cwd=paths_factory.dlib_data_dir_path())
+		# pkexec and sudo may change the working directory, so invoke the
+		# installer by absolute path (it also cds to its own directory)
+		self.proc = elevate_op.popen(
+			[os.path.join(str(paths_factory.dlib_data_dir_path()), "install.sh")],
+			stdout=subprocess.PIPE,
+			stderr=subprocess.STDOUT,
+			cwd=str(paths_factory.dlib_data_dir_path()),
+		)
 
 		self.download_lines = []
 		self.read_download_line()
@@ -186,7 +195,7 @@ class OnboardingWindow(gtk.Window):
 			time.sleep(.5)
 
 			# Get the udevadm details to try to get a better name
-			udevadm = subprocess.check_output(["udevadm info -r --query=all -n " + device_path], shell=True).decode("utf-8")
+			udevadm = subprocess.check_output(["udevadm", "info", "-r", "--query=all", "-n", device_path]).decode("utf-8")
 
 			# Loop though udevadm to search for a better name
 			for line in udevadm.split("\n"):
@@ -294,7 +303,11 @@ class OnboardingWindow(gtk.Window):
 			self.show_error(_("Error selecting camera"))
 
 		device_path = listmodel.get_value(listmodel.get_iter(rowlist[0]), 2)
-		self.proc = subprocess.Popen("howdy set device_path " + device_path, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+		self.proc = elevate_op.howdy_popen(
+			["set", "device_path", device_path],
+			stdout=subprocess.PIPE,
+			stderr=subprocess.STDOUT,
+		)
 
 		self.window.set_focus(self.builder.get_object("scanbutton"))
 
@@ -313,7 +326,7 @@ class OnboardingWindow(gtk.Window):
 		glib.timeout_add(600, self.run_add)
 
 	def run_add(self):
-		status, output = subprocess.getstatusoutput(["howdy add -y"])
+		status, output = elevate_op.howdy_getstatusoutput(["add", "-y"])
 
 		print("howdy add output:")
 		print(output)
@@ -346,7 +359,11 @@ class OnboardingWindow(gtk.Window):
 		elif radio_selected == "radiosecure":
 			radio_certanty = 2.2
 
-		self.proc = subprocess.Popen("howdy set certainty " + str(radio_certanty), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+		self.proc = elevate_op.howdy_popen(
+			["set", "certainty", str(radio_certanty)],
+			stdout=subprocess.PIPE,
+			stderr=subprocess.STDOUT,
+		)
 
 		self.nextbutton.hide()
 		self.builder.get_object("cancelbutton").hide()
