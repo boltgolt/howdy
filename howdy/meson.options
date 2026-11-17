@@ -9,3 +9,4 @@ option('install_pam_config', type: 'boolean', value: false, yield: true, descrip
 option('install_config', type: 'boolean', value: true, yield: true, description: 'Install Howdy config file')
 option('python_path', type: 'string', value: '/usr/bin/python', yield: true, description: 'Set the path to the python executable')
 option('install_selinux_module', type: 'boolean', value: false, yield: true, description: 'Build and install the SELinux policy module (needs checkmodule and semodule_package)')
+option('install_polkit_dropin', type: 'boolean', value: false, yield: true, description: 'Install a systemd drop-in giving polkit-agent-helper@.service camera access')
