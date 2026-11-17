@@ -75,6 +75,17 @@ if get_option('install_pam_config')
     )
 endif
 
+if get_option('install_polkit_dropin')
+    systemd = dependency('systemd', required: false)
+    systemdunitdir = systemd.found() ? systemd.get_variable(pkgconfig: 'systemdsystemunitdir') : get_option('prefix') / 'lib' / 'systemd' / 'system'
+    install_data(
+        'systemd/polkit-agent-helper-howdy.conf',
+        install_dir: systemdunitdir / 'polkit-agent-helper@.service.d',
+        install_tag: 'polkit',
+        rename: '10-howdy.conf',
+    )
+endif
+
 if get_option('install_selinux_module')
     selinux_mod = custom_target(
         'howdy.mod',
