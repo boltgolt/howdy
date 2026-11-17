@@ -1,3 +1,21 @@
+howdy (3.0.2) jammy; urgency=medium
+
+  * Added arm64 packages (thanks @ooaklee!)
+  * Added SELinux policy module for camera access on the login screen (thanks @DaraSamii!)
+  * Added rotate modes 3 and 4 for cameras mounted sideways (thanks @T-Caster!)
+  * Added pixel_format and raw_black_level options for raw IR sensors (thanks @arthgirard!)
+  * Added install_config meson option (thanks @fufexan!)
+  * Fixed configured exposure not being applied while adding a face model (thanks @shawnlopresto!)
+  * Fixed multiple ffmpeg reader bugs (thanks @ds17f and @Lokomojo!)
+  * Fixed test command crashing on OpenCV 5 (thanks @faux123!)
+  * Fixed SyntaxWarning for invalid escape sequence (thanks @nafg!)
+  * Fixed failing snapshots crashing the login, snapshots are now only readable by root
+  * Fixed timings breaking when the system clock changes
+  * Fixed authentication messages not being translated
+  * Fixed lid glob error being logged on desktops
+
+ -- boltgolt <boltgolt@gmail.com>  Tue, 17 Nov 2026 17:55:18 +0100
+
 howdy (3.0.1) jammy; urgency=medium
 
   * Fixed authentication popup not being shown since the C++ PAM rewrite
