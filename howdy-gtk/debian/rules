@@ -13,4 +13,5 @@ override_dh_auto_configure:
 		-Dconfig_dir=/etc/howdy \
 		-Ddlib_data_dir=/etc/howdy/dlib-data \
 		-Dpy_sources_dir=/usr/lib \
-		-Dwith_polkit=true
+		-Dwith_polkit=true \
+		-Dhowdy_cli_path=/usr/bin/howdy

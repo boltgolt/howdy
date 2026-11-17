@@ -23,6 +23,7 @@ py_paths = configure_file(
 
 sources = files(
     'src/authsticky.py',
+    'src/elevate_op.py',
     'src/i18n.py',
     'src/init.py',
     'src/onboarding.py',
@@ -34,7 +35,7 @@ sources = files(
 )
 
 py = import('python').find_installation(
-    # modules: ['gi', 'elevate']
+    # modules: ['gi']
 )
 
 if get_option('install_in_site_packages')
@@ -102,11 +103,12 @@ install_data(
 
 if get_option('with_polkit')
     polkit_config = configure_file(
-        input: 'src/polkit/com.github.boltgolt.howdy-gtk.policy.in',
-        output: 'com.github.boltgolt.howdy-gtk.policy',
-        configuration: {'script_path': cli_path, 'python_path': py.full_path()}
+        input: 'src/polkit/com.github.boltgolt.howdy-cli.policy.in',
+        output: 'com.github.boltgolt.howdy-cli.policy',
+        configuration: {'howdy_cli_path': get_option('howdy_cli_path')}
     )
     install_data(
+        polkit_config,
         polkit_config,
         install_dir: get_option('prefix') / get_option('datadir') / 'polkit-1' / 'actions',
         install_mode: 'rw-r--r--',

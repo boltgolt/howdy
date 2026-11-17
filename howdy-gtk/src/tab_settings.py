@@ -1,7 +1,7 @@
 import configparser
 import subprocess
 
-from i18n import _
+import elevate_op
 import paths_factory
 
 from gi.repository import Gtk as gtk
@@ -48,7 +48,10 @@ def on_settings_save(self, button):
 	}
 
 	for name, value in settings.items():
-		status, output = subprocess.getstatusoutput(["howdy set " + name + " " + value])
+		# Arguments are passed as a list, values can't break out of the command
+		proc = elevate_op.howdy_run(["set", name, value], capture_output=True, text=True)
+		status = proc.returncode
+		output = proc.stdout + proc.stderr
 
 		if status != 0:
 			dialog = gtk.MessageDialog(transient_for=self, modal=True, message_type=gtk.MessageType.ERROR, buttons=gtk.ButtonsType.CLOSE)

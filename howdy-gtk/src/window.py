@@ -3,11 +3,11 @@ import gi
 import signal
 import sys
 import os
-import elevate
 import subprocess
 
 from i18n import _
 import paths_factory
+import elevate_op
 
 # Make sure we have the libs we need
 gi.require_version("Gtk", "3.0")
@@ -80,7 +80,7 @@ class MainWindow(gtk.Window):
 		if self.active_user: user = self.active_user
 
 		# Execute the list command to get the models
-		status, output = subprocess.getstatusoutput(["howdy list --plain -U " + user])
+		status, output = elevate_op.howdy_getstatusoutput(["list", "--plain", "-U", user])
 
 		# Create a datamodel
 		self.listmodel = gtk.ListStore(str, str, str)
@@ -120,8 +120,8 @@ class MainWindow(gtk.Window):
 # Make sure we quit on a SIGINT
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 
-# Make sure we run as sudo
-elevate.elevate()
+# The GUI itself runs unprivileged (elevation would break on Wayland),
+# privileged howdy CLI calls are elevated per-operation via elevate_op
 
 # If no models have been created yet or when it is forced, start the onboarding
 if "--force-onboarding" in sys.argv or not os.path.exists(paths_factory.user_models_dir_path()):
