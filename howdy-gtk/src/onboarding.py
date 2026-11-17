@@ -89,8 +89,10 @@ class OnboardingWindow(gtk.Window):
 			self.enable_next()
 			return
 
+		# pkexec and sudo may change the working directory, so invoke the
+		# installer by absolute path (it also cds to its own directory)
 		self.proc = elevate_op.popen(
-			["./install.sh"],
+			[os.path.join(str(paths_factory.dlib_data_dir_path()), "install.sh")],
 			stdout=subprocess.PIPE,
 			stderr=subprocess.STDOUT,
 			cwd=str(paths_factory.dlib_data_dir_path()),

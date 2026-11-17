@@ -99,13 +99,11 @@ class MainWindow(gtk.Window):
 		self.treeview.set_model(self.listmodel)
 
 	def on_about_link(self, label, uri):
-		"""Open links on about page as a non-root user"""
+		"""Open links on the about page as the current (unprivileged) user"""
 		try:
-			user = os.getlogin()
-		except Exception:
-			user = os.environ.get("SUDO_USER")
-
-		status, output = subprocess.getstatusoutput(["sudo -u " + user + " timeout 10 xdg-open " + uri])
+			subprocess.Popen(["xdg-open", uri], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+		except OSError:
+			pass
 		return True
 
 	def exit(self, widget=None, context=None):

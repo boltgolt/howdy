@@ -11,8 +11,15 @@ import subprocess
 
 
 def _howdy_path():
-	"""Return the path of the howdy CLI"""
-	return shutil.which("howdy") or "/usr/bin/howdy"
+	"""Return the path of the howdy CLI.
+
+	Prefer the absolute path that the polkit action is configured for
+	(pkexec only matches its custom action on the exact program path),
+	falling back to a PATH lookup when it doesn't exist."""
+	default = "/usr/bin/howdy"
+	if os.path.isfile(default) and os.access(default, os.X_OK):
+		return default
+	return shutil.which("howdy") or default
 
 
 def _prefix():

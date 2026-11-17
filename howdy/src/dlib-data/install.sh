@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Always work in the directory of this script, the caller's cwd is
+# unreliable when elevated through pkexec or sudo
+cd "$(dirname "$0")" || exit 1
+
 echo "Downloading 3 required data files..."
 
 # Check if wget is installed
