@@ -9,7 +9,7 @@ import sys
 import os
 import re
 import tarfile
-from shutil import rmtree, which
+from shutil import copy2, rmtree, which
 
 # Don't run unless we need to configure the install
 # Will also happen on upgrade but we will catch that later on
@@ -104,6 +104,29 @@ if len(sys.argv) > 2 and sys.argv[2] != "":
 		# Write it all to file
 		with open("/etc/howdy/config.ini", "w") as configfile:
 			newConf.write(configfile)
+
+	# MIGRATION 2.x -> 3.0.2
+	# Data files and face models moved out of /lib/security/howdy, copy over any that are left behind
+	for (old_dir, new_dir) in [("/lib/security/howdy/dlib-data", "/etc/howdy/dlib-data"), ("/lib/security/howdy/models", "/etc/howdy/models")]:
+		if not os.path.isdir(old_dir):
+			continue
+
+		for filename in os.listdir(old_dir):
+			# Only copy data files, and never overwrite newer ones
+			if not filename.endswith(".dat") or os.path.exists(os.path.join(new_dir, filename)):
+				continue
+
+			os.makedirs(new_dir, exist_ok=True)
+			copy2(os.path.join(old_dir, filename), new_dir)
+			print("Migrated " + filename + " to " + new_dir)
+
+	# Download the data files if they are still missing, these are not included in the package
+	if not os.path.exists("/etc/howdy/dlib-data/shape_predictor_5_face_landmarks.dat"):
+		log("Downloading face recognition data files")
+
+		# Don't fail the upgrade on a download error, howdy add will explain how to retry
+		if sc(["./install.sh"], cwd="/etc/howdy/dlib-data") != 0:
+			print(col(2) + "Could not download data files, run sudo ./install.sh in /etc/howdy/dlib-data to try again" + col(0))
 
 	sys.exit(0)
 

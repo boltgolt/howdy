@@ -16,6 +16,13 @@ from i18n import _
 from recorders.video_capture import VideoCapture
 from rotation import rotate_frame
 
+# Test if at lest 1 of the data files is there and abort if it's not
+if not os.path.isfile(paths_factory.shape_predictor_5_face_landmarks_path()):
+	print(_("Data files have not been downloaded, please run the following commands:"))
+	print("\n\tcd " + paths_factory.dlib_data_dir_path())
+	print("\tsudo ./install.sh\n")
+	sys.exit(1)
+
 # Read config from disk
 config = configparser.ConfigParser()
 config.read(paths_factory.config_file_path())
