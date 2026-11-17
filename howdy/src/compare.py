@@ -6,7 +6,7 @@ import time
 
 # Start timing
 timings = {
-	"st": time.time()
+	"st": time.monotonic()
 }
 
 # Import required modules
@@ -24,6 +24,7 @@ import numpy as np
 import _thread as thread
 import paths_factory
 from recorders.video_capture import VideoCapture
+from rotation import rotate_frame
 from i18n import _
 
 def exit(code=None):
@@ -62,20 +63,24 @@ def init_detector(lock):
 	face_encoder = dlib.face_recognition_model_v1(paths_factory.dlib_face_recognition_resnet_model_v1_path())
 
 	# Note the time it took to initialize detectors
-	timings["ll"] = time.time() - timings["ll"]
+	timings["ll"] = time.monotonic() - timings["ll"]
 	lock.release()
 
 
 def make_snapshot(type):
 	"""Generate snapshot after detection"""
-	snapshot.generate(snapframes, [
-		type + _(" LOGIN"),
-		_("Date: ") + datetime.now(timezone.utc).strftime("%Y/%m/%d %H:%M:%S UTC"),
-		_("Scan time: ") + str(round(time.time() - timings["fr"], 2)) + "s",
-		_("Frames: ") + str(frames) + " (" + str(round(frames / (time.time() - timings["fr"]), 2)) + "FPS)",
-		_("Hostname: ") + os.uname().nodename,
-		_("Best certainty value: ") + str(round(lowest_certainty * 10, 1))
-	])
+	# A snapshot that can't be saved should never change the outcome of the login
+	try:
+		snapshot.generate(snapframes, [
+			type + _(" LOGIN"),
+			_("Date: ") + datetime.now(timezone.utc).strftime("%Y/%m/%d %H:%M:%S UTC"),
+			_("Scan time: ") + str(round(time.monotonic() - timings["fr"], 2)) + "s",
+			_("Frames: ") + str(frames) + " (" + str(round(frames / (time.monotonic() - timings["fr"]), 2)) + "FPS)",
+			_("Hostname: ") + os.uname().nodename,
+			_("Best certainty value: ") + str(round(lowest_certainty * 10, 1))
+		])
+	except Exception as error:
+		print(_("Could not save snapshot: {}").format(error))
 
 
 def send_to_ui(type, message):
@@ -163,10 +168,10 @@ except FileNotFoundError:
 send_to_ui("M", _("Starting up..."))
 
 # Save the time needed to start the script
-timings["in"] = time.time() - timings["st"]
+timings["in"] = time.monotonic() - timings["st"]
 
 # Import face recognition, takes some time
-timings["ll"] = time.time()
+timings["ll"] = time.monotonic()
 
 # Start threading and wait for init to finish
 lock = thread.allocate_lock()
@@ -174,7 +179,7 @@ lock.acquire()
 thread.start_new_thread(init_detector, (lock, ))
 
 # Start video capture on the IR camera
-timings["ic"] = time.time()
+timings["ic"] = time.monotonic()
 
 video_capture = VideoCapture(config)
 
@@ -182,7 +187,7 @@ video_capture = VideoCapture(config)
 exposure = config.getint("video", "exposure", fallback=-1)
 
 # Note the time it took to open the camera
-timings["ic"] = time.time() - timings["ic"]
+timings["ic"] = time.monotonic() - timings["ic"]
 
 # wait for thread to finish
 lock.acquire()
@@ -194,7 +199,7 @@ max_height = config.getfloat("video", "max_height", fallback=320.0)
 
 # Get the height of the image (which would be the width if screen is portrait oriented)
 height = video_capture.internal.get(cv2.CAP_PROP_FRAME_HEIGHT) or 1
-if rotate == 2:
+if rotate >= 2:
 	height = video_capture.internal.get(cv2.CAP_PROP_FRAME_WIDTH) or 1
 # Calculate the amount the image has to shrink
 scaling_factor = (max_height / height) or 1
@@ -213,7 +218,7 @@ send_to_ui("M", _("Identifying you..."))
 # Start the read loop
 frames = 0
 valid_frames = 0
-timings["fr"] = time.time()
+timings["fr"] = time.monotonic()
 dark_running_total = 0
 
 while True:
@@ -228,7 +233,7 @@ while True:
 	send_to_ui("S", ui_subtext)
 
 	# Stop if we've exceeded the time limit
-	if time.time() - timings["fr"] > timeout:
+	if time.monotonic() - timings["fr"] > timeout:
 		# Create a timeout snapshot if enabled
 		if save_failed:
 			make_snapshot(_("FAILED"))
@@ -279,23 +284,9 @@ while True:
 		frame = cv2.resize(frame, None, fx=scaling_factor, fy=scaling_factor, interpolation=cv2.INTER_AREA)
 		gsframe = cv2.resize(gsframe, None, fx=scaling_factor, fy=scaling_factor, interpolation=cv2.INTER_AREA)
 
-	# If camera is configured to rotate = 1, check portrait in addition to landscape
-	if rotate == 1:
-		if frames % 3 == 1:
-			frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
-			gsframe = cv2.rotate(gsframe, cv2.ROTATE_90_COUNTERCLOCKWISE)
-		if frames % 3 == 2:
-			frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
-			gsframe = cv2.rotate(gsframe, cv2.ROTATE_90_CLOCKWISE)
-
-	# If camera is configured to rotate = 2, check portrait orientation
-	elif rotate == 2:
-		if frames % 2 == 0:
-			frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
-			gsframe = cv2.rotate(gsframe, cv2.ROTATE_90_COUNTERCLOCKWISE)
-		else:
-			frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
-			gsframe = cv2.rotate(gsframe, cv2.ROTATE_90_CLOCKWISE)
+	# Turn the frame the way the rotate option asks for
+	frame = rotate_frame(frame, rotate, frames)
+	gsframe = rotate_frame(gsframe, rotate, frames)
 
 	# Get all faces from that frame as encodings
 	# Upsamples 1 time
@@ -322,8 +313,8 @@ while True:
 
 		# Check if a match that's confident enough
 		if 0 < match < video_certainty:
-			timings["tt"] = time.time() - timings["st"]
-			timings["fl"] = time.time() - timings["fr"]
+			timings["tt"] = time.monotonic() - timings["st"]
+			timings["fl"] = time.monotonic() - timings["fr"]
 
 			# If set to true in the config, print debug text
 			if end_report:

@@ -81,4 +81,28 @@ auto getenv_value(const char *name) -> const char * {
   return nullptr;
 }
 
+/**
+ * Check if a locale environment variable is safe to pass to the root python
+ * subprocess.
+ * @param value The value of the environment variable.
+ * @return True if the value only looks like locale names.
+ */
+auto is_safe_locale(const char *value) -> bool {
+  if (*value == '\0' || strstr(value, "..") != nullptr) {
+    return false;
+  }
+
+  for (const char *chr = value; *chr != '\0'; chr++) {
+    bool allowed = (*chr >= 'a' && *chr <= 'z') ||
+                   (*chr >= 'A' && *chr <= 'Z') ||
+                   (*chr >= '0' && *chr <= '9') || *chr == '_' ||
+                   *chr == '.' || *chr == '@' || *chr == ':' || *chr == '-';
+    if (!allowed) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 #endif // MAIN_H_

@@ -1,4 +1,4 @@
-project('howdy-gtk', license: 'MIT', version: '1.0.0', meson_version: '>= 0.61.0')
+project('howdy-gtk', license: 'MIT', version: '1.0.1', meson_version: '>= 0.61.0')
 
 dlibdatadir = get_option('dlib_data_dir') != '' ? get_option('dlib_data_dir') : join_paths(get_option('prefix'), get_option('datadir'), 'dlib-data')
 confdir = get_option('config_dir') != '' ? get_option('config_dir') : join_paths(get_option('prefix'), get_option('sysconfdir'), 'howdy')

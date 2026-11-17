@@ -4,6 +4,7 @@
 # Import required modules
 import configparser
 import cv2
+import numpy as np
 import os
 import sys
 
@@ -85,6 +86,13 @@ class VideoCapture:
 			print(_("Failed to read camera specified in the 'device_path' config option, aborting"))
 			sys.exit(14)
 
+		# Single channel frames come from grayscale or raw formats, see the
+		# pixel_format option. Deeper than 8 bits gets scaled down first.
+		if frame.ndim == 2:
+			if frame.dtype != np.uint8:
+				frame = self._scale_raw(frame)
+			return cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR), frame
+
 		try:
 			# Convert from color to grayscale
 			# First processing of frame, so frame errors show up here
@@ -95,6 +103,17 @@ class VideoCapture:
 			print("\nAn error occurred in OpenCV\n")
 			raise
 		return frame, gsframe
+
+	def _scale_raw(self, frame):
+		"""
+		Scales a raw 10 to 16 bit grayscale frame down to 8 bits. The black
+		level is removed and the brightest 0.5% of pixels are clipped, so a
+		dim IR image still uses the full range.
+		"""
+		black = self.config.getint("video", "raw_black_level", fallback=0)
+		f = np.clip(frame.astype(np.float32) - black, 0, None)
+		top = max(float(np.percentile(f, 99.5)), 1.0)
+		return np.clip(f * (255.0 / top), 0, 255).astype(np.uint8)
 
 	def _create_reader(self):
 		"""
@@ -135,6 +154,14 @@ class VideoCapture:
 		if self.config.getboolean("video", "force_mjpeg", fallback=False):
 			# Set a magic number, will enable MJPEG but is badly documentated
 			self.internal.set(cv2.CAP_PROP_FOURCC, 1196444237)
+
+		# Request a specific pixel format, for IR sensors that only offer raw
+		# formats OpenCV does not choose on its own (Y10 for example)
+		pixel_format = self.config.get("video", "pixel_format", fallback="").strip()
+		if pixel_format:
+			self.internal.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*pixel_format.ljust(4)[:4]))
+			# Keep the raw samples, read_frame() scales them down itself
+			self.internal.set(cv2.CAP_PROP_CONVERT_RGB, 0)
 
 		# Set the frame width and height if requested
 		self.fw = self.config.getint("video", "frame_width", fallback=-1)

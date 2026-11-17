@@ -163,7 +163,8 @@ auto check_enabled(pam_handle_t *pamh, const INIReader &config,
     int return_value =
         glob("/proc/acpi/button/lid/*/state", 0, nullptr, &glob_result);
 
-    if (return_value != 0) {
+    // GLOB_NOMATCH means there is no lid, which is normal on desktops
+    if (return_value != 0 && return_value != GLOB_NOMATCH) {
       pam_syslog(pamh, LOG_ERR, "Failed to read files from glob: %d",
                  return_value);
       if (errno != 0) {
@@ -251,7 +252,7 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
   }
 
   // Wrap the PAM conversation function in our own, easier function
-  auto conv_function = [conv](int msg_type, const char *msg_str) {
+  auto conv_function = [conv](int msg_type, const char *msg_str) -> int {
     const struct pam_message msg = {.msg_style = msg_type, .msg = msg_str};
     const struct pam_message *msgp = &msg;
 
@@ -302,6 +303,14 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
     }
   }
 
+  // Pass the locale so gettext in the subprocess and the auth UI can translate
+  for (const char *name : {"LANGUAGE", "LC_ALL", "LC_MESSAGES", "LANG"}) {
+    const char *value = getenv_value(name);
+    if (value != nullptr && is_safe_locale(value)) {
+      env_vars.emplace_back(std::string(name) + "=" + value);
+    }
+  }
+
   // Build the null terminated array posix_spawnp expects
   std::vector<char *> envp;
   envp.reserve(env_vars.size() + 1);
@@ -331,7 +340,7 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
 
   // This task wait for the status of the python subprocess (we don't want a
   // zombie process)
-  optional_task<int> child_task([&] {
+  optional_task<int> child_task([&]() -> int {
     int status;
     waitpid(child_pid, &status, 0);
     {
@@ -347,7 +356,8 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
   child_task.activate();
 
   // This task waits for the password input (if the workaround wants it)
-  optional_task<std::tuple<int, char *>> pass_task([&] {
+  optional_task<std::tuple<int, char *>> pass_task(
+      [&]() -> std::tuple<int, char *> {
     char *auth_tok_ptr = nullptr;
     int pam_res = pam_get_authtok(
         pamh, PAM_AUTHTOK, const_cast<const char **>(&auth_tok_ptr), nullptr);
@@ -359,7 +369,7 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
     }
     convar.notify_one();
 
-    return std::tuple<int, char *>(pam_res, auth_tok_ptr);
+    return {pam_res, auth_tok_ptr};
   });
 
   auto ask_pass = ask_auth_tok && workaround != Workaround::Off;
@@ -373,8 +383,9 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
   // Wait for the end either of the child or the password input
   {
     std::unique_lock<std::mutex> lock(mutx);
-    convar.wait(lock,
-                [&] { return confirmation_type != ConfirmationType::Unset; });
+    convar.wait(lock, [&]() -> bool {
+      return confirmation_type != ConfirmationType::Unset;
+    });
   }
 
   // The password has been entered or an error has occurred

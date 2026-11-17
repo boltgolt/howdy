@@ -14,6 +14,14 @@ import paths_factory
 
 from i18n import _
 from recorders.video_capture import VideoCapture
+from rotation import rotate_frame
+
+# Test if at lest 1 of the data files is there and abort if it's not
+if not os.path.isfile(paths_factory.shape_predictor_5_face_landmarks_path()):
+	print(_("Data files have not been downloaded, please run the following commands:"))
+	print("\n\tcd " + paths_factory.dlib_data_dir_path())
+	print("\tsudo ./install.sh\n")
+	sys.exit(1)
 
 # Read config from disk
 config = configparser.ConfigParser()
@@ -77,6 +85,11 @@ try:
 except FileNotFoundError:
 	pass
 
+# Only the fixed rotations are shown, the alternating ones would flicker
+rotate = config.getint("video", "rotate", fallback=0)
+if rotate not in (3, 4):
+	rotate = 0
+
 clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
 
 # Open the window and attach a a mouse listener
@@ -92,14 +105,14 @@ sec_frames = 0
 # Last secands FPS
 fps = 0
 # The current second we're counting
-sec = int(time.time())
+sec = int(time.monotonic())
 # recognition time
 rec_tm = 0
 
 # Wrap everything in an keyboard interrupt handler
 try:
 	while True:
-		frame_tm = time.time()
+		frame_tm = time.monotonic()
 
 		# Increment the frames
 		total_frames += 1
@@ -116,6 +129,8 @@ try:
 
 		# Grab a single frame of video
 		orig_frame, frame = video_capture.read_frame()
+		orig_frame = rotate_frame(orig_frame, rotate, total_frames)
+		frame = rotate_frame(frame, rotate, total_frames)
 
 		frame = clahe.apply(frame)
 		# Make a frame to put overlays in
@@ -126,15 +141,17 @@ try:
 		height, width = frame.shape[:2]
 
 		# Create a histogram of the image with 8 values
-		hist = cv2.calcHist([frame], [0], None, [8], [0, 256])
+		# ravel because the returned shape differs across OpenCV versions:
+		# 4.x returns (8, 1), 5.x returns (8,)
+		hist = cv2.calcHist([frame], [0], None, [8], [0, 256]).ravel()
 		# All values combined for percentage calculation
-		hist_total = int(sum(hist)[0])
+		hist_total = int(hist.sum())
 		# Fill with the overall containing percentage
 		hist_perc = []
 
 		# Loop though all values to calculate a percentage and add it to the overlay
 		for index, value in enumerate(hist):
-			value_perc = float(value[0]) / hist_total * 100
+			value_perc = float(value) / hist_total * 100
 			hist_perc.append(value_perc)
 
 			# Top left point, 10px margins
@@ -162,12 +179,12 @@ try:
 			# Show that this is an active frame
 			cv2.putText(overlay, _("SCAN FRAME"), (width - 68, 16), cv2.FONT_HERSHEY_SIMPLEX, .3, (0, 255, 0), 0, cv2.LINE_AA)
 
-			rec_tm = time.time()
+			rec_tm = time.monotonic()
 
 			# Get the locations of all faces and their locations
 			# Upsample it once
 			face_locations = face_detector(frame, 1)
-			rec_tm = time.time() - rec_tm
+			rec_tm = time.monotonic() - rec_tm
 
 			# Loop though all faces and paint a circle around them
 			for loc in face_locations:
@@ -236,7 +253,7 @@ try:
 		if window_closed:
 			raise KeyboardInterrupt()
 
-		frame_time = time.time() - frame_tm
+		frame_time = time.monotonic() - frame_tm
 
 		# Delay the frame if slowmode is on
 		if slow_mode:

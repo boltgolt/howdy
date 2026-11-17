@@ -18,6 +18,7 @@ py_sources = {
         'compare.py',
         'i18n.py',
         'paths_factory.py',
+        'rotation.py',
         'snapshot.py',
         py_paths,
     ],
@@ -74,6 +75,24 @@ if get_option('install_pam_config')
     )
 endif
 
+if get_option('install_selinux_module')
+    selinux_mod = custom_target(
+        'howdy.mod',
+        input: 'selinux/howdy.te',
+        output: 'howdy.mod',
+        command: [find_program('checkmodule'), '-M', '-m', '-o', '@OUTPUT@', '@INPUT@'],
+    )
+    custom_target(
+        'howdy.pp',
+        input: selinux_mod,
+        output: 'howdy.pp',
+        command: [find_program('semodule_package'), '-o', '@OUTPUT@', '-m', '@INPUT@'],
+        install: true,
+        install_dir: get_option('prefix') / get_option('datadir') / 'selinux' / 'packages',
+        install_tag: 'selinux',
+    )
+endif
+
 foreach py_subdir, py_subdir_sources : py_sources
     if get_option('install_in_site_packages')
         py.install_sources(
@@ -106,7 +125,7 @@ install_data(
 )
 
 fs = import('fs')
-if not fs.exists(config_path)
+if get_option('install_config') and not fs.exists(config_path)
     install_data('config.ini', install_dir: confdir, install_mode: 'rwxr--r--', install_tag: 'config')
 endif
 
