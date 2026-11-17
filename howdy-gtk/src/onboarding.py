@@ -195,7 +195,7 @@ class OnboardingWindow(gtk.Window):
 			time.sleep(.5)
 
 			# Get the udevadm details to try to get a better name
-			udevadm = subprocess.check_output(["udevadm info -r --query=all -n " + device_path], shell=True).decode("utf-8")
+			udevadm = subprocess.check_output(["udevadm", "info", "-r", "--query=all", "-n", device_path]).decode("utf-8")
 
 			# Loop though udevadm to search for a better name
 			for line in udevadm.split("\n"):
