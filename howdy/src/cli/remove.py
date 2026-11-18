@@ -86,4 +86,7 @@ else:
 	with open(enc_file, "w") as datafile:
 		json.dump(new_encodings, datafile)
 
+	# Maintain restrictive permissions on the biometric model file
+	os.chmod(enc_file, 0o600)
+
 	print(_("Removed model {}").format(id))
