@@ -37,6 +37,7 @@ py_sources = {
     'recorders': [
         'recorders/__init__.py',
         'recorders/ffmpeg_reader.py',
+        'recorders/ipu3_reader.py',
         'recorders/pyv4l2_reader.py',
         'recorders/v4l2.py',
         'recorders/video_capture.py',
