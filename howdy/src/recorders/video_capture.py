@@ -127,7 +127,6 @@ class VideoCapture:
 			self.internal = IPU3Reader(self.config.get("video", "device_path"),
 			                           paths_factory.user_models_dir_path(),
 			                           self.config.getboolean("video", "ipu3_strobe", fallback=False))
-
 			self.fw, self.fh = 640, 480
 			return
 
