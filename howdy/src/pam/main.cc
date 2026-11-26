@@ -319,6 +319,11 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
   }
   envp.push_back(nullptr);
 
+  posix_spawnattr_t spawn_attr;
+  posix_spawnattr_init(&spawn_attr);
+  posix_spawnattr_setflags(&spawn_attr, POSIX_SPAWN_SETPGROUP);
+  posix_spawnattr_setpgroup(&spawn_attr, 0);
+
   // Start the python subprocess
   int spawn_res =
       posix_spawnp(&child_pid, PYTHON_EXECUTABLE_PATH, &file_actions, nullptr,
@@ -340,9 +345,49 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
 
   // This task wait for the status of the python subprocess (we don't want a
   // zombie process)
+  const int config_timeout_sec = config.GetInteger("video", "timeout", 4);
+  const int config_hard_timeout_sec = config_timeout_sec + 3;
+  const auto hard_deadline =
+      std::chrono::steady_clock::now() +
+      std::chrono::seconds(config_hard_timeout_sec);
+
   optional_task<int> child_task([&]() -> int {
-    int status;
-    waitpid(child_pid, &status, 0);
+    int status = 0;
+    while (true) {
+      const pid_t res = waitpid(child_pid, &status, WNOHANG);
+      if (res == child_pid) {
+        break;
+      }
+      if (res < 0) {
+        if (errno == EINTR) {
+          continue;
+        }
+        pam_syslog(pamh, LOG_ERR, "waitpid failed: %s", strerror(errno));
+        break;
+      }
+
+      if (std::chrono::steady_clock::now() >= hard_deadline) {
+        pam_syslog(pamh, LOG_ERR,
+                   "Howdy subprocess hung past %ds deadline, terminating",
+                   config_hard_timeout_sec);
+        kill(child_pid, SIGTERM);
+        kill(-child_pid, SIGTERM);
+        usleep(500 * 1000); // Give 500ms for clean exit & IR LED shutoff
+
+        if (waitpid(child_pid, &status, WNOHANG) != child_pid) {
+          kill(child_pid, SIGKILL);
+          kill(-child_pid, SIGKILL);
+          usleep(50 * 1000);
+          if (waitpid(child_pid, &status, WNOHANG) != child_pid) {
+            status = W_EXITCODE(0, SIGKILL);
+          }
+        }
+        break;
+      }
+
+      usleep(50 * 1000); // Poll every 50ms
+    }
+
     {
       std::unique_lock<std::mutex> lock(mutx);
       if (confirmation_type == ConfirmationType::Unset) {
@@ -391,7 +436,9 @@ auto identify(pam_handle_t *pamh, int flags, int argc, const char **argv,
   // The password has been entered or an error has occurred
   if (confirmation_type == ConfirmationType::Pam) {
     // We kill the child because we don't need its result
-    kill(child_pid, SIGTERM);
+    kill(-child_pid, SIGTERM);
+    usleep(500 * 1000);
+    kill(-child_pid, SIGKILL);
     child_task.stop(false);
 
     // We just wait for the thread to stop since it's this one which sent us the
