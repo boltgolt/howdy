@@ -40,6 +40,10 @@ def col(id):
 # Create shorthand for subprocess creation
 sc = subprocess.call
 
+# Make systemd pick up the polkit-agent-helper drop-in, also needed on upgrades
+if os.path.isdir("/run/systemd/system"):
+	sc(["systemctl", "daemon-reload"])
+
 # If the package is being upgraded, dpkg passes the previously configured version
 # On a fresh install this argument is empty
 if len(sys.argv) > 2 and sys.argv[2] != "":
