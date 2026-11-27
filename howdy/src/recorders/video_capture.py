@@ -121,6 +121,15 @@ class VideoCapture:
 		"""
 		recording_plugin = self.config.get("video", "recording_plugin", fallback="opencv")
 
+		if recording_plugin == "ipu3":
+			from recorders.ipu3_reader import IPU3Reader
+			import paths_factory
+			self.internal = IPU3Reader(self.config.get("video", "device_path"),
+			                           paths_factory.user_models_dir_path(),
+			                           self.config.getboolean("video", "ipu3_strobe", fallback=False))
+			self.fw, self.fh = 640, 480
+			return
+
 		if recording_plugin == "ffmpeg":
 			# Set the capture source for ffmpeg
 			from recorders.ffmpeg_reader import ffmpeg_reader
